@@ -64,9 +64,9 @@ ROOT::Experimental::RTree::RTree(
 
 ROOT::Experimental::RTree::~RTree() {
   //std::cout << "FLUSHING ALL COLUMNS" << std::endl;
-  if (fSink) fSink->OnCommit(fNentries);
   for (auto column : fColumns)
     column->Flush();
+  if (fSink) fSink->OnCommit(fNentries);
 }
 
 

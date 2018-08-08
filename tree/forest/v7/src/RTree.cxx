@@ -57,6 +57,7 @@ ROOT::Experimental::RTree::RTree(
 {
   fModel->Freeze();
   std::cout << "CREATING TREE FOR READING" << std::endl;
+  fSource->Attach();
   fNentries = fSource->GetNentries();
 }
 

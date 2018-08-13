@@ -74,7 +74,14 @@ public:
   }
 
   void Fill() { Fill(&(fModel->fDefaultEntry)); }
-  void Fill(RTreeEntry *entry);
+  void Fill(RTreeEntry *entry) {
+    for (auto&& ptr_cargo : entry->GetCargoRefs()) {
+      //std::cout << "Filling " << ptr_cargo->GetBranch()->GetName() << std::endl;
+      ptr_cargo->GetBranch()->Append(ptr_cargo.get());
+    }
+    fNentries++;
+  }
+
   void FillV(RTreeEntry **entry, unsigned size);
 }; // RTree
 

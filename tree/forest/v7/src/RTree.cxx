@@ -81,13 +81,13 @@ void ROOT::Experimental::RTree::FillV(RTreeEntry **entry, unsigned size) {
 }
 
 
-void ROOT::Experimental::RTree::Fill(RTreeEntry *entry) {
-  //assert(entry);
-  //assert(entry->IsCompatibleWith(fModel.get()));
-
-  for (auto&& ptr_cargo : entry->GetCargoRefs()) {
-    //std::cout << "Filling " << ptr_cargo->GetBranch()->GetName() << std::endl;
-    ptr_cargo->GetBranch()->Append(ptr_cargo.get());
-  }
-  fNentries++;
-}
+//void ROOT::Experimental::RTree::Fill(RTreeEntry *entry) {
+//  //assert(entry);
+//  //assert(entry->IsCompatibleWith(fModel.get()));
+//
+//  for (auto&& ptr_cargo : entry->GetCargoRefs()) {
+//    //std::cout << "Filling " << ptr_cargo->GetBranch()->GetName() << std::endl;
+//    ptr_cargo->GetBranch()->Append(ptr_cargo.get());
+//  }
+//  fNentries++;
+//}

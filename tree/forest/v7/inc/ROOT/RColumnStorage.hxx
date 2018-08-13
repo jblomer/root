@@ -36,6 +36,15 @@ class RColumnSlice;
 class RColumnSinkRaw;
 class RColumnSourceRaw;
 
+namespace Internal {
+struct RSliceInfo {
+   RSliceInfo() : fFilePos(0), fSize(0) { }
+   RSliceInfo(std::uint64_t p, std::uint64_t s) : fFilePos(p), fSize(s) { }
+   std::uint64_t fFilePos;
+   std::uint64_t fSize;  // compressed size
+}__attribute__((__packed__));
+} // namespace Internal
+
 class RColumnSink {
 public:
    static std::unique_ptr<RColumnSinkRaw> MakeSinkRaw(std::string_view path);
@@ -52,7 +61,8 @@ public:
 class RColumnSinkRaw : public RColumnSink {
    static constexpr std::size_t kEpochSize = 1024 * 1024 * 10;
 
-   using SliceHeads_t = std::vector<std::pair<uint64_t, uint64_t>>;
+   // Maps element start number to slice
+   using SliceHeads_t = std::vector<std::pair<std::uint64_t, Internal::RSliceInfo>>;
 
    struct RColumnIndex {
       RColumnIndex(std::uint32_t id)
@@ -101,10 +111,11 @@ public:
 };
 
 class RColumnSourceRaw : public RColumnSource {
-   using Index_t = std::vector<std::pair<std::uint64_t, std::uint64_t>>;
+   using Index_t = std::vector<std::pair<std::uint64_t, Internal::RSliceInfo>>;
    using ColumnIds_t = std::unordered_map<std::string, std::uint32_t>;
    using ColumnElementSizes_t = std::unordered_map<std::uint32_t, std::size_t>;
    using ColumnElements_t = std::unordered_map<std::uint32_t, std::uint64_t>;
+   using ColumnCompressionSettings_t = std::unordered_map<std::uint32_t, std::uint32_t>;
    using LiveColumns_t = std::unordered_map<RColumn*, std::uint32_t>;
 
    std::string fPath;
@@ -114,6 +125,7 @@ class RColumnSourceRaw : public RColumnSource {
    ColumnIds_t fColumnIds;
    ColumnElementSizes_t fColumnElementSizes;
    ColumnElements_t fColumnElements;
+   ColumnCompressionSettings_t fColumnCompressionSettings;
    LiveColumns_t fLiveColumns;
 
    void Read(void *buf, std::size_t size);

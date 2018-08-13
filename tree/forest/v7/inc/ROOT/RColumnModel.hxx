@@ -19,6 +19,7 @@
 #include <ROOT/RColumnUtil.hxx>
 #include <ROOT/RStringView.hxx>
 
+#include <cstdint>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -35,14 +36,18 @@ class RColumnModel {
    EColumnType fType;
    bool fIsSorted;
    std::size_t fElementSize;
+   std::uint32_t fCompressionSettings;
 
 public:
+   static constexpr std::uint32_t kDefaultCompression = 1;
+
    RColumnModel()
       : fName()
       , fBranchProvenance()
       , fType(EColumnType::kUnknown)
       , fIsSorted(false)
       , fElementSize(0)
+      , fCompressionSettings(kDefaultCompression)
    {
    }
 
@@ -54,6 +59,7 @@ public:
      , fBranchProvenance(provenance)
      , fType(type)
      , fIsSorted(is_sorted)
+     , fCompressionSettings(kDefaultCompression)
    {
       switch (fType) {
       case EColumnType::kFloat:
@@ -70,6 +76,7 @@ public:
   EColumnType GetType() const { return fType; }
   std::string GetName() const { return fName; }
   std::size_t GetElementSize() const { return fElementSize; }
+  std::uint32_t GetCompressionSettings() const { return fCompressionSettings; }
 };
 
 } // namespace Experimental

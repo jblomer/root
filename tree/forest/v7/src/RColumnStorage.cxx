@@ -17,6 +17,7 @@
 #include "ROOT/RColumnStorage.hxx"
 #include "ROOT/RColumnSlice.hxx"
 
+#include "RZip.h"
 #include "TError.h"
 
 #include <fcntl.h>
@@ -68,6 +69,8 @@ void ROOT::Experimental::RColumnSinkRaw::OnCreate()
       Write(&type, sizeof(type));
       std::size_t element_size = iter_col.first->GetModel().GetElementSize();
       Write(&element_size, sizeof(element_size));
+      std::uint32_t compression_settings = iter_col.first->GetModel().GetCompressionSettings();
+      Write(&compression_settings, sizeof(compression_settings));
       std::string name = iter_col.first->GetModel().GetName();
       std::uint32_t name_len = name.length();
       Write(&name_len, sizeof(name_len));
@@ -95,14 +98,6 @@ void ROOT::Experimental::RColumnSinkRaw::OnFullSlice(RColumnSlice *slice, RColum
       WriteMiniFooter();
    }
 
-   std::pair<uint64_t, uint64_t> entry(slice->GetRangeStart(), fFilePos);
-   auto iter_global_index = fGlobalIndex.find(column);
-   auto iter_epoch_index = fEpochIndex.find(column);
-   iter_global_index->second->fSliceHeads.push_back(entry);
-   iter_epoch_index->second->fSliceHeads.push_back(entry);
-
-   iter_global_index->second->fNumElements += num_elements;
-   iter_epoch_index->second->fNumElements += num_elements;
    //std::cout << "adding " << num_elements << " elements"
    //          << ", basket size " << size << std::endl;
    //if (column->GetColumnType() == RTreeColumnType::kOffset) {
@@ -115,8 +110,40 @@ void ROOT::Experimental::RColumnSinkRaw::OnFullSlice(RColumnSlice *slice, RColum
    //     << std::endl;
    //}
 
-   write(fd, slice->GetBuffer(), size);
-   fFilePos += size;
+   std::uint32_t sliceSize;
+   if (column->GetModel().GetCompressionSettings() > 0) {
+      constexpr int compressionLevel = 4;
+      int dataSize = size;
+      int zipBufferSize = size;
+      int zipSize = 0;
+      char *zipBuffer = new char[size + 16];
+      R__zipMultipleAlgorithm(
+         compressionLevel,
+         &dataSize, (char *)slice->GetBuffer(),
+         &zipBufferSize, zipBuffer, &zipSize,
+         kZLIB);
+      //std::cout << "COMPRESSED " << size << " TO " << zipSize << std::endl;
+
+      ssize_t retval = write(fd, zipBuffer, zipSize);
+      R__ASSERT(retval > 0);
+      R__ASSERT(size_t(retval) == zipSize);
+      sliceSize = zipSize;
+      delete[] zipBuffer;
+   } else {
+      write(fd, slice->GetBuffer(), size);
+      sliceSize = size;
+   }
+
+   std::pair<uint64_t, Internal::RSliceInfo> entry(slice->GetRangeStart(), Internal::RSliceInfo(fFilePos, sliceSize));
+   auto iter_global_index = fGlobalIndex.find(column);
+   auto iter_epoch_index = fEpochIndex.find(column);
+   iter_global_index->second->fSliceHeads.push_back(entry);
+   iter_epoch_index->second->fSliceHeads.push_back(entry);
+
+   iter_global_index->second->fNumElements += num_elements;
+   iter_epoch_index->second->fNumElements += num_elements;
+
+   fFilePos += sliceSize;
 }
 
 
@@ -142,7 +169,7 @@ void ROOT::Experimental::RColumnSinkRaw::WriteFooter(std::uint64_t nentries)
       Write(&nslices, sizeof(nslices));
       if (nslices > 0) {
          Write(iter_col.second->fSliceHeads.data(),
-               nslices * sizeof(std::pair<uint64_t, uint64_t>));
+               nslices * sizeof(std::pair<uint64_t, Internal::RSliceInfo>));
       }
       iter_col.second->fSliceHeads.clear();
    }
@@ -172,9 +199,10 @@ void ROOT::Experimental::RColumnSinkRaw::WriteMiniFooter()
             sizeof(iter_col.second->fNumElements));
       uint32_t nslices = iter_col.second->fSliceHeads.size();
       Write(&nslices, sizeof(nslices));
-      if (nslices > 0)
+      if (nslices > 0) {
          Write(iter_col.second->fSliceHeads.data(),
                nslices * sizeof(std::pair<uint64_t, uint64_t>));
+      }
       iter_col.second->fSliceHeads.clear();
    }
 }
@@ -215,6 +243,7 @@ void ROOT::Experimental::RColumnSourceRaw::OnMapSlice(
    std::uint64_t file_pos = 0;
    std::uint64_t first_in_slice = 0;
    std::uint64_t first_outside_slice = fColumnElements[column_id];
+   std::uint64_t slice_disk_size;
    Index_t *idx = fIndex[column_id].get();
    bool stop = false;
    for (auto idx_elem : *idx) {
@@ -225,25 +254,37 @@ void ROOT::Experimental::RColumnSourceRaw::OnMapSlice(
       // TODO: this works only for sequential access
       if (idx_elem.first == num) {
          first_in_slice = idx_elem.first;
-         file_pos = idx_elem.second;
+         file_pos = idx_elem.second.fFilePos;
+         slice_disk_size = idx_elem.second.fSize;
          stop = true;
       }
       //std::cout << "ELEM " << idx_elem.first << " FILEPOS " << idx_elem.second
       //          << std::endl;
    }
    std::uint64_t elements_in_slice = first_outside_slice - first_in_slice;
-   std::uint64_t slice_size = elements_in_slice * fColumnElementSizes[column_id];
+   std::uint64_t slice_mem_size = elements_in_slice * fColumnElementSizes[column_id];
 
-   //  std::cout << "Basket has size " << basket_size << " and " <<
-   //               elements_in_basket << " elements" << std::endl;
+   //  std::cout << "Basket has disk size " << slice_disk_size << " and " <<
+   //               elements_in_slice << " elements" << std::endl;
    //  std::cout << "Mapping slice for element number " << num
    //            << " for column id " << column_id << std::endl;
 
    slice->Reset(first_in_slice);
-   assert(slice->GetCapacity() >= slice_size);
-   slice->Reserve(slice_size);
+   assert(slice->GetCapacity() >= slice_mem_size);
+   slice->Reserve(slice_mem_size);
    Seek(file_pos);
-   Read(slice->GetBuffer(), slice_size);
+   if (fColumnCompressionSettings[column_id] == 0) {
+      Read(slice->GetBuffer(), slice_disk_size);
+   } else {
+      unsigned char *buf = new unsigned char[slice_disk_size];
+      Read(buf, slice_disk_size);
+      int irep;
+      int srcsize = slice_disk_size;
+      int tgtsize = slice_mem_size;
+      R__unzip(&srcsize, buf, &tgtsize, static_cast<unsigned char *>(slice->GetBuffer()), &irep);
+      R__ASSERT(uint64_t(irep) == slice_mem_size);
+      delete[] buf;
+   }
 }
 
 
@@ -269,6 +310,7 @@ void ROOT::Experimental::RColumnSourceRaw::Seek(size_t pos)
 void ROOT::Experimental::RColumnSourceRaw::Read(void *buf, size_t size)
 {
    ssize_t retval = read(fd, buf, size);
+   //std::cout << "HAVE READ " << retval << "B, expected " << size << "B" << std::endl;
    R__ASSERT(retval >= 0);
    R__ASSERT(size_t(retval) == size);
 }
@@ -288,6 +330,8 @@ void ROOT::Experimental::RColumnSourceRaw::Attach()
       Read(&type, sizeof(type));
       std::size_t element_size;
       Read(&element_size, sizeof(element_size));
+      std::uint32_t compressionSettings;
+      Read(&compressionSettings, sizeof(compressionSettings));
       uint32_t name_len;
       Read(&name_len, sizeof(name_len));
       char *name_raw = new char[name_len];
@@ -296,10 +340,12 @@ void ROOT::Experimental::RColumnSourceRaw::Attach()
       delete[] name_raw;
 
       std::cout << "Column " << name << ", id " << id << ", type "
-                << int(type) << ", element size " << element_size << std::endl;
+                << int(type) << ", element size " << element_size
+                << ", compression " << compressionSettings << std::endl;
       fIndex.push_back(nullptr);
       fColumnIds[name] = id;
       fColumnElementSizes[id] = element_size;
+      fColumnCompressionSettings[id] = compressionSettings;
    }
 
    size_t footer_pos;
@@ -315,16 +361,20 @@ void ROOT::Experimental::RColumnSourceRaw::Attach()
    std::size_t cur_pos = footer_pos + sizeof(fNentries);
    while (cur_pos < eof_pos) {
       std::uint32_t id;
+      //std::cout << "Reading in ID" << std::endl;
       Read(&id, sizeof(id));  cur_pos += sizeof(id);
+      //std::cout << "Reading in num_elements" << std::endl;
       std::uint64_t num_elements;
       Read(&num_elements, sizeof(num_elements));  cur_pos += sizeof(num_elements);
       std::uint32_t nslices;
+      //std::cout << "Reading in slices count" << std::endl;
       Read(&nslices, sizeof(nslices));  cur_pos += sizeof(nslices);
       Index_t* col_index = new Index_t();
+      std::cout << "Reading in slices detail" << std::endl;
       for (unsigned i = 0; i < nslices; ++i) {
-         std::pair<std::uint64_t, std::uint64_t> index_entry;
+         std::pair<std::uint64_t, Internal::RSliceInfo> index_entry;
          Read(&index_entry, sizeof(index_entry));  cur_pos += sizeof(index_entry);
-         //std::cout << "  READ " << index_entry.first << "/" << index_entry.second << std::endl;
+         //std::cout << "  READ " << index_entry.first << "/" << index_entry.second.fFilePos << std::endl;
          col_index->push_back(index_entry);
       }
       fIndex[id] = std::move(std::unique_ptr<Index_t>(col_index));

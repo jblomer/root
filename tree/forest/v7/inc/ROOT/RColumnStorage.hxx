@@ -59,7 +59,7 @@ public:
 
 
 class RColumnSinkRaw : public RColumnSink {
-   static constexpr std::size_t kEpochSize = 1024 * 1024 * 10;
+   static constexpr std::size_t kEpochSize = 1024 * 1024 * 20;
 
    // Maps element start number to slice
    using SliceHeads_t = std::vector<std::pair<std::uint64_t, Internal::RSliceInfo>>;

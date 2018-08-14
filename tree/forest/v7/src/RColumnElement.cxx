@@ -40,7 +40,53 @@ std::string ROOT::Experimental::RColumnElement<float>::GetMemoryType()
 
 
 template <>
-ROOT::Experimental::EColumnType  ROOT::Experimental::RColumnElement<ROOT::Experimental::OffsetColumn_t>::MapType()
+ROOT::Experimental::EColumnType ROOT::Experimental::RColumnElement<double>::MapType()
+{
+   return ROOT::Experimental::EColumnType::kDouble;
+}
+
+
+template <>
+void ROOT::Experimental::RColumnElement<double>::Initialize()
+{
+   fIsMovable = true;
+   fRawContent = fValue;
+   fSize = sizeof(double);
+}
+
+
+template <>
+std::string ROOT::Experimental::RColumnElement<double>::GetMemoryType()
+{
+   return "double";
+}
+
+
+template <>
+ROOT::Experimental::EColumnType ROOT::Experimental::RColumnElement<std::int32_t>::MapType()
+{
+   return ROOT::Experimental::EColumnType::kInt32;
+}
+
+
+template <>
+void ROOT::Experimental::RColumnElement<std::int32_t>::Initialize()
+{
+   fIsMovable = true;
+   fRawContent = fValue;
+   fSize = sizeof(std::int32_t);
+}
+
+
+template <>
+std::string ROOT::Experimental::RColumnElement<std::int32_t>::GetMemoryType()
+{
+   return "std::int32_t";
+}
+
+
+template <>
+ROOT::Experimental::EColumnType ROOT::Experimental::RColumnElement<ROOT::Experimental::OffsetColumn_t>::MapType()
 {
    return ROOT::Experimental::EColumnType::kOffset;
 }

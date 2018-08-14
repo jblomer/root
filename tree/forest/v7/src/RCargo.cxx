@@ -57,3 +57,15 @@ void ROOT::Experimental::RCargoCaptured<float>::Init() {
   fPrincipalElement = new ROOT::Experimental::RColumnElement<float>(fValue);
   fIsSimple = true;
 }
+
+template <>
+void ROOT::Experimental::RCargo<double>::Init() {
+  fPrincipalElement = new ROOT::Experimental::RColumnElement<double>(fValue.get());
+  fIsSimple = true;
+}
+
+template <>
+void ROOT::Experimental::RCargo<std::int32_t>::Init() {
+  fPrincipalElement = new ROOT::Experimental::RColumnElement<std::int32_t>(fValue.get());
+  fIsSimple = true;
+}

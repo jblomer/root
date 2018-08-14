@@ -224,6 +224,40 @@ public:
 };
 
 template <>
+class RBranch<double> : public RBranchBase {
+public:
+  explicit RBranch(std::string_view name) : RBranchBase(name) {
+    fIsSimple = true;
+  }
+
+  virtual RColumn* GenerateColumns(RColumnSource *source, RColumnSink *sink)
+    override
+  {
+    fPrincipalColumn = new RColumn(
+      RColumnModel(fName, fDescription, EColumnType::kDouble, false),
+      source, sink);
+    return fPrincipalColumn;
+  }
+};
+
+template <>
+class RBranch<std::int32_t> : public RBranchBase {
+public:
+  explicit RBranch(std::string_view name) : RBranchBase(name) {
+    fIsSimple = true;
+  }
+
+  virtual RColumn* GenerateColumns(RColumnSource *source, RColumnSink *sink)
+    override
+  {
+    fPrincipalColumn = new RColumn(
+      RColumnModel(fName, fDescription, EColumnType::kInt32, false),
+      source, sink);
+    return fPrincipalColumn;
+  }
+};
+
+template <>
 class RBranch<OffsetColumn_t> : public RBranchBase {
 public:
   explicit RBranch(std::string_view name) : RBranchBase(name) {

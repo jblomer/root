@@ -62,11 +62,20 @@ public:
      , fCompressionSettings(kDefaultCompression)
    {
       switch (fType) {
+      case EColumnType::kOffset:
+         fElementSize = sizeof(std::uint64_t);
+         break;
+      case EColumnType::kByte:
+         fElementSize = 1;
+         break;
       case EColumnType::kFloat:
          fElementSize = sizeof(float);
          break;
-      case EColumnType::kOffset:
-         fElementSize = sizeof(std::uint64_t);
+      case EColumnType::kDouble:
+         fElementSize = sizeof(double);
+         break;
+      case EColumnType::kInt32:
+         fElementSize = sizeof(std::int32_t);
          break;
       default:
          fElementSize = 0;

@@ -25,10 +25,11 @@ using OffsetColumn_t = std::uint64_t;
 
 enum class EColumnType {
    kUnknown,
-   kFloat,
-   kInt,
-   kByte,
    kOffset,
+   kByte,
+   kFloat,
+   kDouble,
+   kInt32,
    // TODO: kBit needed?
 };
 

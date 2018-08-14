@@ -45,9 +45,30 @@ struct RSliceInfo {
 }__attribute__((__packed__));
 } // namespace Internal
 
+
+struct RColumnRawSettings {
+   static constexpr std::size_t kDefaultEpochSize = 1024 * 1024 * 32;  // 32MB
+   static constexpr int kDefaultCompressionSettings = 0;  // no compression
+
+   explicit RColumnRawSettings(
+      std::string_view path,
+      std::size_t epoch_size = kDefaultEpochSize,
+      int compression_settings = kDefaultCompressionSettings)
+      : fPath(path)
+      , fEpochSize(epoch_size)
+      , fCompressionSettings(compression_settings)
+   {
+   }
+
+   std::string fPath;
+   std::size_t fEpochSize;
+   int fCompressionSettings;
+};
+
 class RColumnSink {
 public:
    static std::unique_ptr<RColumnSinkRaw> MakeSinkRaw(std::string_view path);
+   static std::unique_ptr<RColumnSinkRaw> MakeSinkRaw(const RColumnRawSettings &settings);
 
    virtual ~RColumnSink() { }
 
@@ -59,8 +80,6 @@ public:
 
 
 class RColumnSinkRaw : public RColumnSink {
-   static constexpr std::size_t kEpochSize = 1024 * 1024 * 20;
-
    // Maps element start number to slice
    using SliceHeads_t = std::vector<std::pair<std::uint64_t, Internal::RSliceInfo>>;
 
@@ -75,6 +94,8 @@ class RColumnSinkRaw : public RColumnSink {
    };
 
    std::string fPath;
+   std::size_t fEpochSize;
+   int fCompressionSettings;
    int fd;
    std::size_t fFilePos;
    std::unordered_map<RColumn*, std::unique_ptr<RColumnIndex>> fGlobalIndex;
@@ -86,8 +107,11 @@ class RColumnSinkRaw : public RColumnSink {
    void WritePadding(std::size_t padding);
 
 public:
-   RColumnSinkRaw(std::string_view path);
+   RColumnSinkRaw(const RColumnRawSettings &settings);
    virtual ~RColumnSinkRaw();
+
+   void SetCompressionSetting(int settings) { fCompressionSettings = settings; }
+   void SetEpochSize(std::size_t size) { fEpochSize = size; }
 
    void OnCreate() final;
    void OnAddColumn(RColumn *column) final;

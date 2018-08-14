@@ -34,12 +34,22 @@
 std::unique_ptr<ROOT::Experimental::RColumnSinkRaw> ROOT::Experimental::RColumnSink::MakeSinkRaw(
   std::string_view path)
 {
-   return std::move(std::make_unique<ROOT::Experimental::RColumnSinkRaw>(path));
+   return std::move(std::make_unique<ROOT::Experimental::RColumnSinkRaw>(
+     ROOT::Experimental::RColumnRawSettings(path)));
 }
 
 
-ROOT::Experimental::RColumnSinkRaw::RColumnSinkRaw(std::string_view path)
-   : fPath(path)
+std::unique_ptr<ROOT::Experimental::RColumnSinkRaw> ROOT::Experimental::RColumnSink::MakeSinkRaw(
+  const ROOT::Experimental::RColumnRawSettings &settings)
+{
+   return std::move(std::make_unique<ROOT::Experimental::RColumnSinkRaw>(settings));
+}
+
+
+ROOT::Experimental::RColumnSinkRaw::RColumnSinkRaw(const RColumnRawSettings &settings)
+   : fPath(settings.fPath)
+   , fEpochSize(settings.fEpochSize)
+   , fCompressionSettings(settings.fCompressionSettings)
    , fd(open(fPath.c_str(), O_CREAT | O_TRUNC | O_WRONLY, 0600))
 {
 }
@@ -69,7 +79,8 @@ void ROOT::Experimental::RColumnSinkRaw::OnCreate()
       Write(&type, sizeof(type));
       std::size_t element_size = iter_col.first->GetModel().GetElementSize();
       Write(&element_size, sizeof(element_size));
-      std::uint32_t compression_settings = iter_col.first->GetModel().GetCompressionSettings();
+      //std::uint32_t compression_settings = iter_col.first->GetModel().GetCompressionSettings();
+      std::uint32_t compression_settings = fCompressionSettings;
       Write(&compression_settings, sizeof(compression_settings));
       std::string name = iter_col.first->GetModel().GetName();
       std::uint32_t name_len = name.length();
@@ -91,9 +102,9 @@ void ROOT::Experimental::RColumnSinkRaw::OnFullSlice(RColumnSlice *slice, RColum
 {
    std::size_t size = slice->GetSize();
    std::size_t num_elements = size / column->GetModel().GetElementSize();
-   std::size_t epoch = fFilePos / kEpochSize;
-   if (((fFilePos + size) / kEpochSize) > epoch) {
-      size_t padding = (epoch + 1) * kEpochSize - fFilePos;
+   std::size_t epoch = fFilePos / fEpochSize;
+   if (((fFilePos + size) / fEpochSize) > epoch) {
+      size_t padding = (epoch + 1) * fEpochSize - fFilePos;
       WritePadding(padding);
       WriteMiniFooter();
    }
@@ -111,17 +122,17 @@ void ROOT::Experimental::RColumnSinkRaw::OnFullSlice(RColumnSlice *slice, RColum
    //}
 
    std::uint32_t sliceSize;
-   if (column->GetModel().GetCompressionSettings() > 0) {
-      constexpr int compressionLevel = 4;
+   //if (column->GetModel().GetCompressionSettings() > 0) {
+   if (fCompressionSettings > 0) {
       int dataSize = size;
       int zipBufferSize = size;
       int zipSize = 0;
       char *zipBuffer = new char[size + 16];
       R__zipMultipleAlgorithm(
-         compressionLevel,
+         fCompressionSettings % 100,
          &dataSize, (char *)slice->GetBuffer(),
          &zipBufferSize, zipBuffer, &zipSize,
-         kZLIB);
+         static_cast<ECompressionAlgorithm>(fCompressionSettings / 100));
       //std::cout << "COMPRESSED " << size << " TO " << zipSize << std::endl;
 
       ssize_t retval = write(fd, zipBuffer, zipSize);

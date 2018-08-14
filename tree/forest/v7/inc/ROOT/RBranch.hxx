@@ -124,6 +124,7 @@ public:
       DoRead(num, cargo);
       return;
     }
+    //std::cout << "READING " << num << std::endl;
     fPrincipalColumn->Read(num, cargo->fPrincipalElement);
   }
 

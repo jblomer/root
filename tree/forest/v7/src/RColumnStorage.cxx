@@ -249,29 +249,38 @@ void ROOT::Experimental::RColumnSourceRaw::OnMapSlice(
    std::uint32_t column_id = iter->second;
    //std::cout << "OnMapSlice column " << column_id
    //  << " #" << num << std::endl;
+   std::uint64_t nelems = fColumnElements[column_id];
 
-   // TODO: binary search
    std::uint64_t file_pos = 0;
    std::uint64_t first_in_slice = 0;
    std::uint64_t first_outside_slice = fColumnElements[column_id];
    std::uint64_t slice_disk_size;
+
    Index_t *idx = fIndex[column_id].get();
-   bool stop = false;
-   for (auto idx_elem : *idx) {
-      if (stop) {
-         first_outside_slice = idx_elem.first;
-         break;
+   unsigned i_lower = 0;
+   unsigned i_upper = idx->size() - 1;
+   R__ASSERT(i_lower <= i_upper);
+   unsigned i_last = i_upper;
+   while (i_lower <= i_upper) {
+      unsigned i_pivot = (i_lower + i_upper) / 2;
+      std::uint64_t pivot = (*idx)[i_pivot].first;
+      if (pivot > num) {
+         i_upper = i_pivot - 1;
+      } else {
+         std::uint64_t next = nelems;
+         if (i_pivot < i_last) next = (*idx)[i_pivot + 1].first;
+         if ((pivot == num) || (next > num)) {
+            first_outside_slice = next;
+            first_in_slice = pivot;
+            file_pos = (*idx)[i_pivot].second.fFilePos;
+            slice_disk_size = (*idx)[i_pivot].second.fSize;
+            break;
+         } else {
+            i_lower = i_pivot + 1;
+         }
       }
-      // TODO: this works only for sequential access
-      if (idx_elem.first == num) {
-         first_in_slice = idx_elem.first;
-         file_pos = idx_elem.second.fFilePos;
-         slice_disk_size = idx_elem.second.fSize;
-         stop = true;
-      }
-      //std::cout << "ELEM " << idx_elem.first << " FILEPOS " << idx_elem.second
-      //          << std::endl;
    }
+
    std::uint64_t elements_in_slice = first_outside_slice - first_in_slice;
    std::uint64_t slice_mem_size = elements_in_slice * fColumnElementSizes[column_id];
 

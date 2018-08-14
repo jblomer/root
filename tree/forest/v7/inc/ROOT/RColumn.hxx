@@ -83,10 +83,10 @@ public:
 
    void Read(const std::int64_t num, RColumnElementBase *__restrict__ element) {
      if ((num < fCurrentSliceStart) || (num > fCurrentSliceEnd)) {
-       MapSlice(num);
-       //std::cout << "Mapped slice [" << fCurrentSliceStart << "-"
+       //std::cout << "Mapping slice [" << fCurrentSliceStart << "-"
        //          << fCurrentSliceEnd << "] for element " << num
        //          << std::endl;
+       MapSlice(num);
      }
      void *buf = reinterpret_cast<unsigned char *>(fCurrentSlice->GetBuffer())
                  + (num - fCurrentSliceStart) * element->GetSize();

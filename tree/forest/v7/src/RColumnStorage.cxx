@@ -366,6 +366,8 @@ void ROOT::Experimental::RColumnSourceRaw::Attach()
       fColumnIds[name] = id;
       fColumnElementSizes[id] = element_size;
       fColumnCompressionSettings[id] = compressionSettings;
+
+      fAllColumns.emplace_back(RColumnModel(name, "TODO", type, false /*todo*/));
    }
 
    size_t footer_pos;
@@ -408,4 +410,17 @@ void ROOT::Experimental::RColumnSourceRaw::Attach()
 ROOT::Experimental::RColumnSourceRaw::~RColumnSourceRaw()
 {
    ::close(fd);
+}
+
+
+std::unique_ptr<ROOT::Experimental::RColumnSource> ROOT::Experimental::RColumnSourceRaw::Clone()
+{
+   std::unique_ptr<RColumnSource> result(new RColumnSourceRaw(fPath));
+   return std::move(result);
+}
+
+
+const ROOT::Experimental::RColumnSource::ColumnList_t& ROOT::Experimental::RColumnSourceRaw::ListColumns()
+{
+   return fAllColumns;
 }

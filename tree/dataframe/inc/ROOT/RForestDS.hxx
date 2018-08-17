@@ -16,13 +16,23 @@
 #include "ROOT/RDataSource.hxx"
 #include "ROOT/RStringView.hxx"
 
+#include <memory>
+#include <string>
+#include <vector>
+
 namespace ROOT {
 
 namespace RDF {
 
 class RForestDS final : public ROOT::RDF::RDataSource {
+private:
+   unsigned fSlots;
+   std::vector<ROOT::Experimental::RColumnSource*> fSources;
+   std::vector<std::unique_ptr<ROOT::Experimental::RColumnSource>> fSourceClones;
+   std::vector<std::string> fColumnNames;
+
 public:
-   RForestDS(ROOT::Experimental::RColumnSource *source);
+   RForestDS(ROOT::Experimental::RColumnSource* source);
    ~RForestDS();
    void SetNSlots(unsigned int nSlots) final;
    const std::vector<std::string> &GetColumnNames() const final;

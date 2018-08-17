@@ -16,6 +16,7 @@
 #ifndef ROOT7_RColumnStorage
 #define ROOT7_RColumnStorage
 
+#include <ROOT/RColumnModel.hxx>
 #include <ROOT/RColumnUtil.hxx>
 #include <ROOT/RStringView.hxx>
 
@@ -122,19 +123,26 @@ public:
 
 class RColumnSource {
 public:
+   using ColumnList_t = std::vector<RColumnModel>;
+
    static std::unique_ptr<RColumnSourceRaw> MakeSourceRaw(std::string_view path);
 
    virtual ~RColumnSource() { }
 
    virtual void Attach() = 0;
 
+   virtual const ColumnList_t& ListColumns() = 0;
+   virtual void ListBranches() { /* High-level objects, TODO */ }
    virtual void OnAddColumn(RColumn *column) = 0;
    virtual void OnMapSlice(RColumn *column, std::uint64_t num, RColumnSlice *slice) = 0;
    virtual std::uint64_t GetNentries() = 0;
    virtual std::uint64_t GetNElements(RColumn *column) = 0;
+
+   virtual std::unique_ptr<RColumnSource> Clone() = 0;
 };
 
 class RColumnSourceRaw : public RColumnSource {
+   // TODO: reduce the index maps
    using Index_t = std::vector<std::pair<std::uint64_t, Internal::RSliceInfo>>;
    using ColumnIds_t = std::unordered_map<std::string, std::uint32_t>;
    using ColumnElementSizes_t = std::unordered_map<std::uint32_t, std::size_t>;
@@ -151,6 +159,9 @@ class RColumnSourceRaw : public RColumnSource {
    ColumnElements_t fColumnElements;
    ColumnCompressionSettings_t fColumnCompressionSettings;
    LiveColumns_t fLiveColumns;
+
+   // TODO: shall we have an iterator interface over columns?
+   ColumnList_t fAllColumns;
 
    void Read(void *buf, std::size_t size);
    void Seek(std::size_t size);
@@ -171,6 +182,9 @@ public:
       return fNentries;
    }
    std::uint64_t GetNElements(RColumn *column) final;
+   const ColumnList_t& ListColumns() final;
+
+   std::unique_ptr<RColumnSource> Clone() final;
 };
 
 } // namespace Experimental

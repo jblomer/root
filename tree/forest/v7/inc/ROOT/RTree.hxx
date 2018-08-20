@@ -49,40 +49,45 @@ class RTree {
    RColumnCollection fColumns;
 
    unsigned fNentries;
+   unsigned fClusterSizeEntries;
+
+   void MakeCluster();
 
 public:
-  RTree(std::shared_ptr<RTreeModel> model,
-        std::unique_ptr<RColumnSink> sink);
-  RTree(std::shared_ptr<RTreeModel> model,
-        std::unique_ptr<RColumnSource> source);
-  ~RTree();
+   static constexpr unsigned kDefaultClusterSizeEntries = 100000;
+   RTree(std::shared_ptr<RTreeModel> model,
+         std::unique_ptr<RColumnSink> sink);
+   RTree(std::shared_ptr<RTreeModel> model,
+         std::unique_ptr<RColumnSource> source);
+   ~RTree();
 
-  unsigned GetNentries() const { return fNentries; }
-  RColumnRange GetEntryRange(ERangeType type, RTreeEntry* entry = nullptr);
+   unsigned GetNentries() const { return fNentries; }
+   RColumnRange GetEntryRange(ERangeType type, RTreeEntry* entry = nullptr);
 
-  template <typename T>
-  RTreeView<T> GetView(std::string_view name) {
-    auto branch = new RBranch<T>(name);  // TODO not with raw pointer
-    branch->GenerateColumns(fSource.get(), nullptr);
-    return RTreeView<T>(branch);
-  }
+   template <typename T>
+   RTreeView<T> GetView(std::string_view name) {
+     auto branch = new RBranch<T>(name);  // TODO not with raw pointer
+     branch->GenerateColumns(fSource.get(), nullptr);
+     return RTreeView<T>(branch);
+   }
 
-  RTreeViewCollection GetViewCollection(std::string_view name) {
-    auto branch = new RBranch<OffsetColumn_t>(name);
-    branch->GenerateColumns(fSource.get(), nullptr);
-    return RTreeViewCollection(branch, fSource.get());
-  }
+   RTreeViewCollection GetViewCollection(std::string_view name) {
+     auto branch = new RBranch<OffsetColumn_t>(name);
+     branch->GenerateColumns(fSource.get(), nullptr);
+     return RTreeViewCollection(branch, fSource.get());
+   }
 
-  void Fill() { Fill(&(fModel->fDefaultEntry)); }
-  void Fill(RTreeEntry *entry) {
-    for (auto&& ptr_cargo : entry->GetCargoRefs()) {
-      //std::cout << "Filling " << ptr_cargo->GetBranch()->GetName() << std::endl;
-      ptr_cargo->GetBranch()->Append(ptr_cargo.get());
-    }
-    fNentries++;
-  }
+   void Fill() { Fill(&(fModel->fDefaultEntry)); }
+   void Fill(RTreeEntry *entry) {
+     for (auto&& ptr_cargo : entry->GetCargoRefs()) {
+       //std::cout << "Filling " << ptr_cargo->GetBranch()->GetName() << std::endl;
+       ptr_cargo->GetBranch()->Append(ptr_cargo.get());
+     }
+     fNentries++;
+     if ((fNentries % fClusterSizeEntries) == 0) MakeCluster();
+   }
 
-  void FillV(RTreeEntry **entry, unsigned size);
+   void FillV(RTreeEntry **entry, unsigned size);
 }; // RTree
 
 } // namespace Experimental

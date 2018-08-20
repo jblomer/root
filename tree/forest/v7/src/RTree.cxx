@@ -36,6 +36,7 @@ ROOT::Experimental::RTree::RTree(
    : fSink(std::move(sink))
    , fModel(model)
    , fNentries(0)
+   , fClusterSizeEntries(kDefaultClusterSizeEntries)
 {
   fModel->Freeze();
 
@@ -66,7 +67,14 @@ ROOT::Experimental::RTree::~RTree() {
   //std::cout << "FLUSHING ALL COLUMNS" << std::endl;
   for (auto column : fColumns)
     column->Flush();
-  if (fSink) fSink->OnCommit(fNentries);
+  if (fSink) fSink->OnCommitDataset(fNentries);
+}
+
+
+void ROOT::Experimental::RTree::MakeCluster() {
+   for (auto column : fColumns)
+      column->Flush();
+   fSink->OnCommitCluster(fNentries);
 }
 
 

@@ -49,7 +49,7 @@ void ROOT::Experimental::RColumn::ShipHeadSlice()
 {
    assert(fSink);
    fHeadSlice->Freeze();
-   fSink->OnFullSlice(fHeadSlice.get(), this);
+   fSink->OnCommitSlice(fHeadSlice.get(), this);
    fHeadSlice->Reset(fMaxElement);
    //std::cout << "RESETTING TO " << fMaxElement << std::endl;
 }

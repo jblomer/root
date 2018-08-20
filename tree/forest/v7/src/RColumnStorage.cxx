@@ -60,8 +60,19 @@ ROOT::Experimental::RColumnSinkRaw::~RColumnSinkRaw()
 }
 
 
-void ROOT::Experimental::RColumnSinkRaw::OnCommit(OffsetColumn_t nentries)
+void ROOT::Experimental::RColumnSinkRaw::OnCommitCluster(OffsetColumn_t nentries)
 {
+   // Only records the entry number, the user of RColumnSink has to make sure
+   // slices are flushed accordingly
+   fClusters.emplace_back(nentries, fFilePos);
+}
+
+
+void ROOT::Experimental::RColumnSinkRaw::OnCommitDataset(OffsetColumn_t nentries)
+{
+   if (fClusters.empty() || (fClusters[fClusters.size() - 1].first < nentries)) {
+     fClusters.emplace_back(nentries, fFilePos);
+   }
    WriteFooter(nentries);
    close(fd);
 }
@@ -98,7 +109,7 @@ void ROOT::Experimental::RColumnSinkRaw::OnAddColumn(ROOT::Experimental::RColumn
 }
 
 
-void ROOT::Experimental::RColumnSinkRaw::OnFullSlice(RColumnSlice *slice, RColumn *column)
+void ROOT::Experimental::RColumnSinkRaw::OnCommitSlice(RColumnSlice *slice, RColumn *column)
 {
    std::size_t size = slice->GetSize();
    std::size_t num_elements = size / column->GetModel().GetElementSize();
@@ -136,8 +147,7 @@ void ROOT::Experimental::RColumnSinkRaw::OnFullSlice(RColumnSlice *slice, RColum
       //std::cout << "COMPRESSED " << size << " TO " << zipSize << std::endl;
 
       ssize_t retval = write(fd, zipBuffer, zipSize);
-      R__ASSERT(retval > 0);
-      R__ASSERT(size_t(retval) == zipSize);
+      R__ASSERT(retval == zipSize);
       sliceSize = zipSize;
       delete[] zipBuffer;
    } else {
@@ -167,6 +177,15 @@ void ROOT::Experimental::RColumnSinkRaw::Write(const void *buf, std::size_t size
 }
 
 
+void ROOT::Experimental::RColumnSinkRaw::WriteClusters() {
+   std::uint64_t nClusters = fClusters.size();
+   Write(&nClusters, sizeof(nClusters));
+   for (unsigned i = 0; i < nClusters; ++i) {
+      Write(&(fClusters[i]), sizeof(fClusters[i]));
+   }
+}
+
+
 void ROOT::Experimental::RColumnSinkRaw::WriteFooter(std::uint64_t nentries)
 {
    std::cout << "WRITING FOOTER" << std::endl;
@@ -184,6 +203,7 @@ void ROOT::Experimental::RColumnSinkRaw::WriteFooter(std::uint64_t nentries)
       }
       iter_col.second->fSliceHeads.clear();
    }
+   WriteClusters();
    Write(&footer_pos, sizeof(footer_pos));
 }
 
@@ -216,6 +236,7 @@ void ROOT::Experimental::RColumnSinkRaw::WriteMiniFooter()
       }
       iter_col.second->fSliceHeads.clear();
    }
+   WriteClusters();
 }
 
 
@@ -254,7 +275,7 @@ void ROOT::Experimental::RColumnSourceRaw::OnMapSlice(
    std::uint64_t file_pos = 0;
    std::uint64_t first_in_slice = 0;
    std::uint64_t first_outside_slice = fColumnElements[column_id];
-   std::uint64_t slice_disk_size;
+   std::uint64_t slice_disk_size = 0;
 
    Index_t *idx = fIndex[column_id].get();
    unsigned i_lower = 0;
@@ -381,7 +402,7 @@ void ROOT::Experimental::RColumnSourceRaw::Attach()
    Read(&fNentries, sizeof(fNentries));
    std::cout << "Found #" << fNentries << " entries in file" << std::endl;
    std::size_t cur_pos = footer_pos + sizeof(fNentries);
-   while (cur_pos < eof_pos) {
+   for (unsigned c = 0; c < num_cols; ++c) {
       std::uint32_t id;
       //std::cout << "Reading in ID" << std::endl;
       Read(&id, sizeof(id));  cur_pos += sizeof(id);
@@ -404,6 +425,16 @@ void ROOT::Experimental::RColumnSourceRaw::Attach()
       std::cout << "Read index of column " << id <<
          " with " << nslices << " slices" <<
          " and " << num_elements << " elements" << std::endl;
+   }
+
+   std::uint64_t nclusters;
+   Read(&nclusters, sizeof(nclusters));
+   for (unsigned i = 0; i < nclusters; ++i) {
+     std::pair<OffsetColumn_t, uint64_t> nelem;
+     Read(&nelem, sizeof(nelem));
+     fClusters.push_back(nelem);
+     std::cout << "Found cluster boundary at " << nelem.first
+               << " (" << nelem.second << ")" << std::endl;
    }
 }
 

@@ -66,6 +66,7 @@ struct RColumnRawSettings {
    int fCompressionSettings;
 };
 
+
 class RColumnSink {
 public:
    static std::unique_ptr<RColumnSinkRaw> MakeSinkRaw(std::string_view path);
@@ -75,8 +76,13 @@ public:
 
    virtual void OnCreate() = 0;
    virtual void OnAddColumn(RColumn *column) = 0;
-   virtual void OnFullSlice(RColumnSlice *slice, RColumn *column) = 0;
-   virtual void OnCommit(OffsetColumn_t nentries) = 0;
+   virtual void OnCommitSlice(RColumnSlice *slice, RColumn *column) = 0;
+   virtual void OnCommitCluster(OffsetColumn_t nentries) = 0;
+   virtual void OnCommitDataset(OffsetColumn_t nentries) = 0;
+
+   // TODO: add possibility for RTree to install call-backs, e.g. to let the
+   // storage inform RTree how many bytes it has written and that it's time for
+   // a new cluster.
 };
 
 
@@ -101,11 +107,14 @@ class RColumnSinkRaw : public RColumnSink {
    std::size_t fFilePos;
    std::unordered_map<RColumn*, std::unique_ptr<RColumnIndex>> fGlobalIndex;
    std::unordered_map<RColumn*, std::unique_ptr<RColumnIndex>> fEpochIndex;
+   // entry number, file position
+   std::vector<std::pair<OffsetColumn_t, std::uint64_t>> fClusters;
 
    void Write(const void *buf, std::size_t size);
    void WriteFooter(std::uint64_t nentries);
    void WriteMiniFooter();
    void WritePadding(std::size_t padding);
+   void WriteClusters();
 
 public:
    RColumnSinkRaw(const RColumnRawSettings &settings);
@@ -116,8 +125,9 @@ public:
 
    void OnCreate() final;
    void OnAddColumn(RColumn *column) final;
-   void OnFullSlice(RColumnSlice *slice, RColumn *column) final;
-   void OnCommit(OffsetColumn_t nentries) final;
+   void OnCommitSlice(RColumnSlice *slice, RColumn *column) final;
+   void OnCommitCluster(OffsetColumn_t nentries) final;
+   void OnCommitDataset(OffsetColumn_t nentries) final;
 };
 
 
@@ -159,6 +169,8 @@ class RColumnSourceRaw : public RColumnSource {
    ColumnElements_t fColumnElements;
    ColumnCompressionSettings_t fColumnCompressionSettings;
    LiveColumns_t fLiveColumns;
+   // entry number, file position
+   std::vector<std::pair<OffsetColumn_t, std::uint64_t>> fClusters;
 
    // TODO: shall we have an iterator interface over columns?
    ColumnList_t fAllColumns;

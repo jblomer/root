@@ -27,7 +27,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
                               SOURCES ${sources}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               LIBRARIES ${TBB_LIBRARIES} ${ARROW_SHARED_LIB}
-                              DEPENDENCIES Tree TreePlayer Hist RIO ROOTVecOps Imt
+                              DEPENDENCIES Tree TreePlayer Hist RIO ROOTVecOps Imt ROOTForest
                               ${TREEPLAYER_DEPENDENCIES})
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

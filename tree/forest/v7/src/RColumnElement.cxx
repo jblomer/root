@@ -15,6 +15,30 @@
 
 #include "ROOT/RColumnElement.hxx"
 
+#include <TError.h>
+
+
+ROOT::Experimental::RColumnElementBase ROOT::Experimental::MakeColumnElement(ROOT::Experimental::EColumnType type)
+{
+   switch (type) {
+   case EColumnType::kOffset:
+      return RColumnElement<OffsetColumn_t>(nullptr);
+   case EColumnType::kFloat:
+      return RColumnElement<float>(nullptr);
+   case EColumnType::kDouble:
+      return RColumnElement<double>(nullptr);
+   case EColumnType::kInt32:
+      return RColumnElement<std::int32_t>(nullptr);
+   case EColumnType::kByte:
+      // TODO return RColumnElement<char>(nullptr);
+   case EColumnType::kUnknown:
+      // fall through
+   default:
+      R__ASSERT(false);
+   }
+}
+
+
 
 template <>
 ROOT::Experimental::EColumnType  ROOT::Experimental::RColumnElement<float>::MapType()

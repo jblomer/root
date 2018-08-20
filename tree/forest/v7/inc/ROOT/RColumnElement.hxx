@@ -77,6 +77,15 @@ public:
    }
 
    void* GetRawContent() { return fRawContent; }
+   void* GetRawContentAddr() { return &fRawContent; }
+   // Used to map directly from slices
+   void SetRawContent(void *source) {
+     if (!fIsMovable) {
+       Deserialize(source);
+       return;
+     }
+     fRawContent = source;
+   }
 };
 
 
@@ -96,6 +105,10 @@ public:
    static EColumnType MapType();
    static std::string GetMemoryType();
 };
+
+
+RColumnElementBase MakeColumnElement(EColumnType type);
+
 
 } // namespace Experimental
 } // namespace ROOT

@@ -11,25 +11,38 @@
 #ifndef ROOT_RSQLITEDS
 #define ROOT_RSQLITEDS
 
-#include "ROOT/RColumnStorage.hxx"
-#include "ROOT/RDataFrame.hxx"
-#include "ROOT/RDataSource.hxx"
-#include "ROOT/RStringView.hxx"
+#include <ROOT/RColumnStorage.hxx>
+#include <ROOT/RDataFrame.hxx>
+#include <ROOT/RDataSource.hxx>
+#include <ROOT/RStringView.hxx>
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
 
 namespace ROOT {
 
+namespace Experimental {
+class RColumn;
+class RColumnElementBase;
+}
+
 namespace RDF {
 
 class RForestDS final : public ROOT::RDF::RDataSource {
 private:
-   unsigned fSlots;
+   unsigned fNSlots;
+   std::uint64_t fNentries;
+   bool fHasSeenAllRanges;  // TODO Remove me
    std::vector<ROOT::Experimental::RColumnSource*> fSources;
    std::vector<std::unique_ptr<ROOT::Experimental::RColumnSource>> fSourceClones;
+   ROOT::Experimental::RColumnSource::ColumnList_t fColumnList;
    std::vector<std::string> fColumnNames;
+
+   // Per-slot column collections
+   std::vector<std::vector<std::unique_ptr<ROOT::Experimental::RColumn>>> fColumns;
+   std::vector<std::vector<std::unique_ptr<ROOT::Experimental::RColumnElementBase>>> fColumnElements;
 
 public:
    RForestDS(ROOT::Experimental::RColumnSource* source);

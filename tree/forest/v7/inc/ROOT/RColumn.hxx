@@ -52,6 +52,27 @@ class RColumn {
 public:
    static const unsigned kDefaultNumElements = 10000;
 
+   // Points to a certain element in a slice, used in RDataFrame
+   /*class RCursor {
+   private:
+      void* fElementPtr;
+      RColumn* fColumn;
+   public:
+      RCursor(RColumn *column) : fElementPtr(nullptr), fColumn(column) { }
+      void Set(const std::uint64_t num) {
+         if ((num < fColumn->GetCurrentSliceStart()) ||
+             (num > fColumn->GetCurrentSliceEnd())) {
+            MapSlice(num);
+         }
+         RColumnElementBase *__restrict__ element
+      }
+    //  void *buf = reinterpret_cast<unsigned char *>(fCurrentSlice->GetBuffer())
+    //             + (num - fCurrentSliceStart) * element->GetSize();
+    // element->Deserialize(buf);
+    //  }
+      void* GetElementPtr { return fElementPtr; }
+   }; // struct RCursor*/
+
    RColumn(const RColumnModel &model,
            RColumnSource *source, RColumnSink *sink);
 
@@ -94,6 +115,19 @@ public:
    }
 
 
+   void Map(const std::int64_t num, RColumnElementBase *__restrict__ element) {
+     if ((num < fCurrentSliceStart) || (num > fCurrentSliceEnd)) {
+       //std::cout << "Mapping slice [" << fCurrentSliceStart << "-"
+       //          << fCurrentSliceEnd << "] for element " << num
+       //          << std::endl;
+       MapSlice(num);
+     }
+     void *buf = reinterpret_cast<unsigned char *>(fCurrentSlice->GetBuffer())
+                 + (num - fCurrentSliceStart) * element->GetSize();
+     element->SetRawContent(buf);
+   }
+
+
    void ReadV(std::int64_t start, std::uint64_t num, void *dst)
    {
      if ((start < fCurrentSliceStart) || (start > fCurrentSliceEnd)) {
@@ -110,6 +144,8 @@ public:
    }
 
    std::uint64_t GetNElements() { return fMaxElement; }
+   std::uint64_t GetCurrentSliceStart() { return fCurrentSliceStart; }
+   std::uint64_t GetCurrentSliceEnd() { return fCurrentSliceEnd; }
 }; // RColumn
 
 using RColumnCollection = std::vector<RColumn*>;

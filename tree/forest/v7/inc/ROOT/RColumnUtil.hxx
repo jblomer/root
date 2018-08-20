@@ -33,6 +33,15 @@ enum class EColumnType {
    // TODO: kBit needed?
 };
 
+constexpr char const* gColumnTypeNames[] = {
+   "void",
+   "ROOT::Experimental::OffsetColumn_t",
+   "unsigned char",
+   "float",
+   "double",
+   "std::int32_t"
+};
+
 } // namespace Experimental
 } // namespace ROOT
 

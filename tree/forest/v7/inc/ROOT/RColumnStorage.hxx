@@ -66,6 +66,34 @@ struct RColumnRawSettings {
    int fCompressionSettings;
 };
 
+namespace Detail {
+struct RColumnRawStats {
+   RColumnRawStats()
+     : fBPadding(0)
+     , fNPadding(0)
+     , fBMiniFooter(0)
+     , fNMiniFooter(0)
+     , fBFooter(0)
+     , fBHeader(0)
+     , fBSliceMem(0)
+     , fBSliceDisk(0)
+     , fNSlice(0)
+     , fBTotal(0)
+   { }
+   std::uint64_t fBPadding;
+   std::uint64_t fNPadding;
+   std::uint64_t fBMiniFooter;
+   std::uint64_t fNMiniFooter;
+   std::uint64_t fBFooter;
+   std::uint64_t fBHeader;
+   std::uint64_t fBSliceMem;
+   std::uint64_t fBSliceDisk;
+   std::uint64_t fNSlice;
+   std::uint64_t fBTotal;
+   void Print();
+};
+}
+
 
 class RColumnSink {
 public:
@@ -110,6 +138,8 @@ class RColumnSinkRaw : public RColumnSink {
    // entry number, file position
    std::vector<std::pair<OffsetColumn_t, std::uint64_t>> fClusters;
 
+   Detail::RColumnRawStats fStats;
+
    void Write(const void *buf, std::size_t size);
    void WriteFooter(std::uint64_t nentries);
    void WriteMiniFooter();
@@ -134,6 +164,7 @@ public:
 class RColumnSource {
 public:
    using ColumnList_t = std::vector<RColumnModel>;
+   using ClusterList_t = std::vector<OffsetColumn_t>;
 
    static std::unique_ptr<RColumnSourceRaw> MakeSourceRaw(std::string_view path);
 
@@ -143,6 +174,8 @@ public:
 
    virtual const ColumnList_t& ListColumns() = 0;
    virtual void ListBranches() { /* High-level objects, TODO */ }
+   virtual const ClusterList_t& ListClusters() = 0;
+
    virtual void OnAddColumn(RColumn *column) = 0;
    virtual void OnMapSlice(RColumn *column, std::uint64_t num, RColumnSlice *slice) = 0;
    virtual std::uint64_t GetNentries() = 0;
@@ -171,9 +204,12 @@ class RColumnSourceRaw : public RColumnSource {
    LiveColumns_t fLiveColumns;
    // entry number, file position
    std::vector<std::pair<OffsetColumn_t, std::uint64_t>> fClusters;
+   ClusterList_t fClusterList;
 
    // TODO: shall we have an iterator interface over columns?
    ColumnList_t fAllColumns;
+
+   Detail::RColumnRawStats fStats;
 
    void Read(void *buf, std::size_t size);
    void Seek(std::size_t size);
@@ -195,6 +231,7 @@ public:
    }
    std::uint64_t GetNElements(RColumn *column) final;
    const ColumnList_t& ListColumns() final;
+   const ClusterList_t &ListClusters() final;
 
    std::unique_ptr<RColumnSource> Clone() final;
 };

@@ -37,6 +37,7 @@ private:
    bool fHasSeenAllRanges;  // TODO Remove me
    std::vector<ROOT::Experimental::RColumnSource*> fSources;
    std::vector<std::unique_ptr<ROOT::Experimental::RColumnSource>> fSourceClones;
+   ROOT::Experimental::RColumnSource::ClusterList_t fClusterList;
    ROOT::Experimental::RColumnSource::ColumnList_t fColumnList;
    std::vector<std::string> fColumnNames;
 

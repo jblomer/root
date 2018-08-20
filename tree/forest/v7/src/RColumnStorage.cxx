@@ -31,6 +31,18 @@
 #include <utility>
 
 
+void ROOT::Experimental::Detail::RColumnRawStats::Print() {
+   std::cout
+      << "---------------------- STATISTICS ------------------------" << std::endl
+      << "Padding: " << fBPadding << " / " << fNPadding << std::endl
+      << "Mini-Footer: " << fBMiniFooter << " / " << fNMiniFooter << std::endl
+      << "Footer: " << fBFooter << std::endl
+      << "Header: " << fBHeader << std::endl
+      << "Slices: " << fBSliceDisk << " >> " << fBSliceMem << " / " << fNSlice << std::endl
+      << "Total: " << fBTotal << std::endl
+      << "----------------------------------------------------------" << std::endl;
+}
+
 std::unique_ptr<ROOT::Experimental::RColumnSinkRaw> ROOT::Experimental::RColumnSink::MakeSinkRaw(
   std::string_view path)
 {
@@ -98,6 +110,7 @@ void ROOT::Experimental::RColumnSinkRaw::OnCreate()
       Write(&name_len, sizeof(name_len));
       Write(name.data(), name.length());
    }
+   fStats.fBHeader = fFilePos;
 }
 
 
@@ -155,6 +168,11 @@ void ROOT::Experimental::RColumnSinkRaw::OnCommitSlice(RColumnSlice *slice, RCol
       sliceSize = size;
    }
 
+   fStats.fNSlice += 1;
+   fStats.fBSliceMem += size;
+   fStats.fBSliceDisk += sliceSize;
+   fStats.fBTotal += sliceSize;
+
    std::pair<uint64_t, Internal::RSliceInfo> entry(slice->GetRangeStart(), Internal::RSliceInfo(fFilePos, sliceSize));
    auto iter_global_index = fGlobalIndex.find(column);
    auto iter_epoch_index = fEpochIndex.find(column);
@@ -170,6 +188,7 @@ void ROOT::Experimental::RColumnSinkRaw::OnCommitSlice(RColumnSlice *slice, RCol
 
 void ROOT::Experimental::RColumnSinkRaw::Write(const void *buf, std::size_t size)
 {
+   fStats.fBTotal += size;
    ssize_t retval = write(fd, buf, size);
    R__ASSERT(retval >= 0);
    R__ASSERT(size_t(retval) == size);
@@ -204,12 +223,17 @@ void ROOT::Experimental::RColumnSinkRaw::WriteFooter(std::uint64_t nentries)
       iter_col.second->fSliceHeads.clear();
    }
    WriteClusters();
+   fStats.fBFooter = fFilePos - footer_pos;
+   Write(&fStats, sizeof(fStats));
+   std::cout << "HEY!! Total is " << fStats.fBTotal << std::endl;
    Write(&footer_pos, sizeof(footer_pos));
 }
 
 
 void ROOT::Experimental::RColumnSinkRaw::WritePadding(std::size_t padding)
 {
+   fStats.fBPadding += padding;
+   fStats.fNPadding += 1;
    std::array<unsigned char, 4096> zeros;
    size_t written = 0;
    while (written < padding) {
@@ -224,6 +248,7 @@ void ROOT::Experimental::RColumnSinkRaw::WritePadding(std::size_t padding)
 void ROOT::Experimental::RColumnSinkRaw::WriteMiniFooter()
 {
    std::cout << "Write Mini Footer at " << fFilePos << std::endl;
+   std::uint64_t fPos = fFilePos;
    for (auto& iter_col : fEpochIndex) {
       Write(&(iter_col.second->fId), sizeof(iter_col.second->fId));
       Write(&(iter_col.second->fNumElements),
@@ -237,6 +262,8 @@ void ROOT::Experimental::RColumnSinkRaw::WriteMiniFooter()
       iter_col.second->fSliceHeads.clear();
    }
    WriteClusters();
+   fStats.fBMiniFooter += fFilePos - fPos;
+   fStats.fNMiniFooter += 1;
 }
 
 
@@ -433,9 +460,13 @@ void ROOT::Experimental::RColumnSourceRaw::Attach()
      std::pair<OffsetColumn_t, uint64_t> nelem;
      Read(&nelem, sizeof(nelem));
      fClusters.push_back(nelem);
+     fClusterList.push_back(nelem.first);
      std::cout << "Found cluster boundary at " << nelem.first
                << " (" << nelem.second << ")" << std::endl;
    }
+
+   Read(&fStats, sizeof(fStats));
+   fStats.Print();
 }
 
 ROOT::Experimental::RColumnSourceRaw::~RColumnSourceRaw()
@@ -454,4 +485,10 @@ std::unique_ptr<ROOT::Experimental::RColumnSource> ROOT::Experimental::RColumnSo
 const ROOT::Experimental::RColumnSource::ColumnList_t& ROOT::Experimental::RColumnSourceRaw::ListColumns()
 {
    return fAllColumns;
+}
+
+
+const ROOT::Experimental::RColumnSource::ClusterList_t& ROOT::Experimental::RColumnSourceRaw::ListClusters()
+{
+   return fClusterList;
 }

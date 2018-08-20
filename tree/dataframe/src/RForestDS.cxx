@@ -158,6 +158,7 @@ void RForestDS::SetNSlots(unsigned int nSlots)
       fSourceClones.emplace_back(std::move(clone));
    }
 
+   fClusterList = fSources[0]->ListClusters();
    fColumnList = fSources[0]->ListColumns();
    for (auto c : fColumnList) {
       fColumnNames.emplace_back(c.GetName());

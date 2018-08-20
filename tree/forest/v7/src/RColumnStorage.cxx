@@ -225,7 +225,6 @@ void ROOT::Experimental::RColumnSinkRaw::WriteFooter(std::uint64_t nentries)
    WriteClusters();
    fStats.fBFooter = fFilePos - footer_pos;
    Write(&fStats, sizeof(fStats));
-   std::cout << "HEY!! Total is " << fStats.fBTotal << std::endl;
    Write(&footer_pos, sizeof(footer_pos));
 }
 

@@ -60,11 +60,11 @@ const std::vector<std::string>& RForestDS::GetColumnNames() const
 
 RDataSource::Record_t RForestDS::GetColumnReadersImpl(std::string_view name, const std::type_info& /* ti */)
 {
-   std::cout << "GetColumnReadersImpl" << std::endl;
-   ROOT::Experimental::EColumnType columnType = ROOT::Experimental::EColumnType::kUnknown;
+   std::cout << "GetColumnReadersImpl " << name << std::endl;
+   ROOT::Experimental::RColumnModel columnModel;
    for (auto c : fColumnList) {
       if (c.GetName() == name) {
-         columnType = c.GetType();
+         columnModel = c;
          break;
       }
    }
@@ -72,11 +72,11 @@ RDataSource::Record_t RForestDS::GetColumnReadersImpl(std::string_view name, con
    std::vector<void*> result;
    for (auto slot : ROOT::TSeqU(fNSlots)) {
       auto column = std::make_unique<ROOT::Experimental::RColumn>(
-         fColumnList[slot], fSources[slot], nullptr);
+         columnModel, fSources[slot], nullptr);
       fColumns[slot].emplace_back(std::move(column));
 
       auto columnElement = std::make_unique<ROOT::Experimental::RColumnElementBase>(
-         ROOT::Experimental::MakeColumnElement(columnType));
+         ROOT::Experimental::MakeColumnElement(columnModel.GetType()));
       result.push_back(columnElement->GetRawContentAddr());
       fColumnElements[slot].emplace_back(std::move(columnElement));
    }
@@ -87,6 +87,7 @@ RDataSource::Record_t RForestDS::GetColumnReadersImpl(std::string_view name, con
 
 std::vector<std::pair<ULong64_t, ULong64_t>> RForestDS::GetEntryRanges()
 {
+   // TODO use cluster sizes
    std::cout << "GetEntryRanges" << std::endl;
    std::vector<std::pair<ULong64_t, ULong64_t>> result;
    if (fHasSeenAllRanges) return result;

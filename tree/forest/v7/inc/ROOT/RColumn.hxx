@@ -50,7 +50,7 @@ class RColumn {
    void MapSlice(std::uint64_t num);
 
 public:
-   static const unsigned kDefaultNumElements = 10000;
+   static const unsigned kDefaultSliceSize = 32000;
 
    // Points to a certain element in a slice, used in RDataFrame
    /*class RCursor {

@@ -35,11 +35,11 @@ ROOT::Experimental::RColumn::RColumn(
    if (fSink) {
       fSink->OnAddColumn(this);
       fHeadSlice =
-        std::make_unique<RColumnSlice>(4 /*TODO*/ * kDefaultNumElements, 0);
+        std::make_unique<RColumnSlice>(kDefaultSliceSize, 0);
    }
    if (fSource) {
       fSource->OnAddColumn(this);
-      fCurrentSlice = std::make_unique<RColumnSlice>(4 /*TODO*/ * kDefaultNumElements, 0);
+      fCurrentSlice = std::make_unique<RColumnSlice>(kDefaultSliceSize, 0);
       fMaxElement = fSource->GetNElements(this);
    }
 }

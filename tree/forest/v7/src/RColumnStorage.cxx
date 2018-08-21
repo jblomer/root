@@ -28,6 +28,7 @@
 #include <array>
 #include <cassert>
 #include <string>
+#include <sstream>
 #include <utility>
 
 
@@ -468,16 +469,29 @@ void ROOT::Experimental::RColumnSourceRaw::Attach()
    Read(&fStats, sizeof(fStats));
    fStats.Print();
 
+   std::vector<std::string> strStats;
+   std::uint64_t totalDiskSize = 0;
+   std::uint64_t totalMemSize = 0;
    for (unsigned c = 0; c < fAllColumns.size(); ++c) {
+      std::ostringstream sstr;
       std::uint64_t memSize = fColumnElements[fIds[c]] * fColumnElementSizes[fIds[c]];
       std::uint64_t diskSize = 0;
       for (unsigned j = 0; j < fIndex[fIds[c]]->size(); ++j) {
          diskSize += (*fIndex[fIds[c]])[j].second.fSize;
       }
-      std::cout << "STATS FOR " << fAllColumns[c].GetName() << ": "
-                << memSize << " >> " << diskSize << " --> "
-                << (double(diskSize) / double(memSize)) << std::endl;
+      sstr << "STATS FOR " << fAllColumns[c].GetName() << ": "
+           << memSize << " >> " << diskSize << " --> "
+           << (double(memSize) / double(diskSize)) << std::endl;
+      totalDiskSize += diskSize;
+      totalMemSize += memSize;
+      strStats.push_back(sstr.str());
    }
+   std::ostringstream sstr;
+   sstr << "ALL SLICES COMPRESSION "
+        << (double(totalMemSize) / double(totalDiskSize)) << std::endl;
+   strStats.push_back(sstr.str());
+   std::sort(strStats.begin(), strStats.end());
+   for (auto s : strStats) std::cout << s;
 }
 
 ROOT::Experimental::RColumnSourceRaw::~RColumnSourceRaw()

@@ -415,6 +415,7 @@ void ROOT::Experimental::RColumnSourceRaw::Attach()
       fColumnCompressionSettings[id] = compressionSettings;
 
       fAllColumns.emplace_back(RColumnModel(name, "TODO", type, false /*todo*/));
+      fIds[i] = id;
    }
 
    size_t footer_pos;
@@ -466,6 +467,17 @@ void ROOT::Experimental::RColumnSourceRaw::Attach()
 
    Read(&fStats, sizeof(fStats));
    fStats.Print();
+
+   for (unsigned c = 0; c < fAllColumns.size(); ++c) {
+      std::uint64_t memSize = fColumnElements[fIds[c]] * fColumnElementSizes[fIds[c]];
+      std::uint64_t diskSize = 0;
+      for (unsigned j = 0; j < fIndex[fIds[c]]->size(); ++j) {
+         diskSize += (*fIndex[fIds[c]])[j].second.fSize;
+      }
+      std::cout << "STATS FOR " << fAllColumns[c].GetName() << ": "
+                << memSize << " >> " << diskSize << " --> "
+                << (double(diskSize) / double(memSize)) << std::endl;
+   }
 }
 
 ROOT::Experimental::RColumnSourceRaw::~RColumnSourceRaw()

@@ -208,6 +208,7 @@ class RColumnSourceRaw : public RColumnSource {
 
    // TODO: shall we have an iterator interface over columns?
    ColumnList_t fAllColumns;
+   std::map<std::uint64_t, std::uint64_t> fIds;
 
    Detail::RColumnRawStats fStats;
 

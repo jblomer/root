@@ -64,6 +64,8 @@ ROOT::Experimental::RColumnSinkRaw::RColumnSinkRaw(const RColumnRawSettings &set
    , fEpochSize(settings.fEpochSize)
    , fCompressionSettings(settings.fCompressionSettings)
    , fd(open(fPath.c_str(), O_CREAT | O_TRUNC | O_WRONLY, 0600))
+   , fZipBufferSize(1024 * 1024)
+   , fZipBuffer(new char[fZipBufferSize])
 {
 }
 
@@ -126,6 +128,7 @@ void ROOT::Experimental::RColumnSinkRaw::OnAddColumn(ROOT::Experimental::RColumn
 void ROOT::Experimental::RColumnSinkRaw::OnCommitSlice(RColumnSlice *slice, RColumn *column)
 {
    std::size_t size = slice->GetSize();
+   R__ASSERT(size > 0);
    std::size_t num_elements = size / column->GetModel().GetElementSize();
    std::size_t epoch = fFilePos / fEpochSize;
    if (((fFilePos + size) / fEpochSize) > epoch) {
@@ -150,20 +153,19 @@ void ROOT::Experimental::RColumnSinkRaw::OnCommitSlice(RColumnSlice *slice, RCol
    //if (column->GetModel().GetCompressionSettings() > 0) {
    if (fCompressionSettings > 0) {
       int dataSize = size;
-      int zipBufferSize = size;
+      int zipBufferSize = fZipBufferSize;
       int zipSize = 0;
-      char *zipBuffer = new char[size + 16];
       R__zipMultipleAlgorithm(
          fCompressionSettings % 100,
          &dataSize, (char *)slice->GetBuffer(),
-         &zipBufferSize, zipBuffer, &zipSize,
+         &zipBufferSize, fZipBuffer, &zipSize,
          static_cast<ECompressionAlgorithm>(fCompressionSettings / 100));
       //std::cout << "COMPRESSED " << size << " TO " << zipSize << std::endl;
 
-      ssize_t retval = write(fd, zipBuffer, zipSize);
+      ssize_t retval = write(fd, fZipBuffer, zipSize);
       R__ASSERT(retval == zipSize);
+      R__ASSERT(zipSize > 0);
       sliceSize = zipSize;
-      delete[] zipBuffer;
    } else {
       write(fd, slice->GetBuffer(), size);
       sliceSize = size;
@@ -344,14 +346,13 @@ void ROOT::Experimental::RColumnSourceRaw::OnMapSlice(
    if (fColumnCompressionSettings[column_id] == 0) {
       Read(slice->GetBuffer(), slice_disk_size);
    } else {
-      unsigned char *buf = new unsigned char[slice_disk_size];
-      Read(buf, slice_disk_size);
+      R__ASSERT(slice_disk_size <= fZipBufferSize);
+      Read(fZipBuffer, slice_disk_size);
       int irep;
       int srcsize = slice_disk_size;
       int tgtsize = slice_mem_size;
-      R__unzip(&srcsize, buf, &tgtsize, static_cast<unsigned char *>(slice->GetBuffer()), &irep);
+      R__unzip(&srcsize, fZipBuffer, &tgtsize, static_cast<unsigned char *>(slice->GetBuffer()), &irep);
       R__ASSERT(uint64_t(irep) == slice_mem_size);
-      delete[] buf;
    }
 }
 

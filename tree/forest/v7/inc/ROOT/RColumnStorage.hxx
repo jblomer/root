@@ -132,6 +132,9 @@ class RColumnSinkRaw : public RColumnSink {
    std::size_t fEpochSize;
    int fCompressionSettings;
    int fd;
+   int fZipBufferSize;
+   char *fZipBuffer;
+
    std::size_t fFilePos;
    std::unordered_map<RColumn*, std::unique_ptr<RColumnIndex>> fGlobalIndex;
    std::unordered_map<RColumn*, std::unique_ptr<RColumnIndex>> fEpochIndex;
@@ -195,6 +198,8 @@ class RColumnSourceRaw : public RColumnSource {
 
    std::string fPath;
    int fd;
+   int fZipBufferSize;
+   unsigned char *fZipBuffer;
    std::uint64_t fNentries;
    std::vector<std::unique_ptr<Index_t>> fIndex;
    ColumnIds_t fColumnIds;
@@ -220,6 +225,8 @@ public:
       : fPath(path)
       , fd(-1)
       , fNentries(0)
+      , fZipBufferSize(1024 * 1024)  // TODO
+      , fZipBuffer(new unsigned char[fZipBufferSize])
    { }
    ~RColumnSourceRaw();
 

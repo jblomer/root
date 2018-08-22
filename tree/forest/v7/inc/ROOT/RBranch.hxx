@@ -130,7 +130,7 @@ public:
 
   void ReadV(std::uint64_t start, std::uint64_t num, void *dst)
   {
-    assert(fIsSimple);
+    assert(fIsSimple);  // TODO
     fPrincipalColumn->ReadV(start, num, dst);
   }
 

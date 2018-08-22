@@ -11,6 +11,8 @@
 #ifndef ROOT_RSQLITEDS
 #define ROOT_RSQLITEDS
 
+#include <ROOT/RColumn.hxx>
+#include <ROOT/RColumnElement.hxx>
 #include <ROOT/RColumnStorage.hxx>
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDataSource.hxx>
@@ -35,6 +37,7 @@ private:
    unsigned fNSlots;
    std::uint64_t fNentries;
    bool fHasSeenAllRanges;  // TODO Remove me
+   unsigned fNColumns;
    std::vector<ROOT::Experimental::RColumnSource*> fSources;
    std::vector<std::unique_ptr<ROOT::Experimental::RColumnSource>> fSourceClones;
    ROOT::Experimental::RColumnSource::ClusterList_t fClusterList;
@@ -53,7 +56,14 @@ public:
    bool HasColumn(std::string_view colName) const final;
    std::string GetTypeName(std::string_view colName) const final;
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() final;
-   bool SetEntry(unsigned int slot, ULong64_t entry) final;
+
+   bool SetEntry(unsigned int slot, ULong64_t entry) final {
+      for (unsigned i = 0; i < fNColumns; ++i) {
+         fColumns[slot][i]->Map(entry, fColumnElements[slot][i].get());
+      }
+      return true;
+   }
+
    void Initialise() final;
 
 protected:

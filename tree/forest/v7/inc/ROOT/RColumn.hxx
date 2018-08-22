@@ -20,6 +20,7 @@
 #include <ROOT/RColumnModel.hxx>
 #include <ROOT/RColumnSlice.hxx>
 
+#include <algorithm>
 #include <cstddef>
 #include <iostream>
 #include <memory>
@@ -138,9 +139,16 @@ public:
      }
      void *buf = reinterpret_cast<unsigned char *>(fCurrentSlice->GetBuffer())
                  + (start - fCurrentSliceStart) * fModel.GetElementSize();
-     // TODO: what about RTreeElement?
-     if (fModel.GetType() == EColumnType::kFloat)
-       memcpy(dst, buf, num * fModel.GetElementSize());
+     std::uint64_t remaining = (fCurrentSliceEnd - start) + 1;
+     num = std::min(num, remaining);
+     memcpy(dst, buf, num * fModel.GetElementSize());
+
+     if (remaining < num) {
+        MapSlice(start + num + 1);
+        memcpy(reinterpret_cast<unsigned char *>(dst) + num * fModel.GetElementSize(),
+               fCurrentSlice->GetBuffer(),
+               remaining * fModel.GetElementSize());
+     }
    }
 
    std::uint64_t GetNElements() { return fMaxElement; }

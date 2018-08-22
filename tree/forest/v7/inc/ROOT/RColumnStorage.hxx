@@ -224,9 +224,9 @@ public:
    RColumnSourceRaw(std::string_view path)
       : fPath(path)
       , fd(-1)
-      , fNentries(0)
       , fZipBufferSize(1024 * 1024)  // TODO
       , fZipBuffer(new unsigned char[fZipBufferSize])
+      , fNentries(0)
    { }
    ~RColumnSourceRaw();
 

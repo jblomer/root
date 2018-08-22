@@ -39,6 +39,7 @@ RForestDS::RForestDS(ROOT::Experimental::RColumnSource* source)
    : fNSlots(0)
    , fNentries(0)
    , fHasSeenAllRanges(false)
+   , fNColumns(0)
 {
    fSources.push_back(source);
    std::cout << "Constructed" << std::endl;
@@ -131,17 +132,7 @@ bool RForestDS::HasColumn(std::string_view colName) const
 void RForestDS::Initialise() {
    std::cout << "Initialise" << std::endl;
    fHasSeenAllRanges = false;
-}
-
-
-bool RForestDS::SetEntry(unsigned int slot, ULong64_t entry)
-{
-   //std::cout << "SetEntry" << std::endl;
-   unsigned N = fColumns[slot].size();
-   for (unsigned i = 0; i < N; ++i) {
-      fColumns[slot][i]->Map(entry, fColumnElements[slot][i].get());
-   }
-   return true;
+   fNColumns = fColumns[0].size();
 }
 
 

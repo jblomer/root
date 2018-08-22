@@ -31,6 +31,9 @@
 #include <sstream>
 #include <utility>
 
+#define DEBUGON 0
+#define DEBUGMSG(x) if (DEBUGON) { x }
+
 
 void ROOT::Experimental::Detail::RColumnRawStats::Print() {
    std::cout
@@ -283,8 +286,8 @@ void ROOT::Experimental::RColumnSourceRaw::OnAddColumn(ROOT::Experimental::RColu
    auto iter = fColumnIds.find(column->GetModel().GetName());
    if (iter == fColumnIds.end()) throw std::string("not found");
    std::uint32_t column_id = iter->second;
-   std::cout << "Found column " << column->GetModel().GetName()
-             << " under id " << column_id << std::endl;
+   DEBUGMSG(std::cout << "Found column " << column->GetModel().GetName()
+                      << " under id " << column_id << std::endl;)
    fLiveColumns[column] = column_id;
 }
 
@@ -364,8 +367,8 @@ std::uint64_t ROOT::Experimental::RColumnSourceRaw::GetNElements(ROOT::Experimen
       throw "not found";
    std::uint32_t column_id = iter->second;
    std::uint64_t nelements = fColumnElements[column_id];
-   std::cout << "Column #" << column_id << " has " << nelements << " elements"
-             << std::endl;
+   DEBUGMSG(std::cout << "Column #" << column_id << " has " << nelements << " elements"
+                     << std::endl;)
    return fColumnElements[column_id];
 }
 
@@ -391,7 +394,7 @@ void ROOT::Experimental::RColumnSourceRaw::Attach()
 
    std::uint32_t num_cols;
    Read(&num_cols, sizeof(num_cols));
-   std::cout << "Found " << num_cols << " columns" << std::endl;
+   DEBUGMSG(std::cout << "Found " << num_cols << " columns" << std::endl;)
    for (unsigned i = 0; i < num_cols; ++i) {
       uint32_t id;
       Read(&id, sizeof(id));
@@ -408,9 +411,9 @@ void ROOT::Experimental::RColumnSourceRaw::Attach()
       std::string name(name_raw, name_len);
       delete[] name_raw;
 
-      std::cout << "Column " << name << ", id " << id << ", type "
-                << int(type) << ", element size " << element_size
-                << ", compression " << compressionSettings << std::endl;
+      DEBUGMSG(std::cout << "Column " << name << ", id " << id << ", type "
+                         << int(type) << ", element size " << element_size
+                         << ", compression " << compressionSettings << std::endl;)
       fIndex.push_back(nullptr);
       fColumnIds[name] = id;
       fColumnElementSizes[id] = element_size;
@@ -424,12 +427,12 @@ void ROOT::Experimental::RColumnSourceRaw::Attach()
    lseek(fd, -sizeof(footer_pos), SEEK_END);
    std::size_t eof_pos = lseek(fd, 0, SEEK_CUR);
    Read(&footer_pos, sizeof(footer_pos));
-   std::cout << "Found footer pos at " << footer_pos
-     << ", eof pos at " << eof_pos << std::endl;
+   DEBUGMSG(std::cout << "Found footer pos at " << footer_pos
+                      << ", eof pos at " << eof_pos << std::endl;)
 
    lseek(fd, footer_pos, SEEK_SET);
    Read(&fNentries, sizeof(fNentries));
-   std::cout << "Found #" << fNentries << " entries in file" << std::endl;
+   DEBUGMSG(std::cout << "Found #" << fNentries << " entries in file" << std::endl;)
    std::size_t cur_pos = footer_pos + sizeof(fNentries);
    for (unsigned c = 0; c < num_cols; ++c) {
       std::uint32_t id;
@@ -442,7 +445,7 @@ void ROOT::Experimental::RColumnSourceRaw::Attach()
       //std::cout << "Reading in slices count" << std::endl;
       Read(&nslices, sizeof(nslices));  cur_pos += sizeof(nslices);
       Index_t* col_index = new Index_t();
-      std::cout << "Reading in slices detail" << std::endl;
+      DEBUGMSG(std::cout << "Reading in slices detail" << std::endl;)
       for (unsigned i = 0; i < nslices; ++i) {
          std::pair<std::uint64_t, Internal::RSliceInfo> index_entry;
          Read(&index_entry, sizeof(index_entry));  cur_pos += sizeof(index_entry);
@@ -451,9 +454,9 @@ void ROOT::Experimental::RColumnSourceRaw::Attach()
       }
       fIndex[id] = std::move(std::unique_ptr<Index_t>(col_index));
       fColumnElements[id] = num_elements;
-      std::cout << "Read index of column " << id <<
-         " with " << nslices << " slices" <<
-         " and " << num_elements << " elements" << std::endl;
+      DEBUGMSG(std::cout << "Read index of column " << id <<
+               " with " << nslices << " slices" <<
+               " and " << num_elements << " elements" << std::endl;)
    }
 
    std::uint64_t nclusters;
@@ -463,14 +466,14 @@ void ROOT::Experimental::RColumnSourceRaw::Attach()
      Read(&nelem, sizeof(nelem));
      fClusters.push_back(nelem);
      fClusterList.push_back(nelem.first);
-     std::cout << "Found cluster boundary at " << nelem.first
-               << " (" << nelem.second << ")" << std::endl;
+     DEBUGMSG(std::cout << "Found cluster boundary at " << nelem.first
+                        << " (" << nelem.second << ")" << std::endl;)
    }
 
    Read(&fStats, sizeof(fStats));
    fStats.Print();
 
-   std::vector<std::string> strStats;
+   DEBUGMSG(std::vector<std::string> strStats;
    std::uint64_t totalDiskSize = 0;
    std::uint64_t totalMemSize = 0;
    for (unsigned c = 0; c < fAllColumns.size(); ++c) {
@@ -492,7 +495,7 @@ void ROOT::Experimental::RColumnSourceRaw::Attach()
         << (double(totalMemSize) / double(totalDiskSize)) << std::endl;
    strStats.push_back(sstr.str());
    std::sort(strStats.begin(), strStats.end());
-   for (auto s : strStats) std::cout << s;
+   for (auto s : strStats) std::cout << s;)
 }
 
 ROOT::Experimental::RColumnSourceRaw::~RColumnSourceRaw()

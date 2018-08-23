@@ -16,6 +16,7 @@
 #ifndef ROOT7_RColumnUtil
 #define ROOT7_RColumnUtil
 
+#include <cassert>
 #include <cstdint>
 
 namespace ROOT {
@@ -43,9 +44,23 @@ constexpr char const* gColumnTypeNames[] = {
 };
 
 template <typename T>
-EColumnType MakeColumnType() { return EColumnType::kUnknown; }
+EColumnType MakeColumnType() { assert(false); return EColumnType::kUnknown; }
+
+template <>
+EColumnType MakeColumnType<float>();
+
+template <>
+EColumnType MakeColumnType<double>();
+
+template <>
+EColumnType MakeColumnType<OffsetColumn_t>();
+
+template <>
+EColumnType MakeColumnType<std::int32_t>();
 
 } // namespace Experimental
 } // namespace ROOT
+
+
 
 #endif

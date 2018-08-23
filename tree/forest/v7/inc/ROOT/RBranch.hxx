@@ -173,8 +173,8 @@ public:
 };
 
 
-template <>
-class RBranch<std::vector<float>> : public RBranchBase {
+template <typename T>
+class RBranch<std::vector<T>> : public RBranchBase {
 private:
   RColumn* fValueColumn;
   OffsetColumn_t fIndex;
@@ -212,7 +212,8 @@ public:
       RColumnModel(fParentName, fDescription, EColumnType::kOffset, false),
       source, sink);
     fValueColumn = new RColumn(
-      RColumnModel(fParentName + "/" + fChildName, fDescription, EColumnType::kFloat, false),
+      RColumnModel(fParentName + "/" + fChildName, fDescription,
+        MakeColumnType<T>(), false),
       source, sink);
 
     return fPrincipalColumn;
@@ -224,7 +225,7 @@ public:
   }
 
   virtual void DoRead(std::uint64_t num, RCargoBase *cargo) override {
-    RCargo<std::vector<float>>* cargo_vec = reinterpret_cast<RCargo<std::vector<float>>*>(cargo);
+    RCargo<std::vector<T>>* cargo_vec = reinterpret_cast<RCargo<std::vector<T>>*>(cargo);
     if (num == 0) {
       fPrincipalColumn->Read(0, &fElementIndex);
       cargo_vec->Get()->resize(fIndex);
@@ -233,7 +234,9 @@ public:
       fPrincipalColumn->Read(num - 1, &fElementIndex);
       OffsetColumn_t prev = fIndex;
       fPrincipalColumn->Read(num, &fElementIndex);
-      fValueColumn->ReadV(fIndex, fIndex - prev, cargo_vec->Get()->data());
+      OffsetColumn_t size = fIndex - prev;
+      cargo_vec->Get()->resize(size);
+      fValueColumn->ReadV(prev, size, cargo_vec->Get()->data());
     }
   }
 };

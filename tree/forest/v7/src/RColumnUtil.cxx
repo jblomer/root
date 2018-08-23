@@ -15,26 +15,27 @@
 
 #include "ROOT/RColumnUtil.hxx"
 
-template<>
+template <>
 ROOT::Experimental::EColumnType ROOT::Experimental::MakeColumnType<ROOT::Experimental::OffsetColumn_t>()
 {
    return ROOT::Experimental::EColumnType::kOffset;
 }
 
-template<>
+template <>
 ROOT::Experimental::EColumnType ROOT::Experimental::MakeColumnType<double>()
 {
    return ROOT::Experimental::EColumnType::kDouble;
 }
 
-template<>
+template <>
 ROOT::Experimental::EColumnType ROOT::Experimental::MakeColumnType<float>()
 {
    return ROOT::Experimental::EColumnType::kFloat;
 }
 
-template<>
+template <>
 ROOT::Experimental::EColumnType ROOT::Experimental::MakeColumnType<std::int32_t>()
 {
    return ROOT::Experimental::EColumnType::kInt32;
 }
+

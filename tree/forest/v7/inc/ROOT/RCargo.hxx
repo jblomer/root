@@ -76,6 +76,20 @@ public:
 
 
 template <typename T>
+class RCargo<std::vector<T>> : public RCargoBase {
+   std::shared_ptr<std::vector<T>> fValue;
+
+public:
+   template <typename... ArgsT>
+   RCargo(RBranchBase *branch, ArgsT&&... args) : RCargoBase(branch) {
+     fValue = std::make_shared<std::vector<T>>(std::forward<ArgsT>(args)...);
+   }
+
+   std::shared_ptr<std::vector<T>> Get() { return fValue; }
+};
+
+
+template <typename T>
 class RCargoCaptured : public RCargoBase {
    T *fValue;
 

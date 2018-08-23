@@ -41,10 +41,10 @@ void ROOT::Experimental::RCargo<ROOT::Experimental::OffsetColumn_t>::Init() {
   fIsSimple = true;
 }
 
-template <>
-void ROOT::Experimental::RCargo<std::vector<float>>::Init() {
-  // TODO
-}
+//template <>
+//void ROOT::Experimental::RCargo<std::vector<float>>::Init() {
+//  // TODO
+//}
 
 template <>
 void ROOT::Experimental::RCargo<float>::Init() {

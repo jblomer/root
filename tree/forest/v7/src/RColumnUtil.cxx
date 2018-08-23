@@ -1,7 +1,7 @@
-/// \file ROOT/RColumnUtil.hxx
+/// \file RColumnUtil.cxx
 /// \ingroup Forest ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
-/// \date 2018-07-19
+/// \date 2018-08-22
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
 
@@ -13,39 +13,28 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RColumnUtil
-#define ROOT7_RColumnUtil
+#include "ROOT/RColumnUtil.hxx"
 
-#include <cstdint>
+template<>
+ROOT::Experimental::EColumnType ROOT::Experimental::MakeColumnType<ROOT::Experimental::OffsetColumn_t>()
+{
+   return ROOT::Experimental::EColumnType::kOffset;
+}
 
-namespace ROOT {
-namespace Experimental {
+template<>
+ROOT::Experimental::EColumnType ROOT::Experimental::MakeColumnType<double>()
+{
+   return ROOT::Experimental::EColumnType::kDouble;
+}
 
-using OffsetColumn_t = std::uint64_t;
+template<>
+ROOT::Experimental::EColumnType ROOT::Experimental::MakeColumnType<float>()
+{
+   return ROOT::Experimental::EColumnType::kFloat;
+}
 
-enum class EColumnType {
-   kUnknown,
-   kOffset,
-   kByte,
-   kFloat,
-   kDouble,
-   kInt32,
-   // TODO: kBit needed?
-};
-
-constexpr char const* gColumnTypeNames[] = {
-   "void",
-   "ROOT::Experimental::OffsetColumn_t",
-   "unsigned char",
-   "float",
-   "double",
-   "std::int32_t"
-};
-
-template <typename T>
-EColumnType MakeColumnType() { return EColumnType::kUnknown; }
-
-} // namespace Experimental
-} // namespace ROOT
-
-#endif
+template<>
+ROOT::Experimental::EColumnType ROOT::Experimental::MakeColumnType<std::int32_t>()
+{
+   return ROOT::Experimental::EColumnType::kInt32;
+}

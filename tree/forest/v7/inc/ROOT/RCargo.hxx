@@ -31,7 +31,7 @@ namespace Experimental {
 class RBranchBase;
 
 /**
- * The "cargo" represents transient storage of simple of complex
+ * The "cargo" represents transient storage of simple or complex
  * C++ values that are supposed to be serialized on Fill or that just
  * have been deserialized for reading.
  */

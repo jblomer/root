@@ -18,6 +18,7 @@
 
 #include <ROOT/RCargo.hxx>
 #include <ROOT/RColumn.hxx>
+#include <ROOT/RColumnElement.hxx>
 #include <ROOT/RColumnStorage.hxx>
 #include <ROOT/RColumnUtil.hxx>
 #include <ROOT/RStringView.hxx>
@@ -176,33 +177,64 @@ template <>
 class RBranch<std::vector<float>> : public RBranchBase {
 private:
   RColumn* fValueColumn;
+  OffsetColumn_t fIndex;
+  RColumnElement<OffsetColumn_t> fElementIndex;
 
 public:
-  RBranch() : RBranchBase("") {
+  RBranch() : RBranchBase(""), fValueColumn(nullptr), fIndex(0), fElementIndex(&fIndex) {
     fIsSimple = false;
   }
-  explicit RBranch(std::string_view name) : RBranchBase(name) {
+  explicit RBranch(std::string_view name)
+    : RBranchBase(name)
+    , fValueColumn(nullptr)
+    , fIndex(0)
+    , fElementIndex(&fIndex)
+  {
+    //std::cout << "NAME " << fParentName << "/" << fChildName << std::endl;
     fIsSimple = false;
   }
 
   virtual RColumn* GenerateColumns(RColumnSource *source, RColumnSink *sink)
     override
   {
+    std::string fParentName;
+    std::string fChildName;
+    auto sep = fName.find('/');
+    if (sep == std::string::npos) {
+      fParentName = fName;
+      fChildName = "@1";
+    } else {
+      fParentName = fName.substr(0, sep);
+      fChildName = fName.substr(sep + 1);
+    }
+
     fPrincipalColumn = new RColumn(
-      RColumnModel(fName, fDescription, EColumnType::kOffset, false),
+      RColumnModel(fParentName, fDescription, EColumnType::kOffset, false),
       source, sink);
     fValueColumn = new RColumn(
-      RColumnModel(fName + "/@1", fDescription, EColumnType::kFloat, false),
+      RColumnModel(fParentName + "/" + fChildName, fDescription, EColumnType::kFloat, false),
       source, sink);
 
     return fPrincipalColumn;
   }
 
   virtual void DoAppend(RCargoBase *cargo) override {
+    // TODO
     //fPrincipalColumn->Append(*(cargo->fPrincipalElement));
   }
 
   virtual void DoRead(std::uint64_t num, RCargoBase *cargo) override {
+    RCargo<std::vector<float>>* cargo_vec = reinterpret_cast<RCargo<std::vector<float>>*>(cargo);
+    if (num == 0) {
+      fPrincipalColumn->Read(0, &fElementIndex);
+      cargo_vec->Get()->resize(fIndex);
+      fValueColumn->ReadV(0, fIndex, cargo_vec->Get()->data());
+    } else {
+      fPrincipalColumn->Read(num - 1, &fElementIndex);
+      OffsetColumn_t prev = fIndex;
+      fPrincipalColumn->Read(num, &fElementIndex);
+      fValueColumn->ReadV(fIndex, fIndex - prev, cargo_vec->Get()->data());
+    }
   }
 };
 

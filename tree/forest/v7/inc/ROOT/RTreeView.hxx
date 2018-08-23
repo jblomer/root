@@ -47,7 +47,7 @@ public:
     , fCargo(fBranch.get())
   { }
 
-  T operator ()(const RColumnPointer &p) {
+  const T& operator ()(const RColumnPointer &p) {
     fBranch->Read(p.GetIndex(), &fCargo);
     return *fCargo.Get();
   }

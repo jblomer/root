@@ -102,6 +102,8 @@ public:
      fColumnType = MapType();
    }
 
+   T* GetPtr() { return reinterpret_cast<T*>(fRawContent); }
+
    static EColumnType MapType();
    static std::string GetMemoryType();
 };

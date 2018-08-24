@@ -15,6 +15,7 @@
 
 #include "ROOT/RColumn.hxx"
 #include "ROOT/RColumnStorage.hxx"
+#include "ROOT/RColumnStorageFile.hxx"
 #include "ROOT/RColumnSlice.hxx"
 
 #include "RZip.h"
@@ -61,6 +62,12 @@ std::unique_ptr<ROOT::Experimental::RColumnSinkRaw> ROOT::Experimental::RColumnS
    return std::move(std::make_unique<ROOT::Experimental::RColumnSinkRaw>(settings));
 }
 
+std::unique_ptr<ROOT::Experimental::RColumnSinkFile> ROOT::Experimental::RColumnSink::MakeSinkFile(
+  const ROOT::Experimental::RColumnFileSettings &settings)
+{
+   return std::move(std::make_unique<ROOT::Experimental::RColumnSinkFile>(settings));
+}
+
 
 ROOT::Experimental::RColumnSinkRaw::RColumnSinkRaw(const RColumnRawSettings &settings)
    : fPath(settings.fPath)
@@ -96,7 +103,7 @@ void ROOT::Experimental::RColumnSinkRaw::OnCommitDataset(OffsetColumn_t nentries
 }
 
 
-void ROOT::Experimental::RColumnSinkRaw::OnCreate()
+void ROOT::Experimental::RColumnSinkRaw::OnCreate(std::string_view /*name*/)
 {
    fFilePos = 0;
    std::cout << "WRITING HEADER" << std::endl;
@@ -388,7 +395,7 @@ void ROOT::Experimental::RColumnSourceRaw::Read(void *buf, size_t size)
 }
 
 
-void ROOT::Experimental::RColumnSourceRaw::Attach()
+void ROOT::Experimental::RColumnSourceRaw::Attach(std::string_view /*name*/)
 {
    fd = open(fPath.c_str(), O_RDONLY);
 

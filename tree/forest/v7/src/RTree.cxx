@@ -46,7 +46,7 @@ ROOT::Experimental::RTree::RTree(
     std::cout << branch->GetName() << std::endl;
   }
 
-  fSink->OnCreate();
+  fSink->OnCreate("Forest" /* TODO */);
 }
 
 
@@ -58,7 +58,7 @@ ROOT::Experimental::RTree::RTree(
 {
   fModel->Freeze();
   std::cout << "CREATING TREE FOR READING" << std::endl;
-  fSource->Attach();
+  fSource->Attach("Forest" /* TODO */);
   fNentries = fSource->GetNentries();
 }
 

@@ -141,12 +141,12 @@ void RForestDS::SetNSlots(unsigned int nSlots)
    std::cout << "SetNSlots " << nSlots << std::endl;
    fNSlots = nSlots;
 
-   fSources[0]->Attach();
+   fSources[0]->Attach("Forest" /* TODO */);
    fNentries = fSources[0]->GetNentries();
    for (unsigned i = 1; i < fNSlots; ++i) {
       std::unique_ptr<ROOT::Experimental::RColumnSource> clone(fSources[0]->Clone());
       fSources.push_back(clone.get());
-      clone->Attach();
+      clone->Attach("Forest" /* TODO */);
       fSourceClones.emplace_back(std::move(clone));
    }
 

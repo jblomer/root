@@ -13,4 +13,10 @@
 #pragma link C++ nestedtypedefs;
 #pragma link C++ nestedclasses;
 
+#pragma link C++ class ROOT::Experimental::Internal::RFColumnFileDesc-;
+#pragma link C++ class ROOT::Experimental::Internal::RFColumnFileHeader-;
+#pragma link C++ class ROOT::Experimental::Internal::RFColumnFileSlices-;
+#pragma link C++ class ROOT::Experimental::Internal::RFColumnFileIndex-;
+#pragma link C++ class ROOT::Experimental::Internal::RFSliceBuffer-;
+
 #endif

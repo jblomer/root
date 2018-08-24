@@ -34,8 +34,10 @@ namespace Experimental {
 
 class RColumn;
 class RColumnSlice;
+class RColumnSinkFile;
 class RColumnSinkRaw;
 class RColumnSourceRaw;
+class RColumnFileSettings;
 
 namespace Internal {
 struct RSliceInfo {
@@ -99,10 +101,11 @@ class RColumnSink {
 public:
    static std::unique_ptr<RColumnSinkRaw> MakeSinkRaw(std::string_view path);
    static std::unique_ptr<RColumnSinkRaw> MakeSinkRaw(const RColumnRawSettings &settings);
+   static std::unique_ptr<RColumnSinkFile> MakeSinkFile(const RColumnFileSettings &settings);
 
    virtual ~RColumnSink() { }
 
-   virtual void OnCreate() = 0;
+   virtual void OnCreate(std::string_view name) = 0;
    virtual void OnAddColumn(RColumn *column) = 0;
    virtual void OnCommitSlice(RColumnSlice *slice, RColumn *column) = 0;
    virtual void OnCommitCluster(OffsetColumn_t nentries) = 0;
@@ -156,7 +159,7 @@ public:
    void SetCompressionSetting(int settings) { fCompressionSettings = settings; }
    void SetEpochSize(std::size_t size) { fEpochSize = size; }
 
-   void OnCreate() final;
+   void OnCreate(std::string_view name) final;
    void OnAddColumn(RColumn *column) final;
    void OnCommitSlice(RColumnSlice *slice, RColumn *column) final;
    void OnCommitCluster(OffsetColumn_t nentries) final;
@@ -173,7 +176,7 @@ public:
 
    virtual ~RColumnSource() { }
 
-   virtual void Attach() = 0;
+   virtual void Attach(std::string_view name) = 0;
 
    virtual const ColumnList_t& ListColumns() = 0;
    virtual void ListBranches() { /* High-level objects, TODO */ }
@@ -230,7 +233,7 @@ public:
    { }
    ~RColumnSourceRaw();
 
-   void Attach() final;
+   void Attach(std::string_view name) final;
 
    void OnAddColumn(RColumn *column) final;
    void OnMapSlice(RColumn *column, std::uint64_t num, RColumnSlice *slice) final;

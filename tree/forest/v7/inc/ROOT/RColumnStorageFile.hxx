@@ -48,8 +48,12 @@ struct RColumnFileSettings {
 namespace Internal {
 
 struct RFSliceBuffer {
-   int fBufferSize = 0;
-   char* fBuffer = nullptr; ///<[fBufferSize]
+   //int n; //n
+   //float* MyBuf; //[n]
+//
+   //RFSliceBuffer() : n(0), MyBuf(nullptr) {}
+   //RFSliceBuffer(int s, float *b) : n(s), MyBuf(b) {}
+   std::vector<unsigned char> buf;
 };
 
 struct RFColumnFileDesc {

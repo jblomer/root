@@ -442,6 +442,7 @@ void TStreamerInfo::Build()
          //
          const char* lbracket = TVirtualStreamerInfo::GetElementCounterStart(dmTitle);
          const char* rbracket = ::strchr(dmTitle, ']');
+         //printf("IT IS A POINTER (%s) name %s type %s title %s full %s\n", lbracket, dmName, dmType, dmTitle, dmFull);
          if (lbracket && rbracket) {
             const char* counterName = dm->GetArrayIndex();
             TRealData* rdCounter = (TRealData*) fClass->GetListOfRealData()->FindObject(counterName);

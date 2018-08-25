@@ -72,8 +72,8 @@ void ROOT::Experimental::RColumnSinkFile::OnCommitSlice(RColumnSlice *slice, RCo
    fIndex.fColumnSlices[colId].fElementStart.push_back(slice->GetRangeStart());
    fIndex.fColumnSlices[colId].fNumElements += elementsInSlice;
 
-   Internal::RFSliceBuffer sliceBuffer;
-
+   int sizeOnDisk = 0;
+   const UChar_t* physicalBuffer;
    if (fHeader.fColumns[colId].fCompressionSettings > 0) {
       int dataSize = sizeInMem;
       int zipBufferSize = fZipBufferSize;
@@ -86,24 +86,30 @@ void ROOT::Experimental::RColumnSinkFile::OnCommitSlice(RColumnSlice *slice, RCo
       //std::cout << "COMPRESSED " << size << " TO " << zipSize << std::endl;
 
       R__ASSERT(zipSize > 0);
-      sliceBuffer.fBufferSize = zipSize;
-      sliceBuffer.fBuffer = fZipBuffer;
+      sizeOnDisk = zipSize;
+      physicalBuffer = (const UChar_t *)fZipBuffer;
    } else {
-      sliceBuffer.fBufferSize = sizeInMem;
-      sliceBuffer.fBuffer = reinterpret_cast<char *>(slice->GetBuffer());
+      sizeOnDisk = sizeInMem;
+      physicalBuffer = (const UChar_t *)(slice->GetBuffer());
    }
 
    std::ostringstream sliceName;
    sliceName << "RFS_" << colId << "_" << sliceNum;
-   std::cout << "committing slice " << sliceName.str() << std::endl;
+   //std::cout << "committing slice " << sliceName.str() << " size "
+   //          << sizeOnDisk << "  " << (long)physicalBuffer << std::endl;
 
-   fSettings.fFile->WriteObject(&sliceBuffer, sliceName.str().c_str());
+   //Internal::RFSliceBuffer sliceBuffer(sizeOnDisk/4, (float *)physicalBuffer);
+   Internal::RFSliceBuffer sliceBuffer;
+   sliceBuffer.buf.resize(sizeOnDisk);
+   memcpy(sliceBuffer.buf.data(), physicalBuffer, sizeOnDisk);
+   fDirectory->WriteObject<ROOT::Experimental::Internal::RFSliceBuffer>(
+      &sliceBuffer, sliceName.str().c_str());
 }
 
 
-void ROOT::Experimental::RColumnSinkFile::OnCommitCluster(OffsetColumn_t /* nentries */)
+void ROOT::Experimental::RColumnSinkFile::OnCommitCluster(OffsetColumn_t nentries)
 {
-   std::cout << "committing cluster, TODO" << std::endl;
+   std::cout << "committing cluster, " << nentries << " TODO" << std::endl;
 }
 
 
@@ -111,7 +117,7 @@ void ROOT::Experimental::RColumnSinkFile::OnCommitDataset(OffsetColumn_t nentrie
 {
    std::cout << "committing data set" << std::endl;
    fIndex.fNentries = nentries;
-   fSettings.fFile->WriteObject(&fIndex, "RFI");
+   fDirectory->WriteObject(&fIndex, "RFI");
    fSettings.fFile->Close();
 }
 

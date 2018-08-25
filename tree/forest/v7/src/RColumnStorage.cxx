@@ -356,7 +356,7 @@ void ROOT::Experimental::RColumnSourceRaw::OnMapSlice(
    if (fColumnCompressionSettings[column_id] == 0) {
       Read(slice->GetBuffer(), slice_disk_size);
    } else {
-      R__ASSERT(slice_disk_size <= fZipBufferSize);
+      R__ASSERT(static_cast<int64_t>(slice_disk_size) <= fZipBufferSize);
       Read(fZipBuffer, slice_disk_size);
       int irep;
       int srcsize = slice_disk_size;

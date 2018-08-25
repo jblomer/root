@@ -64,6 +64,10 @@ struct RFColumnFileDesc {
 };
 
 struct RFColumnFileSlices {
+   const std::vector<uint64_t>& GetElementStartRef() {
+      return fElementStart;
+   }
+
    std::uint32_t fId;
    std::uint32_t fNumElements;
    std::vector<uint64_t> fElementStart;
@@ -102,6 +106,43 @@ public:
    void OnCommitSlice(RColumnSlice *slice, RColumn *column) final;
    void OnCommitCluster(OffsetColumn_t nentries) final;
    void OnCommitDataset(OffsetColumn_t nentries) final;
+};
+
+
+class RColumnSourceFile : public RColumnSource {
+private:
+   std::uint64_t fNentries;
+   TFile *fFile;
+   TDirectory *fDirectory;
+   Internal::RFColumnFileHeader* fHeader;
+   Internal::RFColumnFileIndex* fIndex;
+
+   std::unordered_map<std::string, std::uint32_t> fName2Id;
+   std::unordered_map<RColumn *, std::uint32_t> fColumn2Id;
+   std::unordered_map<std::uint32_t, std::size_t> fId2IdxHeader;
+   std::unordered_map<std::uint32_t, std::size_t> fId2IdxIndex;
+   std::unordered_map<std::uint32_t, std::size_t> fId2ElementSize;
+
+   ClusterList_t fClusterList;
+   ColumnList_t fColumnList;
+
+
+public:
+   explicit RColumnSourceFile(TFile *file);
+   virtual ~RColumnSourceFile();
+
+   void Attach(std::string_view name) final;
+
+   void OnAddColumn(RColumn *column) final;
+   void OnMapSlice(RColumn *column, std::uint64_t num, RColumnSlice *slice) final;
+   std::uint64_t GetNentries() final {
+      return fNentries;
+   }
+   std::uint64_t GetNElements(RColumn *column) final;
+   const ColumnList_t& ListColumns() final;
+   const ClusterList_t &ListClusters() final;
+
+   std::unique_ptr<RColumnSource> Clone() final;
 };
 
 

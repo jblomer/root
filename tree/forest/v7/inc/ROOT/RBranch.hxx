@@ -139,7 +139,9 @@ public:
     return fPrincipalColumn->GetNElements();
   }
 
-  //void
+  RColumn *GetPrincipalColumn() {
+    return fPrincipalColumn;
+  }
 };
 
 

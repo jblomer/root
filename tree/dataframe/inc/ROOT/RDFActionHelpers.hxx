@@ -855,7 +855,6 @@ public:
 
       fOutputTree =
          std::make_unique<TTree>(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/fOutputFile.get());
-
       if (fOptions.fAutoFlush)
          fOutputTree->SetAutoFlush(fOptions.fAutoFlush);
    }
@@ -883,7 +882,7 @@ class SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<BranchTypes...>> {
    const unsigned int fNSlots;
    std::unique_ptr<ROOT::Experimental::TBufferMerger> fMerger; // must use a ptr because TBufferMerger is not movable
    std::vector<std::shared_ptr<ROOT::Experimental::TBufferMergerFile>> fOutputFiles;
-   std::vector<std::stack<std::unique_ptr<TTree>>> fOutputTrees;                       
+   std::vector<std::stack<std::unique_ptr<TTree>>> fOutputTrees;
    std::vector<int> fIsFirstEvent;        // vector<bool> is evil
    const std::string fFileName;           // name of the output file name
    const std::string fDirName;            // name of TFile subdirectory in which output must be written (possibly empty)

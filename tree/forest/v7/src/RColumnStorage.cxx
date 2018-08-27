@@ -122,6 +122,7 @@ void ROOT::Experimental::RColumnSinkRaw::OnCreate(std::string_view /*name*/)
       std::uint32_t name_len = name.length();
       Write(&name_len, sizeof(name_len));
       Write(name.data(), name.length());
+      DEBUGMSG(std::cout << "  --> Column " << name << std::endl;)
    }
    fStats.fBHeader = fFilePos;
 }
@@ -147,8 +148,7 @@ void ROOT::Experimental::RColumnSinkRaw::OnCommitSlice(RColumnSlice *slice, RCol
       WriteMiniFooter();
    }
 
-   //std::cout << "adding " << num_elements << " elements"
-   //          << ", basket size " << size << std::endl;
+   //DEBUGMSG(std::cout << "adding " << num_elements << " elements, basket size " << size << std::endl;)
    //if (column->GetColumnType() == RTreeColumnType::kOffset) {
    //  std::cout << "OFFSET BASKET " << column->GetName()
    //    << "  1st element " << *(uint64_t *)(basket->GetBuffer())

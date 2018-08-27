@@ -50,10 +50,11 @@ class RTree {
 
    unsigned fNentries;
    unsigned fClusterSizeEntries;
-
-   void MakeCluster();
+   bool fIsCommitted;
 
 public:
+   void MakeCluster();
+
    static constexpr unsigned kDefaultClusterSizeEntries = 100000;
    RTree(std::shared_ptr<RTreeModel> model,
          std::unique_ptr<RColumnSink> sink);
@@ -88,6 +89,8 @@ public:
    }
 
    void FillV(RTreeEntry **entry, unsigned size);
+
+   void Commit();
 }; // RTree
 
 } // namespace Experimental

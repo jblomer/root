@@ -84,7 +84,7 @@ public:
 
 
 // Simple data types can map directly in the buffer
-/*template <>
+template <>
 class RTreeView<double> {
 private:
   RColumn *fColumn;
@@ -130,7 +130,7 @@ public:
   //  }
   //};
   //SETUP_ITERATORS(RTreeView, double, ViewIterator);
-};*/
+};
 
 
 template <>

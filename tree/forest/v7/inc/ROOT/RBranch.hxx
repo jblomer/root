@@ -22,6 +22,7 @@
 #include <ROOT/RColumnStorage.hxx>
 #include <ROOT/RColumnUtil.hxx>
 #include <ROOT/RStringView.hxx>
+#include <ROOT/RVec.hxx>
 
 #include <cassert>
 #include <iterator>
@@ -256,6 +257,100 @@ public:
 
   void DoRead(std::uint64_t num, RCargoBase *cargo) final {
     RCargo<std::vector<T>>* cargo_vec = reinterpret_cast<RCargo<std::vector<T>>*>(cargo);
+    if (num == 0) {
+      fPrincipalColumn->Read(0, &fElementIndex);
+      cargo_vec->Get()->resize(fIndex);
+      fValueColumn->ReadV(0, fIndex, cargo_vec->Get()->data());
+    } else {
+      fPrincipalColumn->Read(num - 1, &fElementIndex);
+      OffsetColumn_t prev = fIndex;
+      fPrincipalColumn->Read(num, &fElementIndex);
+      OffsetColumn_t size = fIndex - prev;
+      cargo_vec->Get()->resize(size);
+      fValueColumn->ReadV(prev, size, cargo_vec->Get()->data());
+    }
+  }
+
+  void DoFlush() final {
+    fValueColumn->Flush();
+    fPrincipalColumn->Flush();
+  }
+};
+
+
+template <typename T>
+class RBranch<ROOT::VecOps::RVec<T>> : public RBranchBase {
+private:
+  RColumn* fValueColumn;
+  OffsetColumn_t fIndex;
+  T fValue;
+  RColumnElement<OffsetColumn_t> fElementIndex;
+  RColumnElement<T> fElementValue;
+
+public:
+  RBranch()
+    : RBranchBase("")
+    , fValueColumn(nullptr)
+    , fIndex(0)
+    , fValue()
+    , fElementIndex(&fIndex)
+    , fElementValue(&fValue)
+  {
+    fIsSimple = false;
+  }
+  explicit RBranch(std::string_view name)
+    : RBranchBase(name)
+    , fValueColumn(nullptr)
+    , fIndex(0)
+    , fValue()
+    , fElementIndex(&fIndex)
+    , fElementValue(&fValue)
+  {
+    //std::cout << "NAME " << fParentName << "/" << fChildName << std::endl;
+    fIsSimple = false;
+  }
+
+  virtual RColumn* GenerateColumns(RColumnSource *source, RColumnSink *sink)
+    override
+  {
+    std::string fParentName;
+    std::string fChildName;
+    auto sep = fName.find('/');
+    if (sep == std::string::npos) {
+      fParentName = fName;
+      fChildName = "@1";
+    } else {
+      fParentName = fName.substr(0, sep);
+      fChildName = fName.substr(sep + 1);
+    }
+
+    fPrincipalColumn = new RColumn(
+      RColumnModel(fParentName, fDescription, EColumnType::kOffset, false),
+      source, sink);
+    fValueColumn = new RColumn(
+      RColumnModel(fParentName + "/" + fChildName, fDescription,
+        MakeColumnType<T>(), false),
+      source, sink);
+
+    return fPrincipalColumn;
+  }
+
+  void DoAppend(RCargoBase *cargo) final {
+    RCargo<ROOT::VecOps::RVec<T>>* cargo_vec = reinterpret_cast<RCargo<ROOT::VecOps::RVec<T>>*>(cargo);
+    ROOT::VecOps::RVec<T>* valueVec = cargo_vec->Get().get();
+    for (auto element : *valueVec) {
+       // TODO: less copies, append multi
+       //std::cout << "APPENDING " << element << " to VALUE COLUMN" << std::endl;
+       fValue = element;
+       fValueColumn->Append(fElementValue);
+    }
+    cargo_vec->fOffset += valueVec->size();
+    fIndex = cargo_vec->fOffset;
+    fPrincipalColumn->Append(fElementIndex);
+  }
+
+  void DoRead(std::uint64_t num, RCargoBase *cargo) final {
+    RCargo<ROOT::VecOps::RVec<T>>* cargo_vec = reinterpret_cast<RCargo<ROOT::VecOps::RVec<T>>*>(cargo);
     if (num == 0) {
       fPrincipalColumn->Read(0, &fElementIndex);
       cargo_vec->Get()->resize(fIndex);

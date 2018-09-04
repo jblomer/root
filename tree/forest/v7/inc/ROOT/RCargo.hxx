@@ -18,6 +18,7 @@
 
 #include <ROOT/RColumnElement.hxx>
 #include <ROOT/RColumnUtil.hxx>
+#include <ROOT/RVec.hxx>
 
 #include <cassert>
 #include <memory>
@@ -129,6 +130,23 @@ public:
    }
 
    std::shared_ptr<std::vector<T>> Get() { return fValue; }
+};
+
+
+template <typename T>
+class RCargo<ROOT::VecOps::RVec<T>> : public RCargoBase {
+   std::shared_ptr<ROOT::VecOps::RVec<T>> fValue;
+
+public:
+   OffsetColumn_t fOffset; // TODO Make me private
+
+   template <typename... ArgsT>
+   RCargo(RBranchBase *branch, ArgsT&&... args) : RCargoBase(branch) {
+     fValue = std::make_shared<ROOT::VecOps::RVec<T>>(std::forward<ArgsT>(args)...);
+     fOffset = 0;
+   }
+
+   std::shared_ptr<ROOT::VecOps::RVec<T>> Get() { return fValue; }
 };
 
 

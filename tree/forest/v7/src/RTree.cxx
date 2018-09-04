@@ -43,8 +43,8 @@ ROOT::Experimental::RTree::RTree(
 
   for (auto branch : fModel->fRootBranch) {
     // Todo: column parent-children relationship
-    fColumns.push_back(branch->GenerateColumns(nullptr, fSink.get()));
-    std::cout << branch->GetName() << std::endl;
+    branch->GenerateColumns(nullptr, fSink.get());
+    std::cout << "Registering " << branch->GetName() << std::endl;
   }
 
   fSink->OnCreate("Forest" /* TODO */);
@@ -69,20 +69,25 @@ ROOT::Experimental::RTree::~RTree() {
 }
 
 
+void ROOT::Experimental::RTree::FlushBranches() {
+  for (auto branch : fModel->fRootBranch) {
+    branch->Flush();
+  }
+}
+
+
 void ROOT::Experimental::RTree::Commit() {
   //std::cout << "FLUSHING ALL COLUMNS" << std::endl;
   if (fIsCommitted) return;
 
-  for (auto column : fColumns)
-    column->Flush();
+  FlushBranches();
   if (fSink) fSink->OnCommitDataset(fNentries);
   fIsCommitted = true;
 }
 
 
 void ROOT::Experimental::RTree::MakeCluster() {
-   for (auto column : fColumns)
-      column->Flush();
+   FlushBranches();
    fSink->OnCommitCluster(fNentries);
 }
 

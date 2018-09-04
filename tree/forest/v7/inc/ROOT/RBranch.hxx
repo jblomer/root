@@ -55,6 +55,7 @@ protected:
 
    virtual void DoAppend(RCargoBase *cargo) { assert(false); }
    virtual void DoRead(std::uint64_t num, RCargoBase *cargo) { assert(false); }
+   virtual void DoFlush() { assert(false); }
    //virtual void DoReadV(std::uint64_t num, RLeafBase *leaf) { assert(false); }
 
 public:
@@ -120,6 +121,14 @@ public:
     fPrincipalColumn->Append(*(cargo->fPrincipalElement));
   }
 
+  void Flush() {
+     if (!fIsSimple) {
+        DoFlush();
+        return;
+     }
+     fPrincipalColumn->Flush();
+  }
+
   void Read(std::uint64_t num, RCargoBase *__restrict__ cargo) {
     if (!fIsSimple) {
       DoRead(num, cargo);
@@ -143,7 +152,6 @@ public:
     return fPrincipalColumn;
   }
 };
-
 
 class RBranchCollectionTag {};
 
@@ -180,17 +188,28 @@ class RBranch<std::vector<T>> : public RBranchBase {
 private:
   RColumn* fValueColumn;
   OffsetColumn_t fIndex;
+  T fValue;
   RColumnElement<OffsetColumn_t> fElementIndex;
+  RColumnElement<T> fElementValue;
 
 public:
-  RBranch() : RBranchBase(""), fValueColumn(nullptr), fIndex(0), fElementIndex(&fIndex) {
+  RBranch()
+    : RBranchBase("")
+    , fValueColumn(nullptr)
+    , fIndex(0)
+    , fValue()
+    , fElementIndex(&fIndex)
+    , fElementValue(&fValue)
+  {
     fIsSimple = false;
   }
   explicit RBranch(std::string_view name)
     : RBranchBase(name)
     , fValueColumn(nullptr)
     , fIndex(0)
+    , fValue()
     , fElementIndex(&fIndex)
+    , fElementValue(&fValue)
   {
     //std::cout << "NAME " << fParentName << "/" << fChildName << std::endl;
     fIsSimple = false;
@@ -221,12 +240,21 @@ public:
     return fPrincipalColumn;
   }
 
-  virtual void DoAppend(RCargoBase *cargo) override {
-    // TODO
-    //fPrincipalColumn->Append(*(cargo->fPrincipalElement));
+  void DoAppend(RCargoBase *cargo) final {
+    RCargo<std::vector<T>>* cargo_vec = reinterpret_cast<RCargo<std::vector<T>>*>(cargo);
+    std::vector<T>* valueVec = cargo_vec->Get().get();
+    for (auto element : *valueVec) {
+       // TODO: less copies, append multi
+       //std::cout << "APPENDING " << element << " to VALUE COLUMN" << std::endl;
+       fValue = element;
+       fValueColumn->Append(fElementValue);
+    }
+    cargo_vec->fOffset += valueVec->size();
+    fIndex = cargo_vec->fOffset;
+    fPrincipalColumn->Append(fElementIndex);
   }
 
-  virtual void DoRead(std::uint64_t num, RCargoBase *cargo) override {
+  void DoRead(std::uint64_t num, RCargoBase *cargo) final {
     RCargo<std::vector<T>>* cargo_vec = reinterpret_cast<RCargo<std::vector<T>>*>(cargo);
     if (num == 0) {
       fPrincipalColumn->Read(0, &fElementIndex);
@@ -240,6 +268,11 @@ public:
       cargo_vec->Get()->resize(size);
       fValueColumn->ReadV(prev, size, cargo_vec->Get()->data());
     }
+  }
+
+  void DoFlush() final {
+    fValueColumn->Flush();
+    fPrincipalColumn->Flush();
   }
 };
 

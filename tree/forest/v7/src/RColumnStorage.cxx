@@ -32,7 +32,7 @@
 #include <sstream>
 #include <utility>
 
-#define DEBUGON 0
+#define DEBUGON 1
 #define DEBUGMSG(x) if (DEBUGON) { x }
 
 

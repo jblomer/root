@@ -84,7 +84,7 @@ public:
 
 
 // Simple data types can map directly in the buffer
-template <>
+/*template <>
 class RTreeView<double> {
 private:
   RColumn *fColumn;
@@ -107,30 +107,30 @@ public:
     fColumn->ReadV(start, num, buf);
   }
 
-  /*struct ViewIterator {
-    std::uint64_t pos;
-    inline void next(const RTreeView<double>* ref) {
-      pos++;
-    }
-    inline void begin(const RTreeView<double>* ref) {
-      pos = 0;
-    }
-    inline void end(const RTreeView<double>* ref) {
-      pos = ref->fColumn->GetNElements();
-    }
-    inline double get(RTreeView<double>* ref) {
-      return (*ref)(RColumnPointer(pos));
-    }
-    inline const double get(const RTreeView<double>* ref)
-    {
-      return (*ref)(RColumnPointer(pos));
-    }
-    inline bool cmp(const ViewIterator& s) const {
-      return (pos != s.pos);
-    }
-  };
-  SETUP_ITERATORS(RTreeView, double, ViewIterator);*/
-};
+  //struct ViewIterator {
+  //  std::uint64_t pos;
+  //  inline void next(const RTreeView<double>* ref) {
+  //    pos++;
+  //  }
+  //  inline void begin(const RTreeView<double>* ref) {
+  //    pos = 0;
+  //  }
+  //  inline void end(const RTreeView<double>* ref) {
+  //    pos = ref->fColumn->GetNElements();
+  //  }
+  //  inline double get(RTreeView<double>* ref) {
+  //    return (*ref)(RColumnPointer(pos));
+  //  }
+  //  inline const double get(const RTreeView<double>* ref)
+  //  {
+  //    return (*ref)(RColumnPointer(pos));
+  //  }
+  //  inline bool cmp(const ViewIterator& s) const {
+  //    return (pos != s.pos);
+  //  }
+  //};
+  //SETUP_ITERATORS(RTreeView, double, ViewIterator);
+};*/
 
 
 template <>

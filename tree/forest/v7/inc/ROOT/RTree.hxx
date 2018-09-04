@@ -46,11 +46,12 @@ class RTree {
    std::unique_ptr<RColumnSink> fSink;
    std::unique_ptr<RColumnSource> fSource;
    std::shared_ptr<RTreeModel> fModel;
-   RColumnCollection fColumns;
 
    unsigned fNentries;
    unsigned fClusterSizeEntries;
    bool fIsCommitted;
+
+   void FlushBranches();
 
 public:
    void MakeCluster();

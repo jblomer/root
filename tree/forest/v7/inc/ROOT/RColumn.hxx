@@ -139,12 +139,12 @@ public:
      }
      void *buf = reinterpret_cast<unsigned char *>(fCurrentSlice->GetBuffer())
                  + (start - fCurrentSliceStart) * fModel.GetElementSize();
-     std::uint64_t remaining = (fCurrentSliceEnd - start) + 1;
+     std::uint64_t remaining = fCurrentSliceEnd - start + 1;
      num = std::min(num, remaining);
      memcpy(dst, buf, num * fModel.GetElementSize());
 
      if (remaining < num) {
-        MapSlice(start + num + 1);
+        MapSlice(start + num);
         memcpy(reinterpret_cast<unsigned char *>(dst) + num * fModel.GetElementSize(),
                fCurrentSlice->GetBuffer(),
                remaining * fModel.GetElementSize());

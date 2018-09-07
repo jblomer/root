@@ -19,6 +19,7 @@
 #include <ROOT/RColumnElement.hxx>
 #include <ROOT/RColumnModel.hxx>
 #include <ROOT/RColumnSlice.hxx>
+#include <ROOT/RConfig.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -129,25 +130,29 @@ public:
    }
 
 
-   void ReadV(std::int64_t start, std::uint64_t num, void *dst)
+   void ReadV(const std::int64_t num, const std::uint64_t count, void *dst)
    {
-     if ((start < fCurrentSliceStart) || (start > fCurrentSliceEnd)) {
-       MapSlice(start);
+     if ((num < fCurrentSliceStart) || (num > fCurrentSliceEnd)) {
+       MapSlice(num);
        //std::cout << "Mapped slice [" << fCurrentSliceStart << "-"
        //          << fCurrentSliceEnd << "] for element " << num
        //          << std::endl;
      }
      void *buf = reinterpret_cast<unsigned char *>(fCurrentSlice->GetBuffer())
-                 + (start - fCurrentSliceStart) * fModel.GetElementSize();
-     std::uint64_t remaining = fCurrentSliceEnd - start + 1;
-     num = std::min(num, remaining);
-     memcpy(dst, buf, num * fModel.GetElementSize());
+                 + (num - fCurrentSliceStart) * fModel.GetElementSize();
+     std::uint64_t remaining_in_slice = fCurrentSliceEnd - num + 1;
+     std::uint64_t processed = std::min(count, remaining_in_slice);
+     memcpy(dst, buf, processed * fModel.GetElementSize());
 
-     if (remaining < num) {
-        MapSlice(start + num);
-        memcpy(reinterpret_cast<unsigned char *>(dst) + num * fModel.GetElementSize(),
-               fCurrentSlice->GetBuffer(),
-               remaining * fModel.GetElementSize());
+     while (R__unlikely(processed < count)) {
+       std::uint64_t remaining = count - processed;
+       MapSlice(num + processed);
+       remaining_in_slice = fCurrentSliceEnd - fCurrentSliceStart + 1;
+       std::uint64_t processed_in_slice = std::min(remaining, remaining_in_slice);
+       memcpy(reinterpret_cast<unsigned char *>(dst) + processed * fModel.GetElementSize(),
+              fCurrentSlice->GetBuffer(),
+              processed_in_slice * fModel.GetElementSize());
+       processed += processed_in_slice;
      }
    }
 

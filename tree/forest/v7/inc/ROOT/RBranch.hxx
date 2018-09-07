@@ -266,7 +266,7 @@ public:
       OffsetColumn_t prev = fIndex;
       fPrincipalColumn->Read(num, &fElementIndex);
       OffsetColumn_t size = fIndex - prev;
-      cargo_vec->Get()->reserve(size);
+      cargo_vec->Get()->resize(size);
       fValueColumn->ReadV(prev, size, cargo_vec->Get()->data());
     }
   }

@@ -130,6 +130,23 @@ public:
    }
 
 
+   // Returns the number of mapped values
+   std::uint64_t MapV(const std::int64_t num, const std::uint64_t count, void **dst)
+   {
+     if ((num < fCurrentSliceStart) || (num > fCurrentSliceEnd)) {
+       MapSlice(num);
+       //std::cout << "Mapped slice [" << fCurrentSliceStart << "-"
+       //          << fCurrentSliceEnd << "] for element " << num
+       //          << std::endl;
+     }
+     *dst = reinterpret_cast<unsigned char *>(fCurrentSlice->GetBuffer())
+              + (num - fCurrentSliceStart) * fModel.GetElementSize();
+     std::uint64_t remaining_in_slice = fCurrentSliceEnd - num + 1;
+     std::uint64_t mapped = std::min(count, remaining_in_slice);
+     return mapped;
+   }
+
+
    void ReadV(const std::int64_t num, const std::uint64_t count, void *dst)
    {
      if ((num < fCurrentSliceStart) || (num > fCurrentSliceEnd)) {

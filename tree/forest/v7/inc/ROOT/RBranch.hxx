@@ -360,8 +360,15 @@ public:
       OffsetColumn_t prev = fIndex;
       fPrincipalColumn->Read(num, &fElementIndex);
       OffsetColumn_t size = fIndex - prev;
-      cargo_vec->Get()->resize(size);
-      fValueColumn->ReadV(prev, size, cargo_vec->Get()->data());
+      //T* buf;
+      //std::uint64_t mapped = fValueColumn->MapV(prev, size, (void **)&buf);
+      //if (mapped < size) {
+        cargo_vec->Get()->resize(size);
+        fValueColumn->ReadV(prev, size, cargo_vec->Get()->data());
+      //} else {
+      //  ROOT::VecOps::RVec<T> vec_mapped(buf, mapped);
+      //  *cargo_vec->Get() = std::move(vec_mapped);
+      //}
     }
   }
 

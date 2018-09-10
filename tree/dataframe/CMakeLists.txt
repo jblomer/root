@@ -31,7 +31,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
                               DEPENDENCIES Tree TreePlayer Hist RIO ROOTVecOps Imt
                               ${TREEPLAYER_DEPENDENCIES})
 if (ARROW_FOUND)
-  target_include_directories(ROOTDataFrame ${ARROW_INCLUDE_DIR})
+  target_include_directories(ROOTDataFrame PRIVATE ${ARROW_INCLUDE_DIR})
   target_link_libraries(ROOTDataFrame PRIVATE ${ARROW_SHARED_LIB})
 endif()
 

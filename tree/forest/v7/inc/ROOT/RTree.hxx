@@ -92,6 +92,8 @@ public:
    void FillV(RTreeEntry **entry, unsigned size);
 
    void Commit();
+
+   RColumnSource *GetSource() { return fSource.get(); }
 }; // RTree
 
 } // namespace Experimental

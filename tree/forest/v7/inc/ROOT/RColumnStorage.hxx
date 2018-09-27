@@ -17,6 +17,7 @@
 #define ROOT7_RColumnStorage
 
 #include <ROOT/RColumnModel.hxx>
+#include <ROOT/RColumnSchema.hxx>
 #include <ROOT/RColumnUtil.hxx>
 #include <ROOT/RStringView.hxx>
 
@@ -179,6 +180,7 @@ public:
    virtual void Attach(std::string_view name) = 0;
 
    virtual const ColumnList_t& ListColumns() = 0;
+   virtual const RColumnSchema& GetColumnSchema() = 0;
    virtual void ListBranches() { /* High-level objects, TODO */ }
    virtual const ClusterList_t& ListClusters() = 0;
 
@@ -215,6 +217,7 @@ class RColumnSourceRaw : public RColumnSource {
    ClusterList_t fClusterList;
 
    // TODO: shall we have an iterator interface over columns?
+   RColumnSchema fColumnSchema;
    ColumnList_t fAllColumns;
    std::map<std::uint64_t, std::uint64_t> fIds;
 
@@ -241,6 +244,7 @@ public:
       return fNentries;
    }
    std::uint64_t GetNElements(RColumn *column) final;
+   const RColumnSchema& GetColumnSchema() final;
    const ColumnList_t& ListColumns() final;
    const ClusterList_t &ListClusters() final;
 

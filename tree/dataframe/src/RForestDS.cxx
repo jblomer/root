@@ -22,6 +22,7 @@
 #include <ROOT/RDFUtils.hxx>
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/TSeq.hxx>
+#include <ROOT/RTree.hxx>
 
 #include <TError.h>
 
@@ -35,13 +36,14 @@ namespace ROOT {
 
 namespace RDF {
 
-RForestDS::RForestDS(ROOT::Experimental::RColumnSource* source)
+RForestDS::RForestDS(ROOT::Experimental::RTree* tree)
    : fNSlots(0)
    , fNentries(0)
    , fHasSeenAllRanges(false)
    , fNColumns(0)
+   , fTree(tree)
 {
-   fSources.push_back(source);
+   fSources.push_back(fTree->GetSource());
    std::cout << "Constructed" << std::endl;
 }
 
@@ -111,7 +113,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RForestDS::GetEntryRanges()
 
 std::string RForestDS::GetTypeName(std::string_view colName) const
 {
-   std::cout << "GetTypeName" << std::endl;
+   std::cout << "GetTypeName " << colName << std::endl;
    for (auto c : fColumnList) {
       if (c.GetName() == colName) {
          return ROOT::Experimental::gColumnTypeNames[static_cast<int>(c.GetType())];
@@ -123,7 +125,7 @@ std::string RForestDS::GetTypeName(std::string_view colName) const
 
 bool RForestDS::HasColumn(std::string_view colName) const
 {
-   std::cout << "HasColumn" << std::endl;
+   std::cout << "HasColumn " << colName << std::endl;
    return std::find(fColumnNames.begin(), fColumnNames.end(), colName) !=
           fColumnNames.end();
 }

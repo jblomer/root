@@ -125,6 +125,7 @@ private:
 
    ClusterList_t fClusterList;
    ColumnList_t fColumnList;
+   RColumnSchema fColumnSchema;
 
 
 public:
@@ -140,6 +141,7 @@ public:
    }
    std::uint64_t GetNElements(RColumn *column) final;
    const ColumnList_t& ListColumns() final;
+   virtual const RColumnSchema& GetColumnSchema() final;
    const ClusterList_t &ListClusters() final;
 
    std::unique_ptr<RColumnSource> Clone() final;

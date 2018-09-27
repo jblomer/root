@@ -28,6 +28,7 @@ namespace ROOT {
 namespace Experimental {
 class RColumn;
 class RColumnElementBase;
+class RTree;
 }
 
 namespace RDF {
@@ -38,6 +39,7 @@ private:
    std::uint64_t fNentries;
    bool fHasSeenAllRanges;  // TODO Remove me
    unsigned fNColumns;
+   ROOT::Experimental::RTree* fTree;
    std::vector<ROOT::Experimental::RColumnSource*> fSources;
    std::vector<std::unique_ptr<ROOT::Experimental::RColumnSource>> fSourceClones;
    ROOT::Experimental::RColumnSource::ClusterList_t fClusterList;
@@ -49,7 +51,7 @@ private:
    std::vector<std::vector<std::unique_ptr<ROOT::Experimental::RColumnElementBase>>> fColumnElements;
 
 public:
-   RForestDS(ROOT::Experimental::RColumnSource* source);
+   RForestDS(ROOT::Experimental::RTree* tree);
    ~RForestDS();
    void SetNSlots(unsigned int nSlots) final;
    const std::vector<std::string> &GetColumnNames() const final;

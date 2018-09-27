@@ -255,6 +255,13 @@ std::uint64_t ROOT::Experimental::RColumnSourceFile::GetNElements(ROOT::Experime
 }
 
 
+const ROOT::Experimental::RColumnSchema& ROOT::Experimental::RColumnSourceFile::GetColumnSchema()
+{
+   // TODO
+   return fColumnSchema;
+}
+
+
 const ROOT::Experimental::RColumnSource::ColumnList_t& ROOT::Experimental::RColumnSourceFile::ListColumns()
 {
    // TODO

@@ -32,7 +32,7 @@
 #include <sstream>
 #include <utility>
 
-#define DEBUGON 1
+#define DEBUGON 0
 #define DEBUGMSG(x) if (DEBUGON) { x }
 
 
@@ -426,6 +426,8 @@ void ROOT::Experimental::RColumnSourceRaw::Attach(std::string_view /*name*/)
       fColumnElementSizes[id] = element_size;
       fColumnCompressionSettings[id] = compressionSettings;
 
+      fColumnSchema.Insert(RColumnModel(name, "TODO", type, false /*todo*/));
+
       fAllColumns.emplace_back(RColumnModel(name, "TODO", type, false /*todo*/));
       fIds[i] = id;
    }
@@ -521,6 +523,12 @@ std::unique_ptr<ROOT::Experimental::RColumnSource> ROOT::Experimental::RColumnSo
 const ROOT::Experimental::RColumnSource::ColumnList_t& ROOT::Experimental::RColumnSourceRaw::ListColumns()
 {
    return fAllColumns;
+}
+
+
+const ROOT::Experimental::RColumnSchema& ROOT::Experimental::RColumnSourceRaw::GetColumnSchema()
+{
+   return fColumnSchema;
 }
 
 

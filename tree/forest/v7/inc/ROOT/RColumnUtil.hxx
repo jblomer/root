@@ -16,6 +16,9 @@
 #ifndef ROOT7_RColumnUtil
 #define ROOT7_RColumnUtil
 
+#include <string>
+#include <vector>
+
 #include <cassert>
 #include <cstdint>
 
@@ -57,6 +60,11 @@ EColumnType MakeColumnType<OffsetColumn_t>();
 
 template <>
 EColumnType MakeColumnType<std::int32_t>();
+
+std::vector<std::string> SplitString(
+   const std::string &str,
+   const char delim,
+   const unsigned max_chunks = 0);
 
 } // namespace Experimental
 } // namespace ROOT

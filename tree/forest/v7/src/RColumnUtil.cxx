@@ -39,3 +39,37 @@ ROOT::Experimental::EColumnType ROOT::Experimental::MakeColumnType<std::int32_t>
    return ROOT::Experimental::EColumnType::kInt32;
 }
 
+
+std::vector<std::string> ROOT::Experimental::SplitString(
+   const std::string &str,
+   const char delim,
+   const unsigned max_chunks)
+{
+  std::vector<std::string> result;
+
+  // edge case... one chunk is always the whole string
+  if (1 == max_chunks) {
+    result.push_back(str);
+    return result;
+  }
+
+  // split the string
+  const unsigned size = str.size();
+  unsigned marker = 0;
+  unsigned chunks = 1;
+  unsigned i;
+  for (i = 0; i < size; ++i) {
+    if (str[i] == delim) {
+      result.push_back(str.substr(marker, i - marker));
+      marker = i + 1;
+
+      // we got what we want... good bye
+      if (++chunks == max_chunks) break;
+    }
+  }
+
+  // push the remainings of the string and return
+  result.push_back(str.substr(marker));
+  return result;
+}
+

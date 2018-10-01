@@ -108,7 +108,7 @@ public:
      if ((num < fCurrentSliceStart) || (num > fCurrentSliceEnd)) {
        //std::cout << "Mapping slice [" << fCurrentSliceStart << "-"
        //          << fCurrentSliceEnd << "] for element " << num
-       //          << std::endl;
+       //          << "  (" << fModel.GetName() << ")" << std::endl;
        MapSlice(num);
      }
      void *buf = reinterpret_cast<unsigned char *>(fCurrentSlice->GetBuffer())

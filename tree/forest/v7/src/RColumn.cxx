@@ -57,6 +57,7 @@ void ROOT::Experimental::RColumn::ShipHeadSlice()
 
 void ROOT::Experimental::RColumn::MapSlice(std::uint64_t num)
 {
+   //std::cout << "HERE MAPSLICE" << std::endl;
    fSource->OnMapSlice(this, num, fCurrentSlice.get());
    fCurrentSliceStart = fCurrentSlice->GetRangeStart();
    fCurrentSliceEnd = fCurrentSlice->GetRangeStart() +

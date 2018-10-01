@@ -93,7 +93,8 @@ public:
 
    void Commit();
 
-   RColumnSource *GetSource() { return fSource.get(); }
+   RColumnSource* GetSource() { return fSource.get(); }
+   RTreeModel* GetModel() { return fModel.get(); }
 }; // RTree
 
 } // namespace Experimental

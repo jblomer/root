@@ -36,6 +36,7 @@ class RBranchBase;
  * C++ values that are supposed to be serialized on Fill or that just
  * have been deserialized for reading.
  */
+// TODO: this class should manage a vector of things
 class RCargoBase {
   friend class RBranchBase;
   friend class RCargoSubtree;
@@ -44,16 +45,19 @@ protected:
   RBranchBase* fBranch;
   RColumnElementBase *fPrincipalElement;
   bool fIsSimple;
+  void *fRawPtr;
 
   RCargoBase(RBranchBase *branch)
     : fBranch(branch)
     , fIsSimple(false)
+    , fRawPtr(nullptr)
   { }
 
 public:
    virtual ~RCargoBase() { }
 
    RBranchBase* GetBranch() { return fBranch; }
+   void** GetRawPtrPtr() { return &fRawPtr; }
 };
 
 using CargoCollection = std::vector<std::shared_ptr<RCargoBase>>;
@@ -70,6 +74,7 @@ public:
    RCargo(RBranchBase *branch, ArgsT&&... args) : RCargoBase(branch) {
      fValue = std::make_shared<T>(std::forward<ArgsT>(args)...);
      Init();
+     fRawPtr = fValue.get();
    }
 
    std::shared_ptr<T> Get() { return fValue; }
@@ -88,6 +93,7 @@ public:
      , fValue(value)
    {
      Init();
+     fRawPtr = fValue;
    }
 
    T *Get() { return fValue; }
@@ -127,6 +133,7 @@ public:
    RCargo(RBranchBase *branch, ArgsT&&... args) : RCargoBase(branch) {
      fValue = std::make_shared<std::vector<T>>(std::forward<ArgsT>(args)...);
      fOffset = 0;
+     fRawPtr = fValue.get();
    }
 
    std::shared_ptr<std::vector<T>> Get() { return fValue; }
@@ -144,6 +151,7 @@ public:
    RCargo(RBranchBase *branch, ArgsT&&... args) : RCargoBase(branch) {
      fValue = std::make_shared<ROOT::VecOps::RVec<T>>(std::forward<ArgsT>(args)...);
      fOffset = 0;
+     fRawPtr = fValue.get();
    }
 
    std::shared_ptr<ROOT::VecOps::RVec<T>> Get() { return fValue; }

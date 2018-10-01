@@ -96,6 +96,8 @@ public:
 
    // Remove me
    RTreeEntry* GetDefaultEntry() { return &fDefaultEntry; }
+
+   RBranch<RBranchCollectionTag>& GetRootBranch() { return fRootBranch; }
 };
 
 } // namespace Exerimental

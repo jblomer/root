@@ -44,12 +44,14 @@ protected:
    std::vector<RBranchBase *> fChildren; /* TODO unique_ptr */
    std::string fDescription;
    std::string fName;
+   std::string fType;
    bool fIsSimple;
    RColumn *fPrincipalColumn;
 
-   explicit RBranchBase(std::string_view name)
+   explicit RBranchBase(std::string_view name, std::string type)
      : fParent(nullptr)
      , fName(name)
+     , fType(type)
      , fIsSimple(false)
      , fPrincipalColumn(nullptr)
    { }
@@ -98,6 +100,7 @@ public:
   SETUP_ITERATORS(RBranchBase, RBranchBase*, IteratorState);
 
   std::string GetName() { return fName; }
+  std::string GetType() { return fType; }
   void PrependName(std::string_view parent) {
     fName = std::string(parent) + "/" + fName;
   }
@@ -111,6 +114,7 @@ public:
 
   virtual RColumn* GenerateColumns(RColumnSource *source, RColumnSink *sink)
     = 0;
+   virtual RCargoBase* GenerateCargo() = 0;
 
   void Append(RCargoBase *__restrict__ cargo) {
     if (!fIsSimple) {
@@ -163,10 +167,10 @@ class RBranch : public RBranchBase {
 template <>
 class RBranch<RBranchCollectionTag> : public RBranchBase {
 public:
-  RBranch() : RBranchBase("") {
+  RBranch() : RBranchBase("", gColumnTypeNames[int(EColumnType::kOffset)]) {
     fIsSimple = true;
   }
-  explicit RBranch(std::string_view name) : RBranchBase(name) {
+  explicit RBranch(std::string_view name) : RBranchBase(name, gColumnTypeNames[int(EColumnType::kOffset)]) {
     fIsSimple = true;
   }
 
@@ -178,6 +182,8 @@ public:
       source, sink);
     return fPrincipalColumn;
   }
+
+  RCargoBase* GenerateCargo() final { assert(false); return nullptr; }
 
   bool IsRoot() { return fName.empty(); }
   void MakeSubBranch(std::string_view name) { fName = std::string(name); }
@@ -195,7 +201,7 @@ private:
 
 public:
   RBranch()
-    : RBranchBase("")
+    : RBranchBase("", "std::vector<" + gColumnTypeNames[MakeColumnType<T>()] + ">")
     , fValueColumn(nullptr)
     , fIndex(0)
     , fValue()
@@ -205,7 +211,7 @@ public:
     fIsSimple = false;
   }
   explicit RBranch(std::string_view name)
-    : RBranchBase(name)
+    : RBranchBase(name, "std::vector<" + gColumnTypeNames[MakeColumnType<T>()] + ">")
     , fValueColumn(nullptr)
     , fIndex(0)
     , fValue()
@@ -215,6 +221,8 @@ public:
     //std::cout << "NAME " << fParentName << "/" << fChildName << std::endl;
     fIsSimple = false;
   }
+
+  RCargoBase* GenerateCargo() final { return new RCargo<std::vector<T>>(this); }
 
   virtual RColumn* GenerateColumns(RColumnSource *source, RColumnSink *sink)
     override
@@ -289,7 +297,7 @@ private:
 
 public:
   RBranch()
-    : RBranchBase("")
+    : RBranchBase("", "ROOT::VecOps::RVec<" + gColumnTypeNames[MakeColumnType<T>()] + ">")
     , fValueColumn(nullptr)
     , fIndex(0)
     , fValue()
@@ -299,7 +307,7 @@ public:
     fIsSimple = false;
   }
   explicit RBranch(std::string_view name)
-    : RBranchBase(name)
+    : RBranchBase(name, std::string("ROOT::VecOps::RVec<") + gColumnTypeNames[int(MakeColumnType<T>())] + ">")
     , fValueColumn(nullptr)
     , fIndex(0)
     , fValue()
@@ -309,6 +317,8 @@ public:
     //std::cout << "NAME " << fParentName << "/" << fChildName << std::endl;
     fIsSimple = false;
   }
+
+  RCargoBase* GenerateCargo() final { return new RCargo<ROOT::VecOps::RVec<T>>(this); }
 
   virtual RColumn* GenerateColumns(RColumnSource *source, RColumnSink *sink)
     override
@@ -382,7 +392,7 @@ public:
 template <>
 class RBranch<float> : public RBranchBase {
 public:
-  explicit RBranch(std::string_view name) : RBranchBase(name) {
+  explicit RBranch(std::string_view name) : RBranchBase(name, "float") {
     fIsSimple = true;
   }
 
@@ -394,12 +404,14 @@ public:
       source, sink);
     return fPrincipalColumn;
   }
+
+  RCargoBase* GenerateCargo() final { return new RCargo<float>(this); }
 };
 
 template <>
 class RBranch<double> : public RBranchBase {
 public:
-  explicit RBranch(std::string_view name) : RBranchBase(name) {
+  explicit RBranch(std::string_view name) : RBranchBase(name, "double") {
     fIsSimple = true;
   }
 
@@ -411,12 +423,14 @@ public:
       source, sink);
     return fPrincipalColumn;
   }
+
+  RCargoBase* GenerateCargo() final { return new RCargo<double>(this); }
 };
 
 template <>
 class RBranch<std::int32_t> : public RBranchBase {
 public:
-  explicit RBranch(std::string_view name) : RBranchBase(name) {
+  explicit RBranch(std::string_view name) : RBranchBase(name, "std::int32_t") {
     fIsSimple = true;
   }
 
@@ -428,12 +442,14 @@ public:
       source, sink);
     return fPrincipalColumn;
   }
+
+  RCargoBase* GenerateCargo() final { return new RCargo<std::int32_t>(this); }
 };
 
 template <>
 class RBranch<OffsetColumn_t> : public RBranchBase {
 public:
-  explicit RBranch(std::string_view name) : RBranchBase(name) {
+  explicit RBranch(std::string_view name) : RBranchBase(name, "ROOT::Experimental::OffsetColumn_t") {
     fIsSimple = true;
   }
 
@@ -445,6 +461,8 @@ public:
       source, sink);
     return fPrincipalColumn;
   }
+
+  RCargoBase* GenerateCargo() final { return new RCargo<OffsetColumn_t>(this); }
 };
 
 } // namespace Experimental

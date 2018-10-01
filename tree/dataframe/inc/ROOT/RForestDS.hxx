@@ -26,6 +26,8 @@
 namespace ROOT {
 
 namespace Experimental {
+class RBranchBase;
+class RCargoBase;
 class RColumn;
 class RColumnElementBase;
 class RTree;
@@ -39,12 +41,16 @@ private:
    std::uint64_t fNentries;
    bool fHasSeenAllRanges;  // TODO Remove me
    unsigned fNColumns;
-   ROOT::Experimental::RTree* fTree;
+   std::vector<ROOT::Experimental::RTree*> fTrees;
+
    std::vector<ROOT::Experimental::RColumnSource*> fSources;
    std::vector<std::unique_ptr<ROOT::Experimental::RColumnSource>> fSourceClones;
    ROOT::Experimental::RColumnSource::ClusterList_t fClusterList;
    ROOT::Experimental::RColumnSource::ColumnList_t fColumnList;
    std::vector<std::string> fColumnNames;
+   std::vector<std::string> fTypeNames;
+   std::vector<ROOT::Experimental::RCargoBase*> fCargos;
+   std::vector<ROOT::Experimental::RBranchBase*> fBranches;
 
    // Per-slot column collections
    std::vector<std::vector<std::unique_ptr<ROOT::Experimental::RColumn>>> fColumns;
@@ -59,12 +65,7 @@ public:
    std::string GetTypeName(std::string_view colName) const final;
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() final;
 
-   bool SetEntry(unsigned int slot, ULong64_t entry) final {
-      for (unsigned i = 0; i < fNColumns; ++i) {
-         fColumns[slot][i]->Map(entry, fColumnElements[slot][i].get());
-      }
-      return true;
-   }
+   bool SetEntry(unsigned int slot, ULong64_t entry) final;
 
    void Initialise() final;
 

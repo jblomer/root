@@ -304,6 +304,7 @@ void ROOT::Experimental::RColumnSourceRaw::OnMapSlice(
    std::uint64_t num,
    RColumnSlice *slice)
 {
+   //std::cout << "HERE ONMAPSLICE" << std::endl;
    auto iter = fLiveColumns.find(column);
    if (iter == fLiveColumns.end()) throw "not found";
    std::uint32_t column_id = iter->second;

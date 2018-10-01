@@ -57,9 +57,14 @@ ROOT::Experimental::RTree::RTree(
   : fSource(std::move(source))
   , fModel(model)
 {
-  fModel->Freeze();
   std::cout << "CREATING TREE FOR READING" << std::endl;
+  fModel->Freeze();
   fSource->Attach("Forest" /* TODO */);
+  for (auto branch : fModel->fRootBranch) {
+    // Todo: column parent-children relationship
+    branch->GenerateColumns(fSource.get(), nullptr);
+    std::cout << "Registering " << branch->GetName() << std::endl;
+  }
   fNentries = fSource->GetNentries();
 }
 

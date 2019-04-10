@@ -19,11 +19,255 @@
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPagePool.hxx>
 
+#include <Byteswap.h>
 #include <TKey.h>
 
 #include <cstdlib>
 #include <iostream>
 #include <utility>
+
+namespace {
+
+// Helper classes to read and write the RForest descriptor and the TFile and TKey headers
+
+class RUInt16BE {
+private:
+   std::uint16_t fValBE = 0;
+public:
+   operator std::uint16_t() const { return Rbswap_16(fValBE); }
+   RUInt16BE& operator =(const std::uint16_t val) {
+      fValBE = Rbswap_16(val);
+      return *this;
+   }
+};
+
+class RUInt32BE {
+private:
+   std::uint32_t fValBE = 0;
+public:
+   RUInt32BE() = default;
+   explicit RUInt32BE(const std::uint32_t val) : fValBE(Rbswap_32(val)) {}
+   operator std::uint32_t() const { return Rbswap_32(fValBE); }
+   RUInt32BE& operator =(const std::uint32_t val) {
+      fValBE = Rbswap_32(val);
+      return *this;
+   }
+};
+
+class RInt32BE {
+private:
+   std::int32_t fValBE = 0;
+public:
+   operator std::int32_t() const { return Rbswap_32(fValBE); }
+   RInt32BE& operator =(const std::int32_t val) {
+      fValBE = Rbswap_32(val);
+      return *this;
+   }
+};
+
+class RUInt64BE {
+private:
+   std::uint64_t fValBE = 0;
+public:
+   RUInt64BE() = default;
+   explicit RUInt64BE(const std::uint64_t val) : fValBE(Rbswap_64(val)) {}
+   operator std::uint64_t() const { return Rbswap_64(fValBE); }
+   RUInt64BE& operator =(const std::uint64_t val) {
+      fValBE = Rbswap_64(val);
+      return *this;
+   }
+};
+
+#pragma pack(push, 1)
+class RFileHeader {
+private:
+   char fMagic[4];
+   RUInt32BE fVersion;
+   RUInt32BE fBEGIN;
+   union {
+      struct {
+         RUInt32BE fEND;
+         RUInt32BE fSeekFree;
+         RUInt32BE fNbytesFree;
+         RUInt32BE fNfree;
+         RUInt32BE fNbytesName;
+         unsigned char fUnits;
+         RUInt32BE fCompress;
+         RUInt32BE fSeekInfo;
+         RUInt32BE fNbytesInfo;
+      } fInfoShort;
+      struct {
+         RUInt64BE fEND;
+         RUInt64BE fSeekFree;
+         RUInt32BE fNbytesFree;
+         RUInt32BE fNfree;
+         RUInt32BE fNbytesName;
+         unsigned char fUnits;
+         RUInt32BE fCompress;
+         RUInt64BE fSeekInfo;
+         RUInt32BE fNbytesInfo;
+      } fInfoLong;
+   };
+
+public:
+   RFileHeader() : fInfoLong() {}
+
+   std::uint64_t GetEnd() const {
+      if (fVersion >= 1000000) return fInfoLong.fEND;
+      return fInfoShort.fEND;
+   }
+
+   void SetEnd(std::uint64_t value) {
+      if ((value > (std::uint64_t(1) << 31)) || (fVersion >= 1000000)) {
+         if (fVersion < 1000000)
+            fVersion = fVersion + 1000000;
+         fInfoLong.fEND = value;
+      } else {
+         fInfoShort.fEND = value;
+      }
+   }
+};
+
+class RKeyHeader {
+private:
+   RInt32BE fNbytes;
+   RUInt16BE fVersion;
+   RUInt32BE fObjLen;
+   RUInt32BE fDatetime;
+   RUInt16BE fKeyLen;
+   RUInt16BE fCycle;
+   union {
+      struct {
+         RUInt32BE fSeekKey;
+         RUInt32BE fSeekPdir;
+         char fNameBuffer[771];
+      } fInfoShort;
+      struct {
+         RUInt64BE fSeekKey;
+         RUInt64BE fSeekPdir;
+         char fNameBuffer[771];
+      } fInfoLong;
+   };
+
+public:
+   RKeyHeader() : fInfoLong() {}
+
+   std::string GetClass() const {
+      unsigned char lname = fInfoShort.fNameBuffer[0];
+      return std::string(&fInfoShort.fNameBuffer[1], lname);
+   }
+
+   std::string GetName() const {
+      unsigned int offset = 1 + fInfoShort.fNameBuffer[0];
+      unsigned char lname = fInfoShort.fNameBuffer[offset];
+      return std::string(&fInfoShort.fNameBuffer[1 + offset], lname);
+   }
+
+   std::string GetTitle() const {
+      unsigned int offset = 1 + fInfoShort.fNameBuffer[0];
+      offset += fInfoShort.fNameBuffer[offset] + 1;
+      unsigned char lname = fInfoShort.fNameBuffer[offset];
+      return std::string(&fInfoShort.fNameBuffer[1 + offset], lname);
+   }
+
+   std::uint64_t GetOffsetSelf() const {
+      return (fInfoShort.fSeekKey == 0) ? fInfoShort.fSeekPdir : fInfoShort.fSeekKey;
+   }
+
+   std::uint64_t GetOffsetDir() const {
+      return (fInfoShort.fSeekKey == 0) ? 0 : fInfoShort.fSeekPdir;
+   }
+
+   std::uint32_t GetSize() const { return (fNbytes < 0) ? -fNbytes : fNbytes; }
+};
+
+class RFreeEntry {
+private:
+   RUInt16BE fVersion;
+   union {
+      struct {
+         RUInt32BE fFirst;
+         RUInt32BE fLast;
+      } fInfoShort;
+      struct {
+         RUInt64BE fFirst;
+         RUInt64BE fLast;
+      } fInfoLong;
+   };
+
+public:
+   RFreeEntry() : fInfoLong() {}
+   std::uint64_t GetFirst() const { return (fVersion > 1000) ? fInfoLong.fFirst : fInfoShort.fFirst; }
+   std::uint32_t GetSize() const {
+      return sizeof(fVersion) + ((fVersion > 1000) ? sizeof(fInfoLong) : sizeof(fInfoShort));
+   }
+};
+
+struct RVersionHeader {
+   RUInt32BE fVersionUse;
+   RUInt32BE fVersionMin;
+   RUInt64BE fFlags;
+};
+
+struct RStringHeader {
+   RUInt32BE fLength;
+};
+
+struct RForestHeader {
+   RVersionHeader fVersion;
+   RStringHeader fName;
+   RUInt32BE fNFields;
+   RUInt32BE fNColumns;
+   RUInt32BE fNClusters;
+};
+
+struct RForestFooter {
+   RUInt32BE fNClusters;
+   // Followed by the index to the cluster footer for each cluster
+};
+
+struct RFieldHeader {
+   RUInt64BE fFieldId;
+   RVersionHeader fFieldVersion;
+   RVersionHeader fTypeVersion;
+   RStringHeader fFieldName;
+   RStringHeader fTypeName;
+   RUInt64BE fParentId;
+   RUInt32BE fNLinks;
+   RUInt16BE fStructure;
+};
+
+struct RColumnHeader {
+   RUInt64BE fColumnId;
+   RVersionHeader fVersion;
+   RUInt64BE fFieldId;
+   RUInt64BE fOffsetColumnId;
+   RUInt32BE fNLinks;
+   RUInt16BE fColumnType;
+   char fIsSorted = 0;
+};
+
+struct RClusterHeader {
+   RUInt64BE fClusterId;
+   RVersionHeader fVersion;
+   RUInt64BE fFirstEntryIndex;
+   // Followed by RForestHeader.fNColumns RUInt64BE indicating the first element index of the corresponding column
+};
+
+struct RClusterFooter {
+   RUInt32BE fNEntries;
+   RUInt32BE fNPages;
+   // Followed by fNPages RPageFooter entries
+};
+
+struct RPageFooter {
+   RUInt64BE fColumnId;
+   RUInt32BE fPageNum;
+   RUInt32BE fNElements;
+};
+#pragma pack(pop)
+
+} // anonymous namespace
 
 
 ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view forestName, RSettings settings)
@@ -40,6 +284,7 @@ ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view forest
    , fForestName(forestName)
    , fDirectory(nullptr)
 {
+   fSettings.fFileBin = TFile::Open((path.to_string() + "bin").c_str(), "RECREATE");
    TFile *file = TFile::Open(path.to_string().c_str(), "RECREATE");
    file->SetCompressionSettings(0);
    fSettings.fFile = file;
@@ -50,7 +295,9 @@ ROOT::Experimental::Detail::RPageSinkRoot::~RPageSinkRoot()
 {
    if (fSettings.fTakeOwnership) {
       fSettings.fFile->Close();
+      fSettings.fFileBin->Close();
       delete fSettings.fFile;
+      delete fSettings.fFileBin;
    }
 }
 

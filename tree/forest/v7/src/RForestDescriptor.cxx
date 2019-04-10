@@ -47,17 +47,17 @@ void ROOT::Experimental::RForestDescriptorBuilder::AddFieldLink(DescriptorId_t f
 }
 
 void ROOT::Experimental::RForestDescriptorBuilder::AddColumn(
-   DescriptorId_t columnId, DescriptorId_t fieldId, const RForestVersion &version, const RColumnModel &model)
+   DescriptorId_t columnId, DescriptorId_t originFieldId, const RForestVersion &version, const RColumnModel &model)
 {
    RColumnDescriptor c;
    c.fColumnId = columnId;
-   c.fFieldId = fieldId;
+   c.fOriginFieldId = originFieldId;
    c.fVersion = version;
    c.fModel = model;
    fDescriptor.fColumnDescriptors[columnId] = c;
 }
 
-void ROOT::Experimental::RForestDescriptorBuilder::SetColumnOffset(DescriptorId_t columnId, DescriptorId_t offsetId)
+void ROOT::Experimental::RForestDescriptorBuilder::SetColumnOffsetId(DescriptorId_t columnId, DescriptorId_t offsetId)
 {
    fDescriptor.fColumnDescriptors[columnId].fOffsetId = offsetId;
 }

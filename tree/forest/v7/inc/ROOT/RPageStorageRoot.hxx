@@ -132,6 +132,7 @@ class RPageSinkRoot : public RPageSink {
 public:
    struct RSettings {
       TFile *fFile = nullptr;
+      TFile *fFileBin = nullptr;
       bool fTakeOwnership = false;
    };
 

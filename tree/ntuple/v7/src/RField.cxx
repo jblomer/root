@@ -394,7 +394,7 @@ void ROOT::Experimental::RField<std::int32_t>::GenerateColumnsImpl()
 
 void ROOT::Experimental::RField<std::int32_t>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
-   visitor.VisitIntField(*this);
+   visitor.VisitInt32Field(*this);
 }
 
 //------------------------------------------------------------------------------

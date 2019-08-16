@@ -26,6 +26,8 @@
 #include <string>
 #include <vector>
 
+#include "ROOT/RField.hxx"
+
 namespace ROOT {
 namespace Experimental {
 namespace Detail {
@@ -52,6 +54,7 @@ public:
    virtual void VisitDoubleField(const RField<double> &field) { VisitField(field); }
    virtual void VisitFloatField(const RField<float> &field) { VisitField(field); }
    virtual void VisitIntField(const RField<int> &field) { VisitField(field); }
+   virtual void VisitInt32Field(const RField<std::int32_t> &field) { VisitField(field); }
    virtual void VisitStringField(const RField<std::string> &field) { VisitField(field); }
    virtual void VisitUInt32Field(const RField<std::uint32_t> &field) { VisitField(field); }
    virtual void VisitUInt64Field(const RField<std::uint64_t> &field) { VisitField(field); }

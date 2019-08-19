@@ -13,6 +13,14 @@ if(NOT root7)
   return()
 endif()
 
+if (WIN32)
+  set(rawfile_local_headers ROOT/RRawFileWin.hxx)
+  set(rawfile_local_sources v7/src/RRawFileWin.cxx)
+else ()
+  set(rawfile_local_headers ROOT/RRawFileUnix.hxx)
+  set(rawfile_local_sources v7/src/RRawFileUnix.cxx)
+endif ()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTNTuple
 HEADERS
   ROOT/RColumn.hxx
@@ -32,6 +40,8 @@ HEADERS
   ROOT/RPagePool.hxx
   ROOT/RPageStorage.hxx
   ROOT/RPageStorageRoot.hxx
+  ROOT/RRawFile.hxx
+  ${rawfile_local_headers}
 SOURCES
   v7/src/RColumn.cxx
   v7/src/RColumnElement.cxx
@@ -46,6 +56,8 @@ SOURCES
   v7/src/RPagePool.cxx
   v7/src/RPageStorage.cxx
   v7/src/RPageStorageRoot.cxx
+  v7/src/RRawFile.cxx
+  ${rawfile_local_sources}
 LINKDEF
   LinkDef.h
 DEPENDENCIES

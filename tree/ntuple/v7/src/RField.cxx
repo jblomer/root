@@ -348,6 +348,16 @@ void ROOT::Experimental::RField<double>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
+//------------------------------------------------------------------------------
+
+void ROOT::Experimental::RField<std::uint8_t>::DoGenerateColumns()
+{
+   RColumnModel model(EColumnType::kByte, false /* isSorted*/);
+   fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(Detail::RColumn::Create<
+      std::uint8_t, EColumnType::kByte>(model, 0)));
+   fPrincipalColumn = fColumns[0].get();
+}
+
 
 //------------------------------------------------------------------------------
 

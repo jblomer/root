@@ -717,6 +717,7 @@ TEST(RNTuple, RDF)
    EXPECT_EQ(42.0, *rdf.Min("pt"));
 }
 
+constexpr unsigned int RNTupleDescriptor::kNBytesPostscript;
 
 TEST(RNTuple, Descriptor)
 {

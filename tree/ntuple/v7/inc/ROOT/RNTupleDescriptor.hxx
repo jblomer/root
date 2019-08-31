@@ -220,8 +220,8 @@ public:
    NTupleSize_t GetFirstEntryIndex() const { return fFirstEntryIndex; }
    ClusterSize_t GetNEntries() const { return fNEntries; }
    RLocator GetLocator() const { return fLocator; }
-   RColumnRange GetColumnRange(DescriptorId_t columnId) const { return fColumnRanges.at(columnId); }
-   RPageRange GetPageRange(DescriptorId_t columnId) const { return fPageRanges.at(columnId); }
+   const RColumnRange &GetColumnRange(DescriptorId_t columnId) const { return fColumnRanges.at(columnId); }
+   const RPageRange &GetPageRange(DescriptorId_t columnId) const { return fPageRanges.at(columnId); }
 };
 
 

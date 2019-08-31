@@ -685,7 +685,7 @@ ROOT::Experimental::RNTupleDescriptor::FindClusterId(DescriptorId_t columnId, NT
 {
    // TODO(jblomer): binary search?
    for (const auto &cd : fClusterDescriptors) {
-      auto columnRange = cd.second.GetColumnRange(columnId);
+      const auto &columnRange = cd.second.GetColumnRange(columnId);
       if (columnRange.Contains(index))
          return cd.second.GetId();
    }

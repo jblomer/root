@@ -247,7 +247,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
    fCtrNPages->Inc();
    auto columnId = columnHandle.fId;
    auto clusterId = clusterDescriptor.GetId();
-   auto pageRange = clusterDescriptor.GetPageRange(columnId);
+   const auto &pageRange = clusterDescriptor.GetPageRange(columnId);
 
    // TODO(jblomer): binary search
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
@@ -317,9 +317,20 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
    if (!cachedPage.IsNull())
       return cachedPage;
 
+   if (fLastCluster) {
+      const auto &columnRange = fLastCluster->GetColumnRange(columnId);
+      if (columnRange.Contains(globalIndex)) {
+         //std::cout << "REUSE/CGLOBA: " << fLastCluster->GetId() << std::endl;
+         auto selfOffset = columnRange.fFirstElementIndex;
+         R__ASSERT(selfOffset <= globalIndex);
+         return PopulatePageFromCluster(columnHandle, *fLastCluster, globalIndex - selfOffset);
+      }
+   }
    auto clusterId = fDescriptor.FindClusterId(columnId, globalIndex);
    R__ASSERT(clusterId != kInvalidDescriptorId);
-   auto clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
+   const auto &clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
+   fLastCluster = &clusterDescriptor;
+   //std::cout << "SET CLUSUTER/GLOBAL TO " << fLastCluster->GetId() << std::endl;
    auto selfOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
    R__ASSERT(selfOffset <= globalIndex);
    return PopulatePageFromCluster(columnHandle, clusterDescriptor, globalIndex - selfOffset);
@@ -337,7 +348,15 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
       return cachedPage;
 
    R__ASSERT(clusterId != kInvalidDescriptorId);
-   auto clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
+   if (fLastCluster) {
+      if (fLastCluster->GetId() == clusterId) {
+      //   std::cout << "REUSE/CLUSTER: " << fLastCluster->GetId() << std::endl;
+         return PopulatePageFromCluster(columnHandle, *fLastCluster, index);
+      }
+   }
+   const auto &clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
+   fLastCluster = &clusterDescriptor;
+   //std::cout << "SET CLUSUTER/CLUSTER TO " << fLastCluster->GetId() << std::endl;
    return PopulatePageFromCluster(columnHandle, clusterDescriptor, index);
 }
 

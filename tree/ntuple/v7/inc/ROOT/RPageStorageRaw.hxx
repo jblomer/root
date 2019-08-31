@@ -104,6 +104,8 @@ private:
    std::unique_ptr<std::array<unsigned char, kMaxPageSize>> fUnzipBuffer;
    std::unique_ptr<RRawFile> fFile;
 
+   const RClusterDescriptor *fLastCluster = nullptr;
+
    RNTupleMetrics fMetrics;
    Detail::RNTuplePlainCounter *fCtrNRead = nullptr;
    Detail::RNTuplePlainCounter *fCtrSzRead = nullptr;

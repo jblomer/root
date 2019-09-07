@@ -665,8 +665,7 @@ ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName, D
 
 ROOT::Experimental::DescriptorId_t ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName) const
 {
-   auto rootId = FindFieldId("", kInvalidDescriptorId);
-   return FindFieldId(fieldName, rootId);
+   return FindFieldId(fieldName, FindRootFieldId());
 }
 
 
@@ -711,7 +710,7 @@ ROOT::Experimental::RNTupleDescriptor::FindNextClusterId(DescriptorId_t clusterI
 std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDescriptor::GenerateModel() const
 {
    auto model = std::make_unique<RNTupleModel>();
-   auto rootId = FindFieldId("", kInvalidDescriptorId);
+   auto rootId = FindRootFieldId();
    const auto &rootDesc = GetFieldDescriptor(rootId);
    for (const auto id : rootDesc.GetLinkIds()) {
       const auto &topDesc = GetFieldDescriptor(id);

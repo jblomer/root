@@ -18,6 +18,9 @@
 
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDataSource.hxx>
+#include <ROOT/RField.hxx>
+#include <ROOT/RFieldValue.hxx>
+#include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <cstdint>
@@ -33,18 +36,23 @@ class REntry;
 
 
 class RNTupleDS final : public ROOT::RDF::RDataSource {
-   /// Clones of the first reader, one for each slot
-   std::vector<std::unique_ptr<ROOT::Experimental::RNTupleReader>> fReaders;
-   std::vector<std::unique_ptr<ROOT::Experimental::REntry>> fEntries;
-   /// The raw pointers wrapped by the RValue items of fEntries
-   std::vector<std::vector<void*>> fValuePtrs;
-   unsigned fNSlots = 0;
-   bool fHasSeenAllRanges = false;
+   /// Clones of the first source, one for each slot
+   std::vector<std::unique_ptr<ROOT::Experimental::Detail::RPageSource>> fSources;
+
+   std::vector<std::vector<std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>>> fFields;
+   std::vector<std::vector<Detail::RFieldValue>> fValues;
+   std::vector<std::vector<void *>> fValuePtrs;
+
    std::vector<std::string> fColumnNames;
    std::vector<std::string> fColumnTypes;
+   std::vector<DescriptorId_t> fColumnFieldIds;
+   std::vector<size_t> fActiveColumns;
+
+   unsigned int fNSlots = 0;
+   bool fHasSeenAllRanges = false;
 
 public:
-   explicit RNTupleDS(std::unique_ptr<ROOT::Experimental::RNTupleReader> ntuple);
+   explicit RNTupleDS(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource);
    ~RNTupleDS() = default;
    void SetNSlots(unsigned int nSlots) final;
    const std::vector<std::string> &GetColumnNames() const final;

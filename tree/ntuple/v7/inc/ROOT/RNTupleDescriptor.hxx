@@ -353,6 +353,7 @@ public:
    DescriptorId_t FindFieldId(std::string_view fieldName, DescriptorId_t parentId) const;
    /// Searches for a top-level field
    DescriptorId_t FindFieldId(std::string_view fieldName) const;
+   DescriptorId_t FindRootFieldId() const { return FindFieldId("", kInvalidDescriptorId); }
    DescriptorId_t FindColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex) const;
    DescriptorId_t FindClusterId(DescriptorId_t columnId, NTupleSize_t index) const;
    DescriptorId_t FindNextClusterId(DescriptorId_t clusterId) const;

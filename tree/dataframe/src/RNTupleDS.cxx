@@ -14,6 +14,8 @@
  *************************************************************************/
 
 #include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleDS.hxx>
 #include <ROOT/RStringView.hxx>
 
@@ -27,16 +29,22 @@
 namespace ROOT {
 namespace Experimental {
 
-ROOT::Experimental::RNTupleDS::RNTupleDS(std::unique_ptr<ROOT::Experimental::RNTupleReader> ntuple)
+ROOT::Experimental::RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pageSource)
 {
-   fReaders.emplace_back(std::move(ntuple));
-   auto rootField = fReaders[0]->GetModel()->GetRootField();
-   for (auto &f : *rootField) {
-      if (f.GetParent() != rootField)
+   pageSource->Attach();
+   const auto &descriptor = pageSource->GetDescriptor();
+
+   // TODO(jblomer): field range
+   auto rootId = descriptor.FindRootFieldId();
+   for (unsigned int i = 0; i < descriptor.GetNFields(); ++i) {
+      const auto &fieldDesc = descriptor.GetFieldDescriptor(i);
+      if (fieldDesc.GetParentId() != rootId)
          continue;
-      fColumnNames.push_back(f.GetName());
-      fColumnTypes.push_back(f.GetType());
+      fColumnNames.emplace_back(fieldDesc.GetFieldName());
+      fColumnTypes.emplace_back(fieldDesc.GetTypeName());
+      fColumnFieldIds.emplace_back(i);
    }
+   fSources.emplace_back(std::move(pageSource));
 }
 
 const std::vector<std::string>& RNTupleDS::GetColumnNames() const
@@ -47,21 +55,33 @@ const std::vector<std::string>& RNTupleDS::GetColumnNames() const
 
 RDF::RDataSource::Record_t RNTupleDS::GetColumnReadersImpl(std::string_view name, const std::type_info& /* ti */)
 {
-   const auto index = std::distance(
+   const auto colIdx = std::distance(
       fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), name));
    // TODO(jblomer): check expected type info like in, e.g., RRootDS.cxx
    // There is a problem extracting the type info for std::int32_t and company though
 
-   std::vector<void*> ptrs;
-   for (unsigned i = 0; i < fNSlots; ++i)
-      ptrs.push_back(&fValuePtrs[i][index]);
+   std::vector<void *> ptrs;
+   for (unsigned int slot = 0; slot < fNSlots; ++slot) {
+      if (!fFields[slot][colIdx]) {
+         fFields[slot][colIdx] = std::unique_ptr<Detail::RFieldBase>(
+            Detail::RFieldBase::Create(fColumnNames[colIdx], fColumnTypes[colIdx]));
+         Detail::RFieldFuse::Connect(fColumnFieldIds[colIdx], *fSources[slot], *fFields[slot][colIdx]);
+         fValues[slot][colIdx] = fFields[slot][colIdx]->GenerateValue();
+         fValuePtrs[slot][colIdx] = fValues[slot][colIdx].GetRawPtr();
+         if (slot == 0)
+            fActiveColumns.emplace_back(colIdx);
+      }
+      ptrs.push_back(&fValuePtrs[slot][colIdx]);
+   }
 
    return ptrs;
 }
 
 bool RNTupleDS::SetEntry(unsigned int slot, ULong64_t entryIndex)
 {
-   fReaders[slot]->LoadEntry(entryIndex, fEntries[slot].get());
+   for (auto colIdx : fActiveColumns) {
+      fFields[slot][colIdx]->Read(entryIndex, &fValues[slot][colIdx]);
+   }
    return true;
 }
 
@@ -71,7 +91,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RNTupleDS::GetEntryRanges()
    std::vector<std::pair<ULong64_t, ULong64_t>> ranges;
    if (fHasSeenAllRanges) return ranges;
 
-   auto nEntries = fReaders[0]->GetNEntries();
+   auto nEntries = fSources[0]->GetNEntries();
    const auto chunkSize = nEntries / fNSlots;
    const auto reminder = 1U == fNSlots ? 0 : nEntries % fNSlots;
    auto start = 0UL;
@@ -115,25 +135,29 @@ void RNTupleDS::SetNSlots(unsigned int nSlots)
    R__ASSERT(nSlots > 0);
    fNSlots = nSlots;
 
+   fFields.resize(fNSlots);
+   fValues.resize(fNSlots);
+   fValuePtrs.resize(fNSlots);
    for (unsigned int i = 1; i < fNSlots; ++i) {
-      fReaders.emplace_back(fReaders[0]->Clone());
+      fSources.emplace_back(fSources[0]->Clone());
+      R__ASSERT(i == (fSources.size() - 1));
+      fSources[i]->Attach();
    }
 
+   auto nColumns = fColumnNames.size();
    for (unsigned int i = 0; i < fNSlots; ++i) {
-      auto entry = fReaders[i]->GetModel()->CreateEntry();
-      fValuePtrs.emplace_back(std::vector<void*>());
-      for (unsigned j = 0; j < fColumnNames.size(); ++j) {
-         fValuePtrs[i].emplace_back(entry->GetValue(fColumnNames[j]).GetRawPtr());
-      }
-      fEntries.emplace_back(std::move(entry));
+      fFields[i].resize(nColumns);
+      fValues[i].resize(nColumns);
+      fValuePtrs[i].resize(nColumns);
    }
 }
 
 
 RDataFrame MakeNTupleDataFrame(std::string_view ntupleName, std::string_view fileName)
 {
-   auto ntuple = RNTupleReader::Open(ntupleName, fileName);
-   ROOT::RDataFrame rdf(std::make_unique<RNTupleDS>(std::move(ntuple)));
+   const RNTupleReadOptions options;
+   auto pageSource = Detail::RPageSource::Create(ntupleName, fileName, options);
+   ROOT::RDataFrame rdf(std::make_unique<RNTupleDS>(std::move(pageSource)));
    return rdf;
 }
 

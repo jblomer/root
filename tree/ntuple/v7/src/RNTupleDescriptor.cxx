@@ -668,6 +668,17 @@ ROOT::Experimental::DescriptorId_t ROOT::Experimental::RNTupleDescriptor::FindFi
    return FindFieldId(fieldName, FindRootFieldId());
 }
 
+std::string ROOT::Experimental::RNTupleDescriptor::GetQualifiedFieldName(DescriptorId_t fieldId) const
+{
+   if (fieldId == kInvalidDescriptorId)
+      return "";
+   const auto &fieldDesc = GetFieldDescriptor(fieldId);
+   auto parentName = GetQualifiedFieldName(fieldDesc.GetParentId());
+   if (!parentName.empty())
+      return parentName + "." + fieldDesc.GetFieldName();
+   return fieldDesc.GetFieldName();
+}
+
 
 ROOT::Experimental::DescriptorId_t
 ROOT::Experimental::RNTupleDescriptor::FindColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex) const

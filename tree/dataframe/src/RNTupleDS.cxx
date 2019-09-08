@@ -53,6 +53,8 @@ std::string BuildTypeName(const ROOT::Experimental::RNTupleDescriptor &ntupleDes
 ROOT::Experimental::Detail::RFieldBase *
 BuildField(const ROOT::Experimental::RNTupleDescriptor &ntupleDesc,
            const ROOT::Experimental::RFieldDescriptor &fieldDesc,
+           const std::string &fieldAlias,
+           const std::string &fieldType,
            ROOT::Experimental::Detail::RPageSource &pageSource,
            ROOT::Experimental::Detail::RFieldBase *innerField)
 {
@@ -61,7 +63,8 @@ BuildField(const ROOT::Experimental::RNTupleDescriptor &ntupleDesc,
    }
 
    if (!innerField) {
-      innerField = ROOT::Experimental::Detail::RFieldBase::Create(fieldDesc.GetFieldName(), fieldDesc.GetTypeName());
+      auto useType = fieldType.empty() ? fieldDesc.GetTypeName() : fieldType;
+      innerField = ROOT::Experimental::Detail::RFieldBase::Create(fieldAlias, useType);
       ROOT::Experimental::Detail::RFieldFuse::Connect(fieldDesc.GetId(), pageSource, *innerField);
 
       std::unordered_map<const ROOT::Experimental::Detail::RFieldBase *, ROOT::Experimental::DescriptorId_t> field2Id;
@@ -80,9 +83,9 @@ BuildField(const ROOT::Experimental::RNTupleDescriptor &ntupleDesc,
       parentField = new ROOT::Experimental::RFieldVector(
          parentDesc.GetFieldName(), std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>(innerField));
       ROOT::Experimental::Detail::RFieldFuse::Connect(parentDesc.GetId(), pageSource, *parentField);
-      return BuildField(ntupleDesc, parentDesc, pageSource, parentField);
+      return BuildField(ntupleDesc, parentDesc, "", "", pageSource, parentField);
    case ROOT::Experimental::ENTupleStructure::kRecord:
-      return BuildField(ntupleDesc, parentDesc, pageSource, innerField);
+      return BuildField(ntupleDesc, parentDesc, "", "", pageSource, innerField);
    default:
       return nullptr;
    }
@@ -109,7 +112,7 @@ ROOT::Experimental::RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pa
       std::cout << *fColumnNames.rbegin() << " " << *fColumnTypes.rbegin() << std::endl;
       fColumnFieldIds.emplace_back(i);
       if (fieldDesc.GetStructure() == ENTupleStructure::kCollection) {
-         fColumnNames.emplace_back(descriptor.GetQualifiedFieldName(i) + "#");
+         fColumnNames.emplace_back(descriptor.GetQualifiedFieldName(i) + "_");
          fColumnTypes.emplace_back(BuildTypeName(descriptor, fieldDesc, "ROOT::Experimental::ClusterSize_t"));
          std::cout << *fColumnNames.rbegin() << " " << *fColumnTypes.rbegin() << std::endl;
          fColumnFieldIds.emplace_back(i);
@@ -138,8 +141,20 @@ RDF::RDataSource::Record_t RNTupleDS::GetColumnReadersImpl(std::string_view name
       if (!fValuePtrs[slot][colIdx]) {
          const auto &descriptor = fSources[slot]->GetDescriptor();
          const auto &fieldDesc = descriptor.GetFieldDescriptor(fColumnFieldIds[colIdx]);
+         auto colName = fColumnNames[colIdx];
+
+         std::string fieldName = colName;
+         std::string fieldType = "";
+         //auto fieldName = fieldDesc.GetFieldName();
+         //auto fieldType = fieldDesc.GetTypeName();
+         if (colName[colName.length() - 1] == '_') {
+            fieldName = colName;
+            fieldType = fColumnTypes[colIdx];
+         }
+         std::cout << "  AS " << fieldName << " " << fieldType << std::endl;
          fFields[slot][colIdx] = std::unique_ptr<Detail::RFieldBase>(
-            BuildField(descriptor, fieldDesc, *fSources[slot], nullptr));
+            BuildField(descriptor, fieldDesc, fieldName, fieldType, *fSources[slot], nullptr));
+         std::cout << "  Really AS " << fFields[slot][colIdx]->GetType() << std::endl;
          fValues[slot][colIdx] = fFields[slot][colIdx]->GenerateValue();
          fValuePtrs[slot][colIdx] = fValues[slot][colIdx].GetRawPtr();
          if (slot == 0)
@@ -154,6 +169,8 @@ RDF::RDataSource::Record_t RNTupleDS::GetColumnReadersImpl(std::string_view name
 bool RNTupleDS::SetEntry(unsigned int slot, ULong64_t entryIndex)
 {
    for (auto colIdx : fActiveColumns) {
+      //std::cout << "READ " <<  fColumnNames[colIdx] << "/" << fFields[slot][colIdx]->GetType() << " / "
+      //   << entryIndex << std::endl;
       fFields[slot][colIdx]->Read(entryIndex, &fValues[slot][colIdx]);
    }
    return true;

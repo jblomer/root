@@ -349,6 +349,7 @@ public:
    // The number of entries as seen with the currently loaded cluster meta-data; there might be more
    NTupleSize_t GetNEntries() const;
    NTupleSize_t GetNElements(DescriptorId_t columnId) const;
+   std::string GetQualifiedFieldName(DescriptorId_t fieldId) const;
 
    DescriptorId_t FindFieldId(std::string_view fieldName, DescriptorId_t parentId) const;
    /// Searches for a top-level field

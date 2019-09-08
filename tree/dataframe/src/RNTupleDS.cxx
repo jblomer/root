@@ -14,8 +14,10 @@
  *************************************************************************/
 
 #include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleDS.hxx>
 #include <ROOT/RStringView.hxx>
 
@@ -24,7 +26,69 @@
 #include <string>
 #include <vector>
 #include <typeinfo>
+#include <unordered_map>
 #include <utility>
+
+namespace {
+
+std::string BuildTypeName(const ROOT::Experimental::RNTupleDescriptor &ntupleDesc,
+                          const ROOT::Experimental::RFieldDescriptor &fieldDesc,
+                          const std::string &innerType)
+{
+   if (fieldDesc.GetParentId() == ROOT::Experimental::kInvalidDescriptorId) {
+      return innerType;
+   }
+
+   const auto &parentDesc = ntupleDesc.GetFieldDescriptor(fieldDesc.GetParentId());
+   switch (parentDesc.GetStructure()) {
+   case ROOT::Experimental::ENTupleStructure::kCollection:
+      return BuildTypeName(ntupleDesc, parentDesc, "std::vector<" + innerType + ">");
+   case ROOT::Experimental::ENTupleStructure::kRecord:
+      return BuildTypeName(ntupleDesc, parentDesc, innerType);
+   default:
+      return "";
+   }
+}
+
+ROOT::Experimental::Detail::RFieldBase *
+BuildField(const ROOT::Experimental::RNTupleDescriptor &ntupleDesc,
+           const ROOT::Experimental::RFieldDescriptor &fieldDesc,
+           ROOT::Experimental::Detail::RPageSource &pageSource,
+           ROOT::Experimental::Detail::RFieldBase *innerField)
+{
+   if (fieldDesc.GetParentId() == ROOT::Experimental::kInvalidDescriptorId) {
+      return innerField;
+   }
+
+   if (!innerField) {
+      innerField = ROOT::Experimental::Detail::RFieldBase::Create(fieldDesc.GetFieldName(), fieldDesc.GetTypeName());
+      ROOT::Experimental::Detail::RFieldFuse::Connect(fieldDesc.GetId(), pageSource, *innerField);
+
+      std::unordered_map<const ROOT::Experimental::Detail::RFieldBase *, ROOT::Experimental::DescriptorId_t> field2Id;
+      field2Id[innerField] = fieldDesc.GetId();
+      for (auto &f : *innerField) {
+         auto subFieldId = ntupleDesc.FindFieldId(f.GetName(), field2Id[f.GetParent()]);
+         ROOT::Experimental::Detail::RFieldFuse::Connect(subFieldId, pageSource, f);
+         field2Id[&f] = subFieldId;
+      }
+   }
+
+   ROOT::Experimental::Detail::RFieldBase *parentField = nullptr;
+   const auto &parentDesc = ntupleDesc.GetFieldDescriptor(fieldDesc.GetParentId());
+   switch (parentDesc.GetStructure()) {
+   case ROOT::Experimental::ENTupleStructure::kCollection:
+      parentField = new ROOT::Experimental::RFieldVector(
+         parentDesc.GetFieldName(), std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>(innerField));
+      ROOT::Experimental::Detail::RFieldFuse::Connect(parentDesc.GetId(), pageSource, *parentField);
+      return BuildField(ntupleDesc, parentDesc, pageSource, parentField);
+   case ROOT::Experimental::ENTupleStructure::kRecord:
+      return BuildField(ntupleDesc, parentDesc, pageSource, innerField);
+   default:
+      return nullptr;
+   }
+}
+
+} // anonymous namespace
 
 namespace ROOT {
 namespace Experimental {
@@ -37,12 +101,19 @@ ROOT::Experimental::RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pa
    // TODO(jblomer): field range
    auto rootId = descriptor.FindRootFieldId();
    for (unsigned int i = 0; i < descriptor.GetNFields(); ++i) {
-      const auto &fieldDesc = descriptor.GetFieldDescriptor(i);
-      if (fieldDesc.GetParentId() != rootId)
+      if (i == rootId)
          continue;
-      fColumnNames.emplace_back(fieldDesc.GetFieldName());
-      fColumnTypes.emplace_back(fieldDesc.GetTypeName());
+      const auto &fieldDesc = descriptor.GetFieldDescriptor(i);
+      fColumnNames.emplace_back(descriptor.GetQualifiedFieldName(i));
+      fColumnTypes.emplace_back(BuildTypeName(descriptor, fieldDesc, fieldDesc.GetTypeName()));
+      std::cout << *fColumnNames.rbegin() << " " << *fColumnTypes.rbegin() << std::endl;
       fColumnFieldIds.emplace_back(i);
+      if (fieldDesc.GetStructure() == ENTupleStructure::kCollection) {
+         fColumnNames.emplace_back(descriptor.GetQualifiedFieldName(i) + "#");
+         fColumnTypes.emplace_back(BuildTypeName(descriptor, fieldDesc, "ROOT::Experimental::ClusterSize_t"));
+         std::cout << *fColumnNames.rbegin() << " " << *fColumnTypes.rbegin() << std::endl;
+         fColumnFieldIds.emplace_back(i);
+      }
    }
    fSources.emplace_back(std::move(pageSource));
 }
@@ -60,12 +131,15 @@ RDF::RDataSource::Record_t RNTupleDS::GetColumnReadersImpl(std::string_view name
    // TODO(jblomer): check expected type info like in, e.g., RRootDS.cxx
    // There is a problem extracting the type info for std::int32_t and company though
 
+   std::cout << "TRY CONSTRUCTING " << name << std::endl;
+
    std::vector<void *> ptrs;
    for (unsigned int slot = 0; slot < fNSlots; ++slot) {
-      if (!fFields[slot][colIdx]) {
+      if (!fValuePtrs[slot][colIdx]) {
+         const auto &descriptor = fSources[slot]->GetDescriptor();
+         const auto &fieldDesc = descriptor.GetFieldDescriptor(fColumnFieldIds[colIdx]);
          fFields[slot][colIdx] = std::unique_ptr<Detail::RFieldBase>(
-            Detail::RFieldBase::Create(fColumnNames[colIdx], fColumnTypes[colIdx]));
-         Detail::RFieldFuse::Connect(fColumnFieldIds[colIdx], *fSources[slot], *fFields[slot][colIdx]);
+            BuildField(descriptor, fieldDesc, *fSources[slot], nullptr));
          fValues[slot][colIdx] = fFields[slot][colIdx]->GenerateValue();
          fValuePtrs[slot][colIdx] = fValues[slot][colIdx].GetRawPtr();
          if (slot == 0)
@@ -125,6 +199,7 @@ bool RNTupleDS::HasColumn(std::string_view colName) const
 
 void RNTupleDS::Initialise()
 {
+   std::cout << "INITIALIZE" << std::endl;
    fHasSeenAllRanges = false;
 }
 
@@ -148,7 +223,7 @@ void RNTupleDS::SetNSlots(unsigned int nSlots)
    for (unsigned int i = 0; i < fNSlots; ++i) {
       fFields[i].resize(nColumns);
       fValues[i].resize(nColumns);
-      fValuePtrs[i].resize(nColumns);
+      fValuePtrs[i].resize(nColumns, nullptr);
    }
 }
 

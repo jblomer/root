@@ -675,7 +675,7 @@ std::string ROOT::Experimental::RNTupleDescriptor::GetQualifiedFieldName(Descrip
    const auto &fieldDesc = GetFieldDescriptor(fieldId);
    auto parentName = GetQualifiedFieldName(fieldDesc.GetParentId());
    if (!parentName.empty())
-      return parentName + "." + fieldDesc.GetFieldName();
+      return parentName + "_" + fieldDesc.GetFieldName();
    return fieldDesc.GetFieldName();
 }
 

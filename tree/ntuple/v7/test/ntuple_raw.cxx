@@ -3,6 +3,7 @@
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDS.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RPageStorageRaw.hxx>
 
 #include <TRandom3.h>
@@ -16,6 +17,7 @@
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
+using RNTupleWriteOptions = ROOT::Experimental::RNTupleWriteOptions;
 using RPageSinkRaw = ROOT::Experimental::Detail::RPageSinkRaw;
 using RPageSource = ROOT::Experimental::Detail::RPageSource;
 using RPageSourceRaw = ROOT::Experimental::Detail::RPageSourceRaw;
@@ -47,7 +49,9 @@ TEST(RNTuple, Basics)
    auto wrPt = model->MakeField<float>("pt", 42.0);
 
    {
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+      RNTupleWriteOptions options;
+      options.SetCompression(101);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), options);
       ntuple->Fill();
       ntuple->CommitCluster();
       *wrPt = 24.0;

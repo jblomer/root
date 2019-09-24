@@ -64,9 +64,31 @@ void ROOT::Experimental::Detail::RPageSinkRaw::DoCreate(const RNTupleModel & /* 
    auto szHeader = descriptor.SerializeHeader(nullptr);
    auto buffer = new unsigned char[szHeader];
    descriptor.SerializeHeader(buffer);
-   Write(buffer, szHeader);
+
+   // TODO(jblomer): proper envelopes
+   Write(&szHeader, sizeof(szHeader));
+   auto level = fOptions.GetCompression() % 100;
+   auto algorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(fOptions.GetCompression() / 100);
+   auto zipBuffer = new char[szHeader];
+   int szZipBuffer = szHeader;
+   int szSource = szHeader;
+   char *source = reinterpret_cast<char *>(buffer);
+   int zipBytes = 0;
+   R__zipMultipleAlgorithm(level, &szSource, source, &szZipBuffer, zipBuffer, &zipBytes, algorithm);
+   if ((zipBytes > 0) && (zipBytes < szSource)) {
+      delete[] buffer;
+      buffer = reinterpret_cast<unsigned char *>(zipBuffer);
+   } else {
+      delete[] zipBuffer;
+      zipBytes = szHeader;
+   }
+
+   Write(&zipBytes, sizeof(zipBytes));
+   Write(buffer, zipBytes);
    delete[] buffer;
    fClusterStart = fFilePos;
+
+   //std::cout << "HEADER WRITTEN " << szHeader << " " << zipBytes << std::endl;
 }
 
 ROOT::Experimental::RClusterDescriptor::RLocator
@@ -130,7 +152,27 @@ void ROOT::Experimental::Detail::RPageSinkRaw::DoCommitDataset()
    auto szFooter = descriptor.SerializeFooter(nullptr);
    auto buffer = new unsigned char[szFooter];
    descriptor.SerializeFooter(buffer);
-   Write(buffer, szFooter);
+
+   auto level = fOptions.GetCompression() % 100;
+   auto algorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(fOptions.GetCompression() / 100);
+   auto zipBuffer = new char[szFooter];
+   int szZipBuffer = szFooter;
+   int szSource = szFooter;
+   char *source = reinterpret_cast<char *>(buffer);
+   int zipBytes = 0;
+   R__zipMultipleAlgorithm(level, &szSource, source, &szZipBuffer, zipBuffer, &zipBytes, algorithm);
+   if ((zipBytes > 0) && (zipBytes < szSource)) {
+      delete[] buffer;
+      buffer = reinterpret_cast<unsigned char *>(zipBuffer);
+   } else {
+      delete[] zipBuffer;
+      zipBytes = szFooter;
+   }
+
+   Write(buffer, zipBytes);
+   Write(&szFooter, sizeof(szFooter));
+   Write(&zipBytes, sizeof(zipBytes));
+   //std::cout << "FOOTER WRITTEN " << szFooter << " " << zipBytes << std::endl;
    delete[] buffer;
 }
 
@@ -227,22 +269,54 @@ void ROOT::Experimental::Detail::RPageSourceRaw::Read(void *buffer, std::size_t 
 
 ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceRaw::DoAttach()
 {
-   unsigned char postscript[RNTupleDescriptor::kNBytesPostscript];
+   //unsigned char postscript[RNTupleDescriptor::kNBytesPostscript];
+   //auto fileSize = fFile->GetSize();
+   //R__ASSERT(fileSize != RRawFile::kUnknownFileSize);
+   //R__ASSERT(fileSize >= RNTupleDescriptor::kNBytesPostscript);
+   //auto offset = fileSize - RNTupleDescriptor::kNBytesPostscript;
+   //Read(postscript, RNTupleDescriptor::kNBytesPostscript, offset);
+
+   //std::cout << "ATTACHING!!" << std::endl;
+
+   constexpr unsigned szPostscript = sizeof(uint32_t) + sizeof(int);
+   unsigned char postscript[szPostscript];
    auto fileSize = fFile->GetSize();
    R__ASSERT(fileSize != RRawFile::kUnknownFileSize);
-   R__ASSERT(fileSize >= RNTupleDescriptor::kNBytesPostscript);
-   auto offset = fileSize - RNTupleDescriptor::kNBytesPostscript;
-   Read(postscript, RNTupleDescriptor::kNBytesPostscript, offset);
+   R__ASSERT(fileSize >= szPostscript);
+   auto offset = fileSize - szPostscript;
+   Read(postscript, szPostscript, offset);
+
+   std::uint32_t szFooter = *reinterpret_cast<uint32_t *>(postscript);
+   int zipFooter = *reinterpret_cast<int *>(postscript + sizeof(uint32_t));
+   auto footer = new unsigned char[szFooter];
+   //std::cout << "FOOTER SIZES " << szFooter << " " << zipFooter << std::endl;
+   if ((unsigned)zipFooter == szFooter) {
+      Read(footer, szFooter, fileSize - szPostscript - szFooter);
+   } else {
+      auto zipBuffer = new unsigned char[zipFooter];
+      Read(zipBuffer, zipFooter, fileSize - szPostscript - zipFooter);
+      int unzipBytes = 0;
+      int iszFooter = szFooter;
+      R__unzip(&zipFooter, zipBuffer, &iszFooter, footer, &unzipBytes);
+      delete[] zipBuffer;
+   }
 
    std::uint32_t szHeader;
-   std::uint32_t szFooter;
-   RNTupleDescriptor::LocateMetadata(postscript, szHeader, szFooter);
-   R__ASSERT(fileSize >= szHeader + szFooter);
-
-   unsigned char *header = new unsigned char[szHeader];
-   unsigned char *footer = new unsigned char[szFooter];
-   Read(header, szHeader, 0);
-   Read(footer, szFooter, fileSize - szFooter);
+   int zipHeader;
+   Read(&szHeader, sizeof(szHeader), 0);
+   Read(&zipHeader, sizeof(zipHeader), sizeof(szHeader));
+   //std::cout << "HEADER SIZES " << szHeader << " " << zipHeader << std::endl;
+   auto header = new unsigned char[szHeader];
+   if ((unsigned)zipHeader == szHeader) {
+      Read(header, szHeader, sizeof(szHeader) + sizeof(zipHeader));
+   } else {
+      auto zipBuffer = new unsigned char[zipHeader];
+      Read(zipBuffer, zipHeader, sizeof(szHeader) + sizeof(zipHeader));
+      int unzipBytes = 0;
+      int iszHeader = szHeader;
+      R__unzip(&zipHeader, zipBuffer, &iszHeader, header, &unzipBytes);
+      delete[] zipBuffer;
+   }
 
    RNTupleDescriptorBuilder descBuilder;
    descBuilder.SetFromHeader(header);

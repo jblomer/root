@@ -32,13 +32,16 @@ All page sink classes need to support the common options.
 // clang-format on
 class RNTupleWriteOptions {
   int fCompression = RCompressionSetting::EDefaults::kUseAnalysis;
+  unsigned int fNumElementsPerPage = 10000;
 public:
   RNTupleWriteOptions() = default;
   int GetCompression() const { return fCompression; }
+  unsigned int GetNumElementsPerPage() const { return fNumElementsPerPage; }
   void SetCompression(int val) { fCompression = val; }
   void SetCompression(RCompressionSetting::EAlgorithm algorithm, int compressionLevel) {
     fCompression = CompressionSettings(algorithm, compressionLevel);
   }
+  void SetNumElementsPerPage(unsigned int val) { fNumElementsPerPage = val; }
 };
 
 

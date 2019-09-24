@@ -180,7 +180,7 @@ ROOT::Experimental::Detail::RPage
 ROOT::Experimental::Detail::RPageSinkRaw::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
 {
    if (nElements == 0)
-      nElements = kDefaultElementsPerPage;
+      nElements = fOptions.GetNumElementsPerPage();
    auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
    return fPageAllocator->NewPage(columnHandle.fId, elementSize, nElements);
 }

@@ -545,10 +545,15 @@ void ROOT::Experimental::RFieldVector::DoReadGlobal(NTupleSize_t globalIndex, De
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
 
    typedValue->resize(nItems * fItemSize);
-   for (unsigned i = 0; i < nItems; ++i) {
-      auto itemValue = fSubFields[0]->GenerateValue(typedValue->data() + (i * fItemSize));
-      fSubFields[0]->Read(collectionStart + i, &itemValue);
+   if (nItems == 0)
+      return;
+   if (!fSubFields[0]->IsSimple()) {
+      for (unsigned i = 0; i < nItems; ++i) {
+         fSubFields[0]->GenerateValue(typedValue->data() + (i * fItemSize));
+      }
    }
+   auto itemValue = fSubFields[0]->CaptureValue(typedValue->data());
+   fSubFields[0]->ReadV(collectionStart, nItems, &itemValue);
 }
 
 void ROOT::Experimental::RFieldVector::DoGenerateColumns()

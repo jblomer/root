@@ -45,6 +45,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
 
    std::vector<std::string> fColumnNames;
    std::vector<std::string> fColumnTypes;
+   std::vector<bool> fIsCollectionSize;
    std::vector<DescriptorId_t> fColumnFieldIds;
    std::vector<size_t> fActiveColumns;
 
@@ -63,6 +64,7 @@ public:
    bool SetEntry(unsigned int slot, ULong64_t entry) final;
 
    void Initialise() final;
+   void Finalise() final;
 
 protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;

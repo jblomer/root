@@ -154,7 +154,7 @@ public:
          ClusterSize_t::ValueType nBatch = fCurrentPage.GetNElements() - idxInPage;
          elemArray->ReadFrom(src, nBatch);
          RColumnElementBase elemTail(*elemArray, nBatch);
-         ReadV(RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndex() + nBatch), count - nBatch, &elemTail);
+         ReadV(clusterIndex + nBatch, count - nBatch, &elemTail);
       }
    }
 

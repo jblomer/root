@@ -109,13 +109,15 @@ ROOT::Experimental::RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pa
       const auto &fieldDesc = descriptor.GetFieldDescriptor(i);
       fColumnNames.emplace_back(descriptor.GetQualifiedFieldName(i));
       fColumnTypes.emplace_back(BuildTypeName(descriptor, fieldDesc, fieldDesc.GetTypeName()));
-      std::cout << *fColumnNames.rbegin() << " " << *fColumnTypes.rbegin() << std::endl;
+      // std::cout << *fColumnNames.rbegin() << " " << *fColumnTypes.rbegin() << std::endl;
       fColumnFieldIds.emplace_back(i);
+      fIsCollectionSize.emplace_back(false);
       if (fieldDesc.GetStructure() == ENTupleStructure::kCollection) {
          fColumnNames.emplace_back(descriptor.GetQualifiedFieldName(i) + "_");
          fColumnTypes.emplace_back(BuildTypeName(descriptor, fieldDesc, "ROOT::Experimental::ClusterSize_t"));
-         std::cout << *fColumnNames.rbegin() << " " << *fColumnTypes.rbegin() << std::endl;
+         //std::cout << *fColumnNames.rbegin() << " " << *fColumnTypes.rbegin() << std::endl;
          fColumnFieldIds.emplace_back(i);
+         fIsCollectionSize.emplace_back(true);
       }
    }
    fSources.emplace_back(std::move(pageSource));
@@ -134,7 +136,7 @@ RDF::RDataSource::Record_t RNTupleDS::GetColumnReadersImpl(std::string_view name
    // TODO(jblomer): check expected type info like in, e.g., RRootDS.cxx
    // There is a problem extracting the type info for std::int32_t and company though
 
-   std::cout << "TRY CONSTRUCTING " << name << std::endl;
+   // std::cout << "TRY CONSTRUCTING " << name << std::endl;
 
    std::vector<void *> ptrs;
    for (unsigned int slot = 0; slot < fNSlots; ++slot) {
@@ -171,7 +173,16 @@ bool RNTupleDS::SetEntry(unsigned int slot, ULong64_t entryIndex)
    for (auto colIdx : fActiveColumns) {
       //std::cout << "READ " <<  fColumnNames[colIdx] << "/" << fFields[slot][colIdx]->GetType() << " / "
       //   << entryIndex << std::endl;
-      fFields[slot][colIdx]->Read(entryIndex, &fValues[slot][colIdx]);
+      if (fIsCollectionSize[colIdx]) {
+         auto *f = reinterpret_cast<RField<ClusterSize_t> *>(fFields[slot][colIdx].get());
+         ClusterSize_t size;
+         RClusterIndex collectionStart;
+         f->GetCollectionInfo(entryIndex, &collectionStart, &size);
+         *reinterpret_cast<ClusterSize_t *>(fValuePtrs[slot][colIdx]) = size;
+         //std::cout << "WE HAVE SET COLLECTION SIZE TO " << size << std::endl;
+      } else {
+         fFields[slot][colIdx]->Read(entryIndex, &fValues[slot][colIdx]);
+      }
    }
    return true;
 }
@@ -221,6 +232,13 @@ void RNTupleDS::Initialise()
 }
 
 
+void RNTupleDS::Finalise()
+{
+   //std::cout << "FINALISE" << std::endl;
+   //fSources[0]->GetMetrics().Print(std::cout);
+}
+
+
 void RNTupleDS::SetNSlots(unsigned int nSlots)
 {
    R__ASSERT(fNSlots == 0);
@@ -247,8 +265,10 @@ void RNTupleDS::SetNSlots(unsigned int nSlots)
 
 RDataFrame MakeNTupleDataFrame(std::string_view ntupleName, std::string_view fileName)
 {
-   const RNTupleReadOptions options;
+   RNTupleReadOptions options;
+   options.SetClusterCache(RNTupleReadOptions::kOn);
    auto pageSource = Detail::RPageSource::Create(ntupleName, fileName, options);
+   //pageSource->GetMetrics().Enable();
    ROOT::RDataFrame rdf(std::make_unique<RNTupleDS>(std::move(pageSource)));
    return rdf;
 }

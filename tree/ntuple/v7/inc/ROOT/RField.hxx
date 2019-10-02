@@ -233,6 +233,32 @@ public:
       fPrincipalColumn->Read(clusterIndex, &value->fMappedElement);
    }
 
+   void ReadV(NTupleSize_t globalIndex, ClusterSize_t::ValueType count, RFieldValue *value) {
+      if (!fIsSimple) {
+         auto basePtr = reinterpret_cast<unsigned char *>(value->GetRawPtr());
+         auto size = GetValueSize();
+         for (ClusterSize_t::ValueType i = 0; i < count; ++i) {
+            RFieldValue helper(true /* capture */, this, basePtr + i * size);
+            DoReadGlobal(globalIndex + i, &helper);
+         }
+         return;
+      }
+      fPrincipalColumn->ReadV(globalIndex, count, &value->fMappedElement);
+   }
+
+   void ReadV(const RClusterIndex &clusterIndex, ClusterSize_t::ValueType count, RFieldValue *value) {
+      if (!fIsSimple) {
+         auto basePtr = reinterpret_cast<unsigned char *>(value->GetRawPtr());
+         auto size = GetValueSize();
+         for (ClusterSize_t::ValueType i = 0; i < count; ++i) {
+            RFieldValue helper(true /* capture */, this, basePtr + i * size);
+            DoReadInCluster(clusterIndex + i, &helper);
+         }
+         return;
+      }
+      fPrincipalColumn->ReadV(clusterIndex, count, &value->fMappedElement);
+   }
+
    /// Ensure that all received items are written from page buffers to the storage.
    void Flush() const;
    /// Perform housekeeping tasks for global to cluster-local index translation

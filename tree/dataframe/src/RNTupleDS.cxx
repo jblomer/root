@@ -109,7 +109,7 @@ ROOT::Experimental::RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pa
       const auto &fieldDesc = descriptor.GetFieldDescriptor(i);
       fColumnNames.emplace_back(descriptor.GetQualifiedFieldName(i));
       fColumnTypes.emplace_back(BuildTypeName(descriptor, fieldDesc, fieldDesc.GetTypeName()));
-      // std::cout << *fColumnNames.rbegin() << " " << *fColumnTypes.rbegin() << std::endl;
+      //std::cout << *fColumnNames.rbegin() << " " << *fColumnTypes.rbegin() << std::endl;
       fColumnFieldIds.emplace_back(i);
       fIsCollectionSize.emplace_back(false);
       if (fieldDesc.GetStructure() == ENTupleStructure::kCollection) {

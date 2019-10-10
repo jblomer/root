@@ -27,6 +27,7 @@
 #include <RZip.h>
 #include <TError.h>
 
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
@@ -499,6 +500,14 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
    }
 
    if ((double(activeSize) / double(clusterSize)) < 0.5) {
+      struct RReadRequest {
+         RReadRequest(void *d, std::uint64_t s, std::uint64_t o) : fDestination(d), fSize(s), fOffset(o) {}
+         void *fDestination = 0;
+         std::uint64_t fSize = 0;
+         std::uint64_t fOffset = 0;
+      };
+      std::vector<RReadRequest> readRequests;
+
       //std::cout << "  ... PARTIAL FILLING OF CLUSTER CACHE" << std::endl;
       auto buffer = reinterpret_cast<unsigned char *>(malloc(activeSize));
       R__ASSERT(buffer);
@@ -510,13 +519,19 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
          for (const auto &pageInfo : pageRange.fPageInfos) {
             // TODO(jblomer): read linear
             const auto &pageLocator = pageInfo.fLocator;
-            Read(buffer + bufPos, pageLocator.fBytesOnStorage, pageLocator.fPosition);
+            readRequests.emplace_back(
+               RReadRequest(buffer + bufPos, pageLocator.fBytesOnStorage, pageLocator.fPosition));
             RSheetKey key(columnId, pageNo);
             RSheet sheet(buffer + bufPos, pageLocator.fBytesOnStorage);
             cluster->InsertSheet(key, sheet);
             bufPos += pageLocator.fBytesOnStorage;
             ++pageNo;
          }
+      }
+      std::sort(readRequests.begin(), readRequests.end(),
+         [](const RReadRequest &a, const RReadRequest &b) {return a.fOffset < b.fOffset;});
+      for (const auto &req : readRequests) {
+         Read(req.fDestination, req.fSize, req.fOffset);
       }
       return cluster;
    }

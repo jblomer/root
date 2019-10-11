@@ -65,11 +65,14 @@ public:
 
 private:
    EClusterCache fClusterCache = EClusterCache::kDefault;
+   unsigned int fNumStreams = 4;
 
 public:
    RNTupleReadOptions() = default;
    EClusterCache GetClusterCache() const { return fClusterCache; }
    void SetClusterCache(EClusterCache val) { fClusterCache = val; }
+   unsigned int GetNumStreams() const { return fNumStreams; }
+   void SetNumStreams(unsigned int val) { fNumStreams = val; }
 };
 
 } // namespace Experimental

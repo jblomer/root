@@ -530,7 +530,7 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
       std::sort(readRequests.begin(), readRequests.end(),
          [](const RReadRequest &a, const RReadRequest &b) {return a.fOffset < b.fOffset;});
 
-      unsigned nStreams = 4;
+      unsigned nStreams = fOptions.GetNumStreams();
       std::vector<std::thread> threads;
       for (unsigned s = 0; s < nStreams; ++s) {
          std::thread t([this, nStreams, s](const std::vector<RReadRequest> &v) {

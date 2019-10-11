@@ -109,15 +109,15 @@ private:
    std::unordered_multimap<void *, std::shared_ptr<RCluster>> fMmapdPages;
 
    RNTupleMetrics fMetrics;
-   RNTuplePlainCounter *fCtrNRead = nullptr;
-   RNTuplePlainCounter *fCtrSzRead = nullptr;
+   RNTupleAtomicCounter *fCtrNRead = nullptr;
+   RNTupleAtomicCounter *fCtrSzRead = nullptr;
    RNTuplePlainCounter *fCtrSzUnzip = nullptr;
    RNTuplePlainCounter *fCtrNPage = nullptr;
    RNTuplePlainCounter *fCtrNPageMmap = nullptr;
    RNTuplePlainCounter *fCtrNCacheMiss = nullptr;
-   RNTuplePlainCounter *fCtrTimeWallRead = nullptr;
+   RNTupleAtomicCounter *fCtrTimeWallRead = nullptr;
    RNTuplePlainCounter *fCtrTimeWallUnzip = nullptr;
-   RNTupleTickCounter<RNTuplePlainCounter> *fCtrTimeCpuRead = nullptr;
+   RNTupleTickCounter<RNTupleAtomicCounter> *fCtrTimeCpuRead = nullptr;
    RNTupleTickCounter<RNTuplePlainCounter> *fCtrTimeCpuUnzip = nullptr;
 
    RPageSourceRaw(std::string_view ntupleName, const RNTupleReadOptions &options);

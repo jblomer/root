@@ -262,7 +262,7 @@ ROOT::Experimental::Detail::RPageSourceRaw::~RPageSourceRaw()
 
 void ROOT::Experimental::Detail::RPageSourceRaw::Read(void *buffer, std::size_t nbytes, std::uint64_t offset)
 {
-   RNTuplePlainTimer timer(*fCtrTimeWallRead, *fCtrTimeCpuRead);
+   RNTupleAtomicTimer timer(*fCtrTimeWallRead, *fCtrTimeCpuRead);
    auto nread = fFile->ReadAt(buffer, nbytes, offset);
    R__ASSERT(nread == nbytes);
    fCtrSzRead->Add(nread);
@@ -517,7 +517,6 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
          const auto &pageRange = clusterDesc.GetPageRange(columnId);
          NTupleSize_t pageNo = 0;
          for (const auto &pageInfo : pageRange.fPageInfos) {
-            // TODO(jblomer): read linear
             const auto &pageLocator = pageInfo.fLocator;
             readRequests.emplace_back(
                RReadRequest(buffer + bufPos, pageLocator.fBytesOnStorage, pageLocator.fPosition));
@@ -530,9 +529,27 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
       }
       std::sort(readRequests.begin(), readRequests.end(),
          [](const RReadRequest &a, const RReadRequest &b) {return a.fOffset < b.fOffset;});
-      for (const auto &req : readRequests) {
-         Read(req.fDestination, req.fSize, req.fOffset);
+
+      unsigned nStreams = 4;
+      std::vector<std::thread> threads;
+      for (unsigned s = 0; s < nStreams; ++s) {
+         std::thread t([this, nStreams, s](const std::vector<RReadRequest> &v) {
+            unsigned N = v.size();
+            for (unsigned i = s; i < N; i += nStreams) {
+               Read(v[i].fDestination, v[i].fSize, v[i].fOffset);
+            }
+         }, readRequests);
+         threads.emplace_back(std::move(t));
       }
+      for (unsigned i = 0; i < threads.size(); ++i) {
+         threads[i].join();
+      }
+
+      //for (const auto &req : readRequests) {
+      //   //std::cout << "READING " << req.fOffset << " -- " << req.fOffset + req.fSize
+      //   //          << " / " << req.fSize/1024 << "kB" << std::endl;
+      //   Read(req.fDestination, req.fSize, req.fOffset);
+      //}
       return cluster;
    }
 

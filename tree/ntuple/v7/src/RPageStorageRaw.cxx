@@ -486,57 +486,91 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
    auto clusterSize = clusterLocator.fBytesOnStorage;
    R__ASSERT(clusterSize > 0);
 
+   struct RSheetLocator {
+      RSheetLocator() = default;
+      RSheetLocator(DescriptorId_t c, NTupleSize_t p, std::uint64_t o, std::uint64_t s)
+         : fColumnId(c), fPageNo(p), fOffset(o), fSize(s) {}
+      DescriptorId_t fColumnId = 0;
+      NTupleSize_t fPageNo = 0;
+      std::uint64_t fOffset = 0;
+      std::uint64_t fSize = 0;
+      std::size_t fBufPos = 0;
+   };
+
+   std::vector<RSheetLocator> sheets;
    auto activeSize = 0;
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kMMap) {
       activeSize = clusterSize;
    } else {
       for (auto columnId : fActiveColumns) {
          const auto &pageRange = clusterDesc.GetPageRange(columnId);
+         NTupleSize_t pageNo = 0;
          for (const auto &pageInfo : pageRange.fPageInfos) {
             const auto &pageLocator = pageInfo.fLocator;
             activeSize += pageLocator.fBytesOnStorage;
+            sheets.emplace_back(RSheetLocator(columnId, pageNo, pageLocator.fPosition, pageLocator.fBytesOnStorage));
+            ++pageNo;
          }
       }
    }
 
-   if ((double(activeSize) / double(clusterSize)) < 0.5) {
+   if ((double(activeSize) / double(clusterSize)) < 0.75) {
+      std::sort(sheets.begin(), sheets.end(),
+         [](const RSheetLocator &a, const RSheetLocator &b) {return a.fOffset < b.fOffset;});
+
       struct RReadRequest {
-         RReadRequest(void *d, std::uint64_t s, std::uint64_t o) : fDestination(d), fSize(s), fOffset(o) {}
-         void *fDestination = 0;
-         std::uint64_t fSize = 0;
+         RReadRequest() = default;
+         RReadRequest(std::size_t b, std::uint64_t o, std::uint64_t s) : fBufPos(b), fOffset(o), fSize(s) {}
+         std::size_t fBufPos = 0;
          std::uint64_t fOffset = 0;
+         std::uint64_t fSize = 0;
       };
       std::vector<RReadRequest> readRequests;
 
-      //std::cout << "  ... PARTIAL FILLING OF CLUSTER CACHE" << std::endl;
-      auto buffer = reinterpret_cast<unsigned char *>(malloc(activeSize));
+      RReadRequest req;
+      std::size_t szPayload = 0;
+      std::size_t szOverhead = 0;
+      for (auto &s : sheets) {
+         auto readUpTo = req.fOffset + req.fSize;
+         R__ASSERT(s.fOffset >= readUpTo);
+         auto overhead = s.fOffset - readUpTo;
+         szPayload += s.fSize;
+         //if (overhead <= 64*1024/*float(overhead) <= 0.5 * float(s.fSize + req.fSize)*/) {
+         if (float(szOverhead + overhead) <= 0.25 * float(szPayload)) {
+            // extend the read request
+            szOverhead += overhead;
+            s.fBufPos = req.fBufPos + req.fSize + overhead;
+            req.fSize += overhead + s.fSize;
+            continue;
+         }
+
+         // close the current request
+         readRequests.emplace_back(req);
+
+         req.fBufPos += req.fSize;
+         s.fBufPos = req.fBufPos;
+
+         req.fOffset = s.fOffset;
+         req.fSize = s.fSize;
+      }
+      readRequests.emplace_back(req);
+
+      auto buffer = reinterpret_cast<unsigned char *>(malloc(req.fBufPos + req.fSize));
       R__ASSERT(buffer);
       auto cluster = std::make_unique<RHeapCluster>(buffer, clusterId);
-      size_t bufPos = 0;
-      for (auto columnId : fActiveColumns) {
-         const auto &pageRange = clusterDesc.GetPageRange(columnId);
-         NTupleSize_t pageNo = 0;
-         for (const auto &pageInfo : pageRange.fPageInfos) {
-            const auto &pageLocator = pageInfo.fLocator;
-            readRequests.emplace_back(
-               RReadRequest(buffer + bufPos, pageLocator.fBytesOnStorage, pageLocator.fPosition));
-            RSheetKey key(columnId, pageNo);
-            RSheet sheet(buffer + bufPos, pageLocator.fBytesOnStorage);
-            cluster->InsertSheet(key, sheet);
-            bufPos += pageLocator.fBytesOnStorage;
-            ++pageNo;
-         }
+      for (const auto &s : sheets) {
+         RSheetKey key(s.fColumnId, s.fPageNo);
+         RSheet sheet(buffer + s.fBufPos, s.fSize);
+         cluster->InsertSheet(key, sheet);
       }
-      std::sort(readRequests.begin(), readRequests.end(),
-         [](const RReadRequest &a, const RReadRequest &b) {return a.fOffset < b.fOffset;});
 
       unsigned nStreams = fOptions.GetNumStreams();
       std::vector<std::thread> threads;
       for (unsigned s = 0; s < nStreams; ++s) {
-         std::thread t([this, nStreams, s](const std::vector<RReadRequest> &v) {
+         std::thread t([this, nStreams, s, buffer](const std::vector<RReadRequest> &v) {
             unsigned N = v.size();
             for (unsigned i = s; i < N; i += nStreams) {
-               Read(v[i].fDestination, v[i].fSize, v[i].fOffset);
+               Read(buffer + v[i].fBufPos, v[i].fSize, v[i].fOffset);
             }
          }, readRequests);
          threads.emplace_back(std::move(t));

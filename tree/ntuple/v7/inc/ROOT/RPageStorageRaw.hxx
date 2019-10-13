@@ -18,6 +18,7 @@
 
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
+#include <ROOT/RRawFile.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <array>
@@ -32,7 +33,6 @@ namespace Detail {
 class RClusterPool;
 class RPageAllocatorHeap;
 class RPagePool;
-class RRawFile;
 
 // clang-format off
 /**
@@ -110,6 +110,7 @@ private:
 
    RNTupleMetrics fMetrics;
    RNTupleAtomicCounter *fCtrNRead = nullptr;
+   RNTupleAtomicCounter *fCtrNReadV = nullptr;
    RNTupleAtomicCounter *fCtrSzRead = nullptr;
    RNTuplePlainCounter *fCtrSzUnzip = nullptr;
    RNTuplePlainCounter *fCtrNPage = nullptr;
@@ -122,6 +123,7 @@ private:
 
    RPageSourceRaw(std::string_view ntupleName, const RNTupleReadOptions &options);
    void Read(void *buffer, std::size_t nbytes, std::uint64_t offset);
+   void ReadV(std::vector<RRawFile::RIOVec> &ioVec);
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle,
                                  const RClusterDescriptor &clusterDescriptor,
                                  ClusterSize_t::ValueType clusterIndex);

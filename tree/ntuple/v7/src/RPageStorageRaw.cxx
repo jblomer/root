@@ -225,7 +225,8 @@ ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntup
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kDefault)
       fOptions.SetClusterCache(RNTupleReadOptions::EClusterCache::kOff);
 
-   fCtrNRead = fMetrics.MakeCounter<decltype(fCtrNRead)>("nRead", "", "number of read() calls");
+   fCtrNRead = fMetrics.MakeCounter<decltype(fCtrNRead)>("nRead", "", "number of read blocks");
+   fCtrNReadV = fMetrics.MakeCounter<decltype(fCtrNReadV)>("nReadV", "", "number of vector reads");
    fCtrSzRead = fMetrics.MakeCounter<decltype(fCtrSzRead)>("szRead", "B", "volume read from file");
    fCtrSzUnzip = fMetrics.MakeCounter<decltype(fCtrSzUnzip)>("szUnzip", "B", "volume after unzipping");
    fCtrNPage = fMetrics.MakeCounter<decltype(fCtrNPage)>("nPage", "", "number of populated pages");
@@ -267,6 +268,44 @@ void ROOT::Experimental::Detail::RPageSourceRaw::Read(void *buffer, std::size_t 
    R__ASSERT(nread == nbytes);
    fCtrSzRead->Add(nread);
    fCtrNRead->Inc();
+}
+
+
+void ROOT::Experimental::Detail::RPageSourceRaw::ReadV(std::vector<RRawFile::RIOVec> &ioVec)
+{
+   RNTupleAtomicTimer timer(*fCtrTimeWallRead, *fCtrTimeCpuRead);
+
+   auto nReqs = ioVec.size();
+   decltype(nReqs) nStreams = fOptions.GetNumStreams();
+   if ((nStreams <= 1) || (nReqs <= 1)) {
+      fFile->ReadV(&ioVec[0], nReqs);
+      fCtrNReadV->Inc();
+   } else {
+      auto nThreads = std::min(nStreams, nReqs);
+      auto reqsPerThread = nReqs / nThreads;
+      std::vector<std::thread> threads;
+      for (unsigned i = 0; i < nThreads; ++i) {
+         auto startIdx = i * reqsPerThread;
+         auto slotSize = (i == nThreads - 1) ? (nReqs - startIdx) : reqsPerThread;
+         std::thread t([this](RRawFile::RIOVec *partialIoVec, unsigned int n)
+            {
+               fFile->ReadV(partialIoVec, n);
+            }, &ioVec[startIdx], slotSize);
+         threads.emplace_back(std::move(t));
+      }
+      for (unsigned i = 0; i < nThreads; ++i) {
+         threads[i].join();
+      }
+      fCtrNReadV->Add(nThreads);
+   }
+
+   std::size_t nBytes = 0;
+   for (const auto &r : ioVec) {
+      R__ASSERT(r.fSize == r.fOutBytes);
+      nBytes += r.fSize;
+   }
+   fCtrSzRead->Add(nBytes);
+   fCtrNRead->Add(nReqs);
 }
 
 
@@ -525,9 +564,9 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
          std::uint64_t fOffset = 0;
          std::uint64_t fSize = 0;
       };
-      std::vector<RReadRequest> readRequests;
+      std::vector<RRawFile::RIOVec> readRequests;
 
-      RReadRequest req;
+      RRawFile::RIOVec req;
       std::size_t szPayload = 0;
       std::size_t szOverhead = 0;
       for (auto &s : sheets) {
@@ -539,23 +578,24 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
          if (float(szOverhead + overhead) <= 0.25 * float(szPayload)) {
             // extend the read request
             szOverhead += overhead;
-            s.fBufPos = req.fBufPos + req.fSize + overhead;
+            s.fBufPos = reinterpret_cast<intptr_t>(req.fBuffer) + req.fSize + overhead;
             req.fSize += overhead + s.fSize;
             continue;
          }
 
-         // close the current request
+         // close the current request and open new one
          readRequests.emplace_back(req);
 
-         req.fBufPos += req.fSize;
-         s.fBufPos = req.fBufPos;
+         req.fBuffer = reinterpret_cast<unsigned char *>(req.fBuffer) + req.fSize;
+         s.fBufPos = reinterpret_cast<intptr_t>(req.fBuffer);
 
          req.fOffset = s.fOffset;
          req.fSize = s.fSize;
       }
       readRequests.emplace_back(req);
 
-      auto buffer = reinterpret_cast<unsigned char *>(malloc(req.fBufPos + req.fSize));
+      auto buffer = reinterpret_cast<unsigned char *>(malloc(
+         reinterpret_cast<intptr_t>(req.fBuffer) + req.fSize));
       R__ASSERT(buffer);
       auto cluster = std::make_unique<RHeapCluster>(buffer, clusterId);
       for (const auto &s : sheets) {
@@ -563,21 +603,10 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
          RSheet sheet(buffer + s.fBufPos, s.fSize);
          cluster->InsertSheet(key, sheet);
       }
-
-      unsigned nStreams = fOptions.GetNumStreams();
-      std::vector<std::thread> threads;
-      for (unsigned s = 0; s < nStreams; ++s) {
-         std::thread t([this, nStreams, s, buffer](const std::vector<RReadRequest> &v) {
-            unsigned N = v.size();
-            for (unsigned i = s; i < N; i += nStreams) {
-               Read(buffer + v[i].fBufPos, v[i].fSize, v[i].fOffset);
-            }
-         }, readRequests);
-         threads.emplace_back(std::move(t));
+      for (auto &r : readRequests) {
+         r.fBuffer = buffer + reinterpret_cast<intptr_t>(r.fBuffer);
       }
-      for (unsigned i = 0; i < threads.size(); ++i) {
-         threads[i].join();
-      }
+      ReadV(readRequests);
 
       //for (const auto &req : readRequests) {
       //   //std::cout << "READING " << req.fOffset << " -- " << req.fOffset + req.fSize

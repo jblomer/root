@@ -432,14 +432,19 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
       int szSource = pageSize;
       unsigned char *source = reinterpret_cast<unsigned char *>(pageBuffer);
       int unzipBytes = 0;
-      R__unzip(&szSource, source, &szUnzipBuffer, fUnzipBuffer->data(), &unzipBytes);
-      R__ASSERT(unzipBytes > static_cast<int>(pageSize));
+
       if (isAdoptedPage) {
-         pageBuffer = malloc(unzipBytes);
+         pageBuffer = malloc(bytesOnStorage);
          R__ASSERT(pageBuffer);
          isAdoptedPage = false;
+         int szPageBuffer = bytesOnStorage;
+         R__unzip(&szSource, source, &szPageBuffer, reinterpret_cast<unsigned char *>(pageBuffer), &unzipBytes);
+         R__ASSERT(unzipBytes == static_cast<int>(bytesOnStorage));
+      } else {
+         R__unzip(&szSource, source, &szUnzipBuffer, fUnzipBuffer->data(), &unzipBytes);
+         R__ASSERT(unzipBytes > static_cast<int>(pageSize));
+         memcpy(pageBuffer, fUnzipBuffer->data(), unzipBytes);
       }
-      memcpy(pageBuffer, fUnzipBuffer->data(), unzipBytes);
       pageSize = unzipBytes;
       fCtrSzUnzip->Add(unzipBytes);
    }

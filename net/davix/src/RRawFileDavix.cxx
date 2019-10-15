@@ -12,6 +12,8 @@
 #include "ROOT/RRawFileDavix.hxx"
 #include "ROOT/RMakeUnique.hxx"
 
+#include "TError.h"
+
 #include <stdexcept>
 
 #include <davix.hpp>
@@ -35,6 +37,7 @@ struct RDavixFileDes {
    DAVIX_FD *fd;
    Davix::Context ctx;
    Davix::DavPosix pos;
+   Davix::RequestParams parm;
 };
 
 } // namespace Internal
@@ -70,11 +73,13 @@ std::uint64_t ROOT::Experimental::Detail::RRawFileDavix::DoGetSize()
 
 void ROOT::Experimental::Detail::RRawFileDavix::DoOpen()
 {
+   fFileDes->parm.setMetalinkMode(Davix::MetalinkMode::Disable);
    Davix::DavixError *err = nullptr;
-   fFileDes->fd = fFileDes->pos.open(nullptr, fUrl, O_RDONLY, &err);
+   fFileDes->fd = fFileDes->pos.open(&fFileDes->parm, fUrl, O_RDONLY, &err);
    if (fFileDes->fd == nullptr) {
       throw std::runtime_error("Cannot open '" + fUrl + "', error: " + err->getErrMsg());
    }
+   fFileDes->pos.fadvise(fFileDes->fd, 0, 300, Davix::AdviseRandom);
    if (fOptions.fBlockSize < 0)
       fOptions.fBlockSize = kDefaultBlockSize;
 }
@@ -94,12 +99,12 @@ void ROOT::Experimental::Detail::RRawFileDavix::DoReadV(RIOVec *ioVec, unsigned 
    Davix::DavixError *davixErr = NULL;
    Davix::DavIOVecInput in[nReq];
    Davix::DavIOVecOuput out[nReq];
-   std::cout << "NUMBER OF REQUESTS: " << nReq << std::endl;
 
    for (unsigned int i = 0; i < nReq; ++i) {
       in[i].diov_buffer = ioVec[i].fBuffer;
       in[i].diov_offset = ioVec[i].fOffset;
       in[i].diov_size = ioVec[i].fSize;
+      R__ASSERT(ioVec[i].fSize > 0);
    }
 
    auto ret = fFileDes->pos.preadVec(fFileDes->fd, in, out, nReq, &davixErr);

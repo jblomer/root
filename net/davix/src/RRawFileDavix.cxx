@@ -94,6 +94,7 @@ void ROOT::Experimental::Detail::RRawFileDavix::DoReadV(RIOVec *ioVec, unsigned 
    Davix::DavixError *davixErr = NULL;
    Davix::DavIOVecInput in[nReq];
    Davix::DavIOVecOuput out[nReq];
+   std::cout << "NUMBER OF REQUESTS: " << nReq << std::endl;
 
    for (unsigned int i = 0; i < nReq; ++i) {
       in[i].diov_buffer = ioVec[i].fBuffer;

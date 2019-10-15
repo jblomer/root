@@ -786,6 +786,7 @@ void TDavixFile::eventStop(Double_t t_start, Long64_t len, bool read)
 
 Long64_t TDavixFile::DavixReadBuffer(Davix_fd *fd, char *buf, Int_t len)
 {
+   std::cout << "READ BUFFER {1}" << std::endl;
    DavixError *davixErr = NULL;
    Double_t start_time = eventStart();
 
@@ -806,6 +807,7 @@ Long64_t TDavixFile::DavixReadBuffer(Davix_fd *fd, char *buf, Int_t len)
 
 Long64_t TDavixFile::DavixWriteBuffer(Davix_fd *fd, const char *buf, Int_t len)
 {
+   std::cout << "READ BUFFER {2}" << std::endl;
    DavixError *davixErr = NULL;
    Double_t start_time = eventStart();
 
@@ -826,6 +828,7 @@ Long64_t TDavixFile::DavixWriteBuffer(Davix_fd *fd, const char *buf, Int_t len)
 
 Long64_t TDavixFile::DavixPReadBuffer(Davix_fd *fd, char *buf, Long64_t pos, Int_t len)
 {
+   std::cout << "READ BUFFER {3}" << std::endl;
    DavixError *davixErr = NULL;
    Double_t start_time = eventStart();
 
@@ -846,6 +849,7 @@ Long64_t TDavixFile::DavixPReadBuffer(Davix_fd *fd, char *buf, Long64_t pos, Int
 
 Long64_t TDavixFile::DavixReadBuffers(Davix_fd *fd, char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
 {
+   std::cout << "READ BUFFERS {4} WITH " << nbuf << std::endl;
    DavixError *davixErr = NULL;
    Double_t start_time = eventStart();
    DavIOVecInput in[nbuf];

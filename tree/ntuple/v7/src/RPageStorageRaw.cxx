@@ -559,8 +559,22 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
    }
 
    if ((double(activeSize) / double(clusterSize)) < 0.75) {
+      float extraFraction = 0.25;
       std::sort(sheets.begin(), sheets.end(),
          [](const RSheetLocator &a, const RSheetLocator &b) {return a.fOffset < b.fOffset;});
+      std::vector<std::size_t> gaps;
+      for (unsigned i = 1; i < sheets.size(); ++i) {
+         gaps.emplace_back(sheets[i].fOffset - (sheets[i-1].fSize + sheets[i-1].fOffset));
+      }
+      std::sort(gaps.begin(), gaps.end());
+      std::size_t gapCut = 0;
+      float szExtra = 0.0;
+      for (auto g : gaps) {
+         szExtra += g;
+         if (szExtra  > extraFraction * float(activeSize))
+            break;
+         gapCut = g;
+      }
 
       struct RReadRequest {
          RReadRequest() = default;
@@ -574,19 +588,26 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
       RRawFile::RIOVec req;
       std::size_t szPayload = 0;
       std::size_t szOverhead = 0;
+      //std::cout << "BEGIN " << activeSize / 1024 << "kB  GAP " << gapCut / 1024 << "kB" << std::endl;
       for (auto &s : sheets) {
          auto readUpTo = req.fOffset + req.fSize;
          R__ASSERT(s.fOffset >= readUpTo);
          auto overhead = s.fOffset - readUpTo;
          szPayload += s.fSize;
+         //std::cout << "Overhead to NEXT is " << overhead / 1024 << "kB  SIZE " << s.fSize;
          //if (overhead <= 64*1024/*float(overhead) <= 0.5 * float(s.fSize + req.fSize)*/) {
-         if (float(szOverhead + overhead) <= 0.25 * float(szPayload)) {
+         //if ((overhead < 64 * 1024) || (float(szOverhead + overhead) <= 0.25 * float(szPayload))) {
+         //if (overhead <= 128*1024 /*float(overhead) <= 0.5 * float(s.fSize + req.fSize)*/) {
+         //if ((overhead <= 1024 * 1024) && (float(szOverhead + overhead) <= 0.25 * float(activeSize))) {
+         if (overhead <= gapCut) {
             // extend the read request
+            //std::cout << "... MERGING" << std::endl;
             szOverhead += overhead;
             s.fBufPos = reinterpret_cast<intptr_t>(req.fBuffer) + req.fSize + overhead;
             req.fSize += overhead + s.fSize;
             continue;
          }
+         //std::cout << "... NOT merging" << std::endl;
 
          // close the current request and open new one
          readRequests.emplace_back(req);
@@ -597,6 +618,7 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
          req.fOffset = s.fOffset;
          req.fSize = s.fSize;
       }
+      //std::cout << "END" << std::endl;
       readRequests.emplace_back(req);
 
       auto buffer = reinterpret_cast<unsigned char *>(malloc(

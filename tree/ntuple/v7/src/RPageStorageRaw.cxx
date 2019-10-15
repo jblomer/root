@@ -590,6 +590,7 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
       std::size_t szOverhead = 0;
       //std::cout << "BEGIN " << activeSize / 1024 << "kB  GAP " << gapCut / 1024 << "kB" << std::endl;
       for (auto &s : sheets) {
+         R__ASSERT(s.fSize > 0);
          auto readUpTo = req.fOffset + req.fSize;
          R__ASSERT(s.fOffset >= readUpTo);
          auto overhead = s.fOffset - readUpTo;
@@ -610,7 +611,8 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
          //std::cout << "... NOT merging" << std::endl;
 
          // close the current request and open new one
-         readRequests.emplace_back(req);
+         if (req.fSize > 0)
+            readRequests.emplace_back(req);
 
          req.fBuffer = reinterpret_cast<unsigned char *>(req.fBuffer) + req.fSize;
          s.fBufPos = reinterpret_cast<intptr_t>(req.fBuffer);

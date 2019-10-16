@@ -65,7 +65,7 @@ public:
 
 private:
    EClusterCache fClusterCache = EClusterCache::kDefault;
-   unsigned int fNumStreams = 4;
+   unsigned int fNumStreams = 1;
 
 public:
    RNTupleReadOptions() = default;

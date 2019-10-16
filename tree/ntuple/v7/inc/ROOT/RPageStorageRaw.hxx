@@ -105,12 +105,14 @@ private:
    std::unique_ptr<RClusterPool> fClusterPool;
    std::unique_ptr<std::array<unsigned char, kMaxPageSize>> fUnzipBuffer;
    std::unique_ptr<RRawFile> fFile;
+   void *fMappedFile = nullptr;
 
    std::unordered_multimap<void *, std::shared_ptr<RCluster>> fMmapdPages;
 
    RNTupleMetrics fMetrics;
    RNTupleAtomicCounter *fCtrNRead = nullptr;
    RNTupleAtomicCounter *fCtrNReadV = nullptr;
+   RNTupleAtomicCounter *fCtrNReadMerged = nullptr;
    RNTupleAtomicCounter *fCtrSzRead = nullptr;
    RNTuplePlainCounter *fCtrSzUnzip = nullptr;
    RNTuplePlainCounter *fCtrNPage = nullptr;

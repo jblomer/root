@@ -227,6 +227,8 @@ ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntup
 
    fCtrNRead = fMetrics.MakeCounter<decltype(fCtrNRead)>("nRead", "", "number of read blocks");
    fCtrNReadV = fMetrics.MakeCounter<decltype(fCtrNReadV)>("nReadV", "", "number of vector reads");
+   fCtrNReadMerged = fMetrics.MakeCounter<decltype(fCtrNReadMerged)>(
+      "nReadMerged", "", "number of blocks merged into vector reads");
    fCtrSzRead = fMetrics.MakeCounter<decltype(fCtrSzRead)>("szRead", "B", "volume read from file");
    fCtrSzUnzip = fMetrics.MakeCounter<decltype(fCtrSzUnzip)>("szUnzip", "B", "volume after unzipping");
    fCtrNPage = fMetrics.MakeCounter<decltype(fCtrNPage)>("nPage", "", "number of populated pages");
@@ -251,6 +253,11 @@ ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntup
    fFile = std::unique_ptr<RRawFile>(RRawFile::Create(path, fileOptions));
    R__ASSERT(fFile);
    R__ASSERT(fFile->GetFeatures() & RRawFile::kFeatureHasSize);
+   if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kMMap) {
+      std::uint64_t mmapdOffset;
+      fMappedFile = fFile->Map(fFile->GetSize(), 0, mmapdOffset);
+      R__ASSERT(fMappedFile);
+   }
 }
 
 
@@ -258,6 +265,8 @@ ROOT::Experimental::Detail::RPageSourceRaw::~RPageSourceRaw()
 {
    // delete cluster pool before the file
    fClusterPool = nullptr;
+   if (fMappedFile)
+      fFile->Unmap(fMappedFile, fFile->GetSize());
 }
 
 
@@ -280,6 +289,7 @@ void ROOT::Experimental::Detail::RPageSourceRaw::ReadV(std::vector<RRawFile::RIO
    if ((nStreams <= 1) || (nReqs <= 1)) {
       fFile->ReadV(&ioVec[0], nReqs);
       fCtrNReadV->Inc();
+      fCtrNReadMerged->Add(nReqs);
    } else {
       auto nThreads = std::min(nStreams, nReqs);
       auto reqsPerThread = nReqs / nThreads;
@@ -290,6 +300,7 @@ void ROOT::Experimental::Detail::RPageSourceRaw::ReadV(std::vector<RRawFile::RIO
          std::thread t([this](RRawFile::RIOVec *partialIoVec, unsigned int n)
             {
                fFile->ReadV(partialIoVec, n);
+               fCtrNReadMerged->Add(n);
             }, &ioVec[startIdx], slotSize);
          threads.emplace_back(std::move(t));
       }
@@ -646,14 +657,10 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
    }
 
    std::unique_ptr<RCluster> cluster;
-   size_t bufferOffset = 0;
    unsigned char *buffer = nullptr;
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kMMap) {
-      std::uint64_t mmapdOffset;
-      buffer = reinterpret_cast<unsigned char *>(fFile->Map(clusterSize, clusterLocator.fPosition, mmapdOffset));
-      R__ASSERT(buffer);
-      bufferOffset = clusterLocator.fPosition - mmapdOffset;
-      cluster = std::make_unique<RMMapCluster>(buffer, clusterId, clusterSize + bufferOffset, *fFile);
+      buffer = reinterpret_cast<unsigned char *>(fMappedFile) + clusterLocator.fPosition;
+      cluster = std::make_unique<RMMapCluster>(buffer, clusterId);
    } else {
       buffer = reinterpret_cast<unsigned char *>(malloc(clusterSize));
       R__ASSERT(buffer);
@@ -668,7 +675,7 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
       for (const auto &pageInfo : pageRange.fPageInfos) {
          const auto &pageLocator = pageInfo.fLocator;
          RSheetKey key(i, pageNo);
-         RSheet sheet(buffer + bufferOffset + pageLocator.fPosition - clusterLocator.fPosition,
+         RSheet sheet(buffer + pageLocator.fPosition - clusterLocator.fPosition,
                       pageLocator.fBytesOnStorage);
          //std::cout << "REGISTER SHEET " << i << "/" << pageNo << " @ "
          //          << sheet.GetAddress() << " : " << sheet.GetSize() << std::endl;

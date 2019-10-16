@@ -39,5 +39,4 @@ ROOT::Experimental::Detail::RHeapCluster::~RHeapCluster()
 
 ROOT::Experimental::Detail::RMMapCluster::~RMMapCluster()
 {
-   fFile.Unmap(fHandle, fLength);
 }

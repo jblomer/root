@@ -101,12 +101,9 @@ public:
 };
 
 class RMMapCluster : public RCluster {
-private:
-   RRawFile &fFile;
-   std::size_t fLength;
 public:
-   RMMapCluster(ClusterHandle_t handle, DescriptorId_t clusterId, std::size_t length, RRawFile &file)
-      : RCluster(handle, clusterId), fFile(file), fLength(length) {}
+   RMMapCluster(ClusterHandle_t handle, DescriptorId_t clusterId)
+      : RCluster(handle, clusterId) {}
    ~RMMapCluster();
 };
 

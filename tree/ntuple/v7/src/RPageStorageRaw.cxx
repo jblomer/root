@@ -291,19 +291,33 @@ void ROOT::Experimental::Detail::RPageSourceRaw::ReadV(std::vector<RRawFile::RIO
       fCtrNReadV->Inc();
       fCtrNReadMerged->Add(nReqs);
    } else {
-      auto nThreads = std::min(nStreams, nReqs);
-      auto reqsPerThread = nReqs / nThreads;
       std::vector<std::thread> threads;
-      for (unsigned i = 0; i < nThreads; ++i) {
-         auto startIdx = i * reqsPerThread;
-         auto slotSize = (i == nThreads - 1) ? (nReqs - startIdx) : reqsPerThread;
+      float reqsPerThread = static_cast<float>(nReqs) / static_cast<float>(nStreams);
+      float err = 0.0;
+      unsigned int startIdx = 0;
+      while (startIdx < nReqs) {
+         unsigned int slotSize = static_cast<int>(reqsPerThread);
+         if (slotSize == 0)
+            slotSize = 1;
+         err += reqsPerThread - static_cast<float>(slotSize);
+         if (err > 0.5) {
+            slotSize++;
+            err -= 1.0;
+         }
+         if (startIdx + slotSize > nReqs)
+            slotSize = nReqs - slotSize;
+
          std::thread t([this](RRawFile::RIOVec *partialIoVec, unsigned int n)
             {
                fFile->ReadV(partialIoVec, n);
                fCtrNReadMerged->Add(n);
             }, &ioVec[startIdx], slotSize);
          threads.emplace_back(std::move(t));
+
+         startIdx += slotSize;
       }
+
+      auto nThreads = threads.size();
       for (unsigned i = 0; i < nThreads; ++i) {
          threads[i].join();
       }

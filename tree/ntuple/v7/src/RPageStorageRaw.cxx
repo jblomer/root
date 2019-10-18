@@ -569,7 +569,7 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
       }
    }
 
-   if ((double(activeSize) / double(clusterSize)) < 0.95) {
+   if ((double(activeSize) / double(clusterSize)) < 0.75) {
       float extraFraction = 0.25;
       std::sort(sheets.begin(), sheets.end(),
          [](const RSheetLocator &a, const RSheetLocator &b) {return a.fOffset < b.fOffset;});

@@ -63,8 +63,6 @@ void *ROOT::Experimental::Detail::RRawFileUnix::DoMap(size_t nbytes, std::uint64
    void *result = mmap(nullptr, nbytes, PROT_READ, MAP_PRIVATE, fFileDes, mapdOffset);
    if (result == MAP_FAILED)
       throw std::runtime_error(std::string("Cannot perform memory mapping: ") + strerror(errno));
-   int retval = posix_madvise(result, nbytes, POSIX_MADV_RANDOM);
-   R__ASSERT(retval == 0);
    return result;
 }
 

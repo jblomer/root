@@ -688,10 +688,13 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
       cluster = std::make_unique<RHeapCluster>(buffer, clusterId);
    }
 
+   static unsigned char dummy = 0;
    for (const auto &s : sheets) {
       RSheetKey key(s.fColumnId, s.fPageNo);
       RSheet sheet(buffer + s.fOffset, s.fSize);
       cluster->InsertSheet(key, sheet);
+      // Populate page
+      dummy += *(buffer + s.fOffset);
    }
 
    return cluster;

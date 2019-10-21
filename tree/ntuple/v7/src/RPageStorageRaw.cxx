@@ -682,20 +682,10 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
       cluster = std::make_unique<RHeapCluster>(buffer, clusterId);
    }
 
-   // TODO(jblomer): make id range
-   for (unsigned int i = 0; i < fDescriptor.GetNColumns(); ++i) {
-      const auto &pageRange = clusterDesc.GetPageRange(i);
-      NTupleSize_t pageNo = 0;
-      for (const auto &pageInfo : pageRange.fPageInfos) {
-         const auto &pageLocator = pageInfo.fLocator;
-         RSheetKey key(i, pageNo);
-         RSheet sheet(buffer + pageLocator.fPosition - clusterLocator.fPosition,
-                      pageLocator.fBytesOnStorage);
-         //std::cout << "REGISTER SHEET " << i << "/" << pageNo << " @ "
-         //          << sheet.GetAddress() << " : " << sheet.GetSize() << std::endl;
-         cluster->InsertSheet(key, sheet);
-         ++pageNo;
-      }
+   for (const auto &s : sheets) {
+      RSheetKey key(s.fColumnId, s.fPageNo);
+      RSheet sheet(buffer + s.fOffset, s.fSize);
+      cluster->InsertSheet(key, sheet);
    }
 
    return cluster;

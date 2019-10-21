@@ -488,14 +488,20 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
    auto newPage = fPageAllocator->NewPage(columnId, pageBuffer, elementSize, pageInfo.fNElements);
    newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
    if (isAdoptedPage) {
-      fMmapdPages.emplace(newPage.GetBuffer(), cluster);
-      fPagePool->RegisterPage(newPage,
-         RPageDeleter([](const RPage &page, void *userData)
-            {
-               auto mmapdPages =
-                  reinterpret_cast<std::unordered_multimap<void *, std::shared_ptr<RCluster>>*>(userData);
-               mmapdPages->erase(mmapdPages->find(page.GetBuffer()));
-            }, &fMmapdPages));
+      if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kMMap) {
+         fPagePool->RegisterPage(newPage,
+            RPageDeleter([](const RPage & /*page*/, void * /*userData*/)
+               {}, nullptr));
+      } else {
+        fMmapdPages.emplace(newPage.GetBuffer(), cluster);
+        fPagePool->RegisterPage(newPage,
+           RPageDeleter([](const RPage &page, void *userData)
+              {
+                 auto mmapdPages =
+                    reinterpret_cast<std::unordered_multimap<void *, std::shared_ptr<RCluster>>*>(userData);
+                 mmapdPages->erase(mmapdPages->find(page.GetBuffer()));
+              }, &fMmapdPages));
+      }
       fCtrNPageMmap->Inc();
    } else {
       fPagePool->RegisterPage(newPage,

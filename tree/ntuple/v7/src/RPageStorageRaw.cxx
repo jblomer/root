@@ -626,11 +626,6 @@ ROOT::Experimental::Detail::RPageSourceRaw::LoadCluster(DescriptorId_t clusterId
          R__ASSERT(s.fOffset >= readUpTo);
          auto overhead = s.fOffset - readUpTo;
          szPayload += s.fSize;
-         //std::cout << "Overhead to NEXT is " << overhead / 1024 << "kB  SIZE " << s.fSize;
-         //if (overhead <= 64*1024/*float(overhead) <= 0.5 * float(s.fSize + req.fSize)*/) {
-         //if ((overhead < 64 * 1024) || (float(szOverhead + overhead) <= 0.25 * float(szPayload))) {
-         //if (overhead <= 128*1024 /*float(overhead) <= 0.5 * float(s.fSize + req.fSize)*/) {
-         //if ((overhead <= 1024 * 1024) && (float(szOverhead + overhead) <= 0.25 * float(activeSize))) {
          if (overhead <= gapCut) {
             // extend the read request
             //std::cout << "... MERGING" << std::endl;

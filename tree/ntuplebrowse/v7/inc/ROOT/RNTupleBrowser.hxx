@@ -65,7 +65,7 @@ namespace Experimental {
 \class ROOT::Experimental::RNTupleBrowser
 \ingroup NTupleBrowse
 \brief Coordinates the communication between TBrowser and RNTupleReader
-    
+
 .root files created by ntuples have a TDirectory. RNTupleBrowser reads this TDirectory and allows browsing through
  the contents of the .root file. To browse the contents, an instance of RNTupleReader is created, which traverses
  through the fields stored in the .root file. It also stores various objects which shouldn't be deleted until the
@@ -102,6 +102,7 @@ public:
    std::vector<std::unique_ptr<TNamed>> fNTupleBrowsePtrVec;
 
    RNTupleBrowser(TDirectory *directory);
+   RNTupleBrowser(TBrowser *b, const std::string &ntupleName);
    ~RNTupleBrowser();
 
    /// Instantiates the RNTupleReader associated to the TDirectory.
@@ -117,7 +118,7 @@ public:
 \class ROOT::Experimental::RNTupleBrowseFolder
 \ingroup NTupleBrowse
 \brief Is displayed in the TBrowser as a field with children.
- 
+
 It represents an RNTuple-field which has children. It is displayed in the TBrowser with a folder symbol. The
  subfields can be displayed by double-clicking this object, which calls void Browse(TBrowser *b)
 */
@@ -152,7 +153,7 @@ public:
 \class ROOT::Experimental::RNTupleBrowseLeaf
 \ingroup NTupleBrowse
 \brief Is displayed in the TBrowser as a field without children.
-    
+
 It represents an ntuple-field without children. If it represents a field with numerical data, double-clicking
  creates a TH1F-histogram.
 */

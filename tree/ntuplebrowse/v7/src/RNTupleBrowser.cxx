@@ -27,6 +27,12 @@
 
 //--------------------------- RNTupleBrowser -----------------------------
 
+ROOT::Experimental::RNTupleBrowser::RNTupleBrowser(TBrowser *b, const std::string &ntupleName)
+   : fDirectory{nullptr}, fCurrentTH1F{nullptr}
+{
+   // TODO(jblomer)
+}
+
 ROOT::Experimental::RNTupleBrowser::RNTupleBrowser(TDirectory *directory) : fDirectory{directory}, fCurrentTH1F{nullptr}
 {
 }

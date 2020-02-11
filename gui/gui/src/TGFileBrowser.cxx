@@ -27,7 +27,6 @@
 #include "TInterpreter.h"
 #include "TRegexp.h"
 #include "TEnv.h"
-#include "TError.h"
 #include "TImage.h"
 #include "TBrowser.h"
 #include "TRemoteObject.h"
@@ -257,7 +256,6 @@ TGFileBrowser::~TGFileBrowser()
    if (fCachedPic && (fCachedPic != fFileIcon))
       fClient->FreePicture(fCachedPic);
    if (fFileIcon) fClient->FreePicture(fFileIcon);
-   gROOT->ProcessLine(TString::Format("delete (ROOT::Experimental::RNTupleBrowser*)(%p);", fNTupleBrowserPtr));
    Cleanup();
 }
 
@@ -1208,7 +1206,6 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
    char action[512];
    TString act;
    Bool_t is_link = kFALSE;
-   Bool_t is_rntuple = kFALSE;
    if (!gSystem->GetPathInfo(item->GetText(), sbuf) && sbuf.fIsLink) {
       is_link = kTRUE;
       fullpath = item->GetText();
@@ -1227,22 +1224,10 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
    if (obj && !obj->InheritsFrom("TSystemFile")) {
       TString ext = obj->GetName();
       if (obj->InheritsFrom("TDirectory") && (obj->IsA() != TClass::Class())) {
-         // strcmp(obj->ClassName(), "TFile") in the if statement below prevents double-clicked .root files to call: fNTupleBrowserPtr->SetDirectory(...).
-         if (obj->TestBit(9/*TDirectoryFile::kCustomBrowse*/) && (strcmp(obj->ClassName(), "TFile") != 0)) {
-            is_rntuple = kTRUE;
-            if (!fNTupleBrowserPtr) {
-               fNTupleBrowserPtr = (ROOT::Experimental::RNTupleBrowser *)gROOT->ProcessLine(
-                  TString::Format("new ROOT::Experimental::RNTupleBrowser((TDirectory *)%#tx);", (uintptr_t)obj));
-            }
-            R__ASSERT(fNTupleBrowserPtr);
-            gROOT->ProcessLine(TString::Format("((ROOT::Experimental::RNTupleBrowser *)%#tx)->SetDirectory((TDirectory *)%#tx);", (uintptr_t)fNTupleBrowserPtr, (uintptr_t)obj));
-            gROOT->ProcessLine(TString::Format("((ROOT::Experimental::RNTupleBrowser *)%#tx)->Browse((TBrowser *)%#tx);", (uintptr_t)fNTupleBrowserPtr, (uintptr_t)fBrowser));
-         } else {
-            if (((TDirectory *)obj)->GetListOfKeys())
-               fNKeys = ((TDirectory *)obj)->GetListOfKeys()->GetEntries();
-            else
-               fNKeys = 0;
-         }
+         if (((TDirectory *)obj)->GetListOfKeys())
+            fNKeys = ((TDirectory *)obj)->GetListOfKeys()->GetEntries();
+         else
+            fNKeys = 0;
       }
       else if (obj->InheritsFrom("TKey") && (obj->IsA() != TClass::Class())) {
          Chdir(item);
@@ -1305,13 +1290,18 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
           gSystem->AccessPathName(fullpath.Data())) {
          if (fBrowser) fBrowser->SetDrawOption(GetDrawOption());
          fDblClick = kTRUE;
-         if (gClient->GetMimeTypeList()->GetAction(obj->IsA()->GetName(), action)) {
+         std::string clname = obj->IsA()->GetName();
+         if (clname == "TKey") {
+            clname = ((TKey *)obj)->GetClassName();
+         }
+         if (gClient->GetMimeTypeList()->GetAction(clname.c_str(), action)) {
             act = action;
             if (fBrowser && act.Contains("->Browse()")) obj->Browse(fBrowser);
             else if (act.Contains("->Draw()")) obj->Draw(GetDrawOption());
             else {
                if (act.Contains("%s")) act.ReplaceAll("%s", obj->GetName());
                else act.Prepend(obj->GetName());
+               act.ReplaceAll("%b", Form("(TBrowser *)%p", fBrowser));
                gInterpreter->SaveGlobalsContext();
                if (act[0] == '!') {
                   act.Remove(0, 1);
@@ -1331,10 +1321,8 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
             // than a canvas already embedded in one of the browser's tab
             obj->DrawClone();
          }
-         // !is_rntuple prevents RNTuple's internal key names from being displayed.
-         else if (fBrowser && !obj->InheritsFrom("TFormula") && !is_rntuple) {
+         else if (fBrowser && !obj->InheritsFrom("TFormula"))
             obj->Browse(fBrowser);
-         }
          fDblClick = kFALSE;
          fNKeys = 0;
          fCnt = 0;

@@ -11,4 +11,3 @@ if(NOT dataframe)
 endif()
 
 ROOT_ADD_GTEST(ntuple_browse ntuple_browse.cxx LIBRARIES ROOTNTupleBrowse)
-

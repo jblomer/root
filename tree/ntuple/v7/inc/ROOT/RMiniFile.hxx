@@ -90,29 +90,30 @@ struct RTFileControlBlock;
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RMiniFileReader
+\class ROOT::Experimental::Internal::RNTupleFileReader
 \ingroup NTuple
-\brief Read RNTuple data blocks from a TFile container, provided by a RRawFile
+\brief Read RNTuple data blocks from a TFile container, provided either by a RRawFile or by a TFile
 
-A RRawFile is used for the byte access.  The class implements a minimal subset of TFile, enough to extract
-RNTuple data keys.
+In case a RRawFile is used, the class implements a minimal subset of TFile, enough to extract RNTuple data keys.
 */
 // clang-format on
-class RMiniFileReader {
+class RNTupleFileReader {
 private:
-   /// The raw file used to read byte ranges
+   /// The raw file used to read byte ranges (if set, fProperFile is nullptr)
    ROOT::Internal::RRawFile *fRawFile = nullptr;
-   /// Indicates whether the file is a TFile container or an RNTuple bare file
-   bool fIsBare = false;
+   /// The TFile used to read byte ranges (if set, fRawFile is nullptr)
+   TFile *fProperFile = nullptr;
    /// Used when the file container turns out to be a bare file
    RNTuple GetNTupleBare(std::string_view ntupleName);
    /// Used when the file turns out to be a TFile container
-   RNTuple GetNTupleProper(std::string_view ntupleName);
+   RNTuple GetNTupleTFile(std::string_view ntupleName);
 
 public:
-   RMiniFileReader() = default;
+   RNTupleFileReader() = default;
    /// Uses the given raw file to read byte ranges
-   explicit RMiniFileReader(ROOT::Internal::RRawFile *rawFile);
+   explicit RNTupleFileReader(ROOT::Internal::RRawFile *rawFile);
+   /// Uses the given TFile to read byte ranges; used by the TBrowser
+   explicit RNTupleFileReader(TFile *properFile);
    /// Extracts header and footer location for the RNTuple identified by ntupleName
    RNTuple GetNTuple(std::string_view ntupleName);
    /// Reads a given byte range from the file into the provided memory buffer

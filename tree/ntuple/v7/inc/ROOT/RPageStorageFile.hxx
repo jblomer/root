@@ -125,7 +125,7 @@ private:
    /// An RRawFile is used to request the necessary byte ranges from a local or a remote file
    std::unique_ptr<ROOT::Internal::RRawFile> fFile;
    /// Takes the fFile to read ntuple blobs from it
-   Internal::RMiniFileReader fReader;
+   Internal::RNTupleFileReader fReader;
 
    RPageSourceFile(std::string_view ntupleName, const RNTupleReadOptions &options);
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor,

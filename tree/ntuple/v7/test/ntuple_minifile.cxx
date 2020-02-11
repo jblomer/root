@@ -9,7 +9,7 @@
 #include <memory>
 
 using ENTupleContainerFormat = ROOT::Experimental::ENTupleContainerFormat;
-using RMiniFileReader = ROOT::Experimental::Internal::RMiniFileReader;
+using RNTupleFileReader = ROOT::Experimental::Internal::RNTupleFileReader;
 using RNTupleFileWriter = ROOT::Experimental::Internal::RNTupleFileWriter;
 using RNTuple = ROOT::Experimental::RNTuple;
 using RRawFile = ROOT::Internal::RRawFile;
@@ -49,7 +49,7 @@ TEST(MiniFile, Raw)
    writer->Commit();
 
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
-   RMiniFileReader reader(rawFile.get());
+   RNTupleFileReader reader(rawFile.get());
    auto ntuple = reader.GetNTuple("MyNTuple");
    EXPECT_EQ(offHeader, ntuple.fSeekHeader);
    EXPECT_EQ(offFooter, ntuple.fSeekFooter);
@@ -79,7 +79,7 @@ TEST(MiniFile, Stream)
    writer->Commit();
 
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
-   RMiniFileReader reader(rawFile.get());
+   RNTupleFileReader reader(rawFile.get());
    auto ntuple = reader.GetNTuple("MyNTuple");
    EXPECT_EQ(offHeader, ntuple.fSeekHeader);
    EXPECT_EQ(offFooter, ntuple.fSeekFooter);
@@ -99,9 +99,9 @@ TEST(MiniFile, Stream)
 }
 
 
-TEST(MiniFile, Proper)
+TEST(MiniFile, ProperWrite)
 {
-   FileRaii fileGuard("test_ntuple_minifile_proper.root");
+   FileRaii fileGuard("test_ntuple_minifile_proper_write.root");
 
    std::unique_ptr<TFile> file;
    auto writer = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), file));
@@ -115,7 +115,37 @@ TEST(MiniFile, Proper)
    writer->Commit();
 
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
-   RMiniFileReader reader(rawFile.get());
+   RNTupleFileReader reader(rawFile.get());
+   auto ntuple = reader.GetNTuple("MyNTuple");
+   EXPECT_EQ(offHeader, ntuple.fSeekHeader);
+   EXPECT_EQ(offFooter, ntuple.fSeekFooter);
+
+   char buf;
+   reader.ReadBuffer(&buf, 1, offBlob);
+   EXPECT_EQ(blob, buf);
+   reader.ReadBuffer(&buf, 1, offHeader);
+   EXPECT_EQ(header, buf);
+   reader.ReadBuffer(&buf, 1, offFooter);
+   EXPECT_EQ(footer, buf);
+}
+
+
+TEST(MiniFile, ProperRead)
+{
+   FileRaii fileGuard("test_ntuple_minifile_proper_read.root");
+
+   auto writer = std::unique_ptr<RNTupleFileWriter>(
+      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, ENTupleContainerFormat::kTFile));
+   char header = 'h';
+   char footer = 'f';
+   char blob = 'b';
+   auto offHeader = writer->WriteNTupleHeader(&header, 1, 1);
+   auto offBlob = writer->WriteBlob(&blob, 1, 1);
+   auto offFooter = writer->WriteNTupleFooter(&footer, 1, 1);
+   writer->Commit();
+
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "READ"));
+   RNTupleFileReader reader(file.get());
    auto ntuple = reader.GetNTuple("MyNTuple");
    EXPECT_EQ(offHeader, ntuple.fSeekHeader);
    EXPECT_EQ(offFooter, ntuple.fSeekFooter);
@@ -155,7 +185,7 @@ TEST(MiniFile, Multi)
    writer2->Commit();
 
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
-   RMiniFileReader reader(rawFile.get());
+   RNTupleFileReader reader(rawFile.get());
    auto ntuple1 = reader.GetNTuple("FirstNTuple");
    EXPECT_EQ(offHeader1, ntuple1.fSeekHeader);
    EXPECT_EQ(offFooter1, ntuple1.fSeekFooter);
@@ -197,6 +227,6 @@ TEST(MiniFile, Failures)
    writer->Commit();
 
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
-   RMiniFileReader reader(rawFile.get());
+   RNTupleFileReader reader(rawFile.get());
    EXPECT_DEATH(reader.GetNTuple("No such NTiple"), ".*");
 }

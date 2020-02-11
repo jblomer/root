@@ -895,23 +895,33 @@ struct RTFileControlBlock {
 } // namespace Internal
 
 
-ROOT::Experimental::Internal::RMiniFileReader::RMiniFileReader(ROOT::Internal::RRawFile *rawFile)
+ROOT::Experimental::Internal::RNTupleFileReader::RNTupleFileReader(ROOT::Internal::RRawFile *rawFile)
    : fRawFile(rawFile)
 {
 }
 
-ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::GetNTuple(std::string_view ntupleName)
+ROOT::Experimental::Internal::RNTupleFileReader::RNTupleFileReader(TFile *properFile)
+   : fProperFile(properFile)
 {
+}
+
+ROOT::Experimental::RNTuple
+ROOT::Experimental::Internal::RNTupleFileReader::GetNTuple(std::string_view ntupleName)
+{
+   if (fProperFile) {
+      return *fProperFile->Get<ROOT::Experimental::RNTuple>(std::string(ntupleName).c_str());
+   }
+
    char ident[4];
    ReadBuffer(ident, 4, 0);
    if (std::string(ident, 4) == "root")
-      return GetNTupleProper(ntupleName);
-   fIsBare = true;
+      return GetNTupleTFile(ntupleName);
    return GetNTupleBare(ntupleName);
 }
 
 
-ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view ntupleName)
+ROOT::Experimental::RNTuple
+ROOT::Experimental::Internal::RNTupleFileReader::GetNTupleTFile(std::string_view ntupleName)
 {
    RTFHeader fileHeader;
    ReadBuffer(&fileHeader, sizeof(fileHeader), 0);
@@ -958,7 +968,7 @@ ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::GetNT
    return ntuple.ToRNTuple();
 }
 
-ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::GetNTupleBare(std::string_view ntupleName)
+ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RNTupleFileReader::GetNTupleBare(std::string_view ntupleName)
 {
    RBareFileHeader fileHeader;
    ReadBuffer(&fileHeader, sizeof(fileHeader), 0);
@@ -975,10 +985,15 @@ ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::GetNT
 }
 
 
-void ROOT::Experimental::Internal::RMiniFileReader::ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset)
+void ROOT::Experimental::Internal::RNTupleFileReader::ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset)
 {
-   auto nread = fRawFile->ReadAt(buffer, nbytes, offset);
-   R__ASSERT(nread == nbytes);
+   if (fProperFile) {
+      bool rv = fProperFile->ReadBuffer((char *)(buffer), offset, nbytes);
+      R__ASSERT(!rv);
+   } else {
+      auto nread = fRawFile->ReadAt(buffer, nbytes, offset);
+      R__ASSERT(nread == nbytes);
+   }
 }
 
 

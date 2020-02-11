@@ -212,7 +212,7 @@ ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view nt
 {
    fFile = ROOT::Internal::RRawFile::Create(path);
    R__ASSERT(fFile);
-   fReader = Internal::RMiniFileReader(fFile.get());
+   fReader = Internal::RNTupleFileReader(fFile.get());
 }
 
 
@@ -337,6 +337,6 @@ std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Det
 {
    auto clone = new RPageSourceFile(fNTupleName, fOptions);
    clone->fFile = fFile->Clone();
-   clone->fReader = Internal::RMiniFileReader(clone->fFile.get());
+   clone->fReader = Internal::RNTupleFileReader(clone->fFile.get());
    return std::unique_ptr<RPageSourceFile>(clone);
 }

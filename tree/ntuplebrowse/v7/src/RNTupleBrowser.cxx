@@ -27,10 +27,12 @@
 #include <cstring>
 #include <string>
 
+
 //--------------------------- RNTupleBrowser -----------------------------
 
+
 ROOT::Experimental::RNTupleBrowser::RNTupleBrowser(TBrowser *b, const std::string &ntupleName)
-   : fBrowser(b), fDirectory{nullptr}, fCurrentTH1F{nullptr}
+   : fBrowser(b)
 {
    auto pageSource = Detail::RPageSourceFile::CreateFromTFile(ntupleName, dynamic_cast<TFile *>(gDirectory));
    fReader = std::make_unique<RNTupleReader>(std::unique_ptr<Detail::RPageSource>(pageSource));
@@ -39,79 +41,43 @@ ROOT::Experimental::RNTupleBrowser::RNTupleBrowser(TBrowser *b, const std::strin
    fReader->GetModel()->GetRootField()->AcceptVisitor(browseVisitor);
 }
 
-ROOT::Experimental::RNTupleBrowser::RNTupleBrowser(TDirectory *directory) : fDirectory{directory}, fCurrentTH1F{nullptr}
-{
-}
-
-void ROOT::Experimental::RNTupleBrowser::SetDirectory(TDirectory *directory)
-{
-   fDirectory = directory;
-   // Checks if a RNTupleReader with that directory was already created. If so it just takes the already existing
-   // RNTupleReader.
-   for (unsigned int i = 0; i < fPastDirectories.size(); ++i) {
-      if (fPastDirectories.at(i) == fDirectory) {
-         fReaderPtrVecIndex = i;
-         return;
-      }
-   }
-
-   std::unique_ptr<Detail::RPageSource> sourcePtr = std::make_unique<Detail::RPageSourceRoot>(fDirectory);
-
-   // Stores smart pointers of RNTupleReader in a vector, so that RNTupleReader-objects don't get destroyed at the end
-   // of this function. Because the fDirectory serves like a key to the RNTupleReader (like in a map data structure), it
-   // is also stored in a vector.
-   fReaderPtrVec.emplace_back(std::make_unique<ROOT::Experimental::RNTupleReader>(std::move(sourcePtr)));
-   fReaderPtrVecIndex = static_cast<int>(fReaderPtrVec.size() - 1);
-   fPastDirectories.push_back(fDirectory);
-}
 
 ROOT::Experimental::RNTupleBrowser::~RNTupleBrowser()
 {
-   // No need to delete TH1F* fCurrentTH1F, because it's automatically deallocated when TBrowser is closed.
+   // No need to delete fCurrentHist, because it's automatically deallocated when TBrowser is closed.
 }
 
-void ROOT::Experimental::RNTupleBrowser::Browse(TBrowser *b)
+
+void ROOT::Experimental::RNTupleBrowser::SetCurrentHist(TH1F *h)
 {
-   ROOT::Experimental::RBrowseVisitor browseVisitor(b, this);
-   GetReaderPtr()->GetModel()->GetRootField()->TraverseVisitor(browseVisitor, 0);
+   delete fCurrentHist;
+   fCurrentHist = h;
 }
 
-//---------------------------- NTupleBrowseFolder ---------------------------
+
+//---------------------------- NTupleBrowseFolder ------------------------------
+
 
 ClassImp(ROOT::Experimental::RNTupleBrowseFolder);
 
+
 void ROOT::Experimental::RNTupleBrowseFolder::Browse(TBrowser *b)
 {
-   RBrowseVisitor browseVisitor(b, fRNTupleBrowserPtr);
-   for (auto f : fFieldPtr->GetSubFields()) {
+   RBrowseVisitor browseVisitor(b, fNtplBrowser);
+   for (auto f : fField->GetSubFields()) {
       f->AcceptVisitor(browseVisitor);
    }
 }
 
-void ROOT::Experimental::RNTupleBrowseFolder::AddBrowse(TBrowser *b)
-{
-   // The if statement allows nothing to happen in this function when this function is called in a unit test.
-   if (b != nullptr) {
-      b->Add(this);
-   }
-}
 
-//---------------------------- RNTupleBrowseLeaf --------------------
+//------------------------------ RNTupleBrowseLeaf -----------------------------
+
 
 ClassImp(ROOT::Experimental::RNTupleBrowseLeaf);
 
-void ROOT::Experimental::RNTupleBrowseLeaf::AddBrowse(TBrowser *b)
-{
-   // The if statement allows nothing to happen in this function when this function is called in a unit test.
-   if (b != nullptr) {
-      b->Add(this);
-   }
-}
 
 void ROOT::Experimental::RNTupleBrowseLeaf::Browse(TBrowser * /*b*/)
 {
-   RDisplayHistVisitor histVisitor(fRNTupleBrowserPtr, fRNTupleBrowserPtr->GetReader());
-   if (fFieldPtr) {
-      fFieldPtr->AcceptVisitor(histVisitor, 1 /* 1 is a dummy value*/);
-   }
+   RDisplayHistVisitor histVisitor(fNtplBrowser);
+   fField->AcceptVisitor(histVisitor);
 }

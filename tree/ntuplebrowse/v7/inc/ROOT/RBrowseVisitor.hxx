@@ -24,7 +24,12 @@
 
 #include <cassert>
 #include <cmath>
+<<<<<<< HEAD
 #include <limits.h>
+=======
+#include <limits>
+#include <type_traits>
+>>>>>>> [ntuple] beautify ntuple browser code
 
 class TBrowser;
 
@@ -35,33 +40,36 @@ namespace Experimental {
 /**
 \class ROOT::Experimental::RBrowseVisitor
 \ingroup NTupleBrowse
-\brief Visitor class which traverses fields to display them on the TBrowser.
-
-RBrowseVisitor uses information about a field and creates an instance of RNTupleBrowseLeaf or RNTupleBrowseFolder.
+\brief Visitor class which adds the RNTupleBrowseLeaf or RNTupleBrowseFolder shims to the TBrowser.
 */
 // clang-format on
 class RBrowseVisitor : public Detail::RNTupleVisitor {
 private:
-   /// Is passed down to RNTupleBrowseLeaf or RNTupleBrowseFolder.
+   /// Passed down to RNTupleBrowseLeaf or RNTupleBrowseFolder.
    TBrowser *fBrowser;
-   /// Used to save created instance of RNTupleBrowseLeaf or RNTupleBrowseFolder in RNTupleBrowser and also passed down
-   /// to RNTupleBrowseLeaf and RNTupleBrowseFolder.
-   RNTupleBrowser *fNTupleBrowserPtr;
+   /// Passed down to RNTupleBrowseLeaf or RNTupleBrowseFolder.
+   RNTupleBrowser *fNtplBrowser;
 
 public:
-   RBrowseVisitor(TBrowser *parb, RNTupleBrowser *parntplb) : fBrowser{parb}, fNTupleBrowserPtr{parntplb} {}
+   RBrowseVisitor(TBrowser *b, RNTupleBrowser *ntplBrowser) : fBrowser(b), fNtplBrowser(ntplBrowser) {}
 
    /// Creates instance of RNTupleBrowseLeaf or RNTupleBrowseFolder and displays it in TBrowser.
+<<<<<<< HEAD
    void VisitField(const Detail::RFieldBase &field, int level) final;
    // Do nothing for RootField
+=======
+   void VisitField(const Detail::RFieldBase &field) final;
+   // Visit the top-level fields
+>>>>>>> [ntuple] beautify ntuple browser code
    void VisitRootField(const RFieldRoot &field) final;
 };
+
 
 // clang-format off
 /**
 \class ROOT::Experimental::RDisplayHistVisitor
 \ingroup NTupleBrowse
-\brief Visitor class which draws a histogram for fields with numerical data.
+\brief Draws a histogram for scalar fields with numerical data.
 
 Visits fields displayed in TBrowser and draws a histogram for appropriate fields. Instances of this class are created
  when a field without subfields is double-clicked in TBrowser. (called by RNTupleBrowseLeaf::Browse(TBrowser* b))
@@ -69,38 +77,33 @@ Visits fields displayed in TBrowser and draws a histogram for appropriate fields
 // clang-format on
 class RDisplayHistVisitor : public Detail::RNTupleVisitor {
 private:
-   /// Allows to access RNTupleBrowser::fCurrentTH1F.
+   /// Allows to access RNTupleBrowser::fCurrentHist and the ntuple reader
    RNTupleBrowser *fNtplBrowser;
-   /// Allows to get entries of a field which will be displayed in the histogram.
-   RNTupleReader *fReader;
-   // Note: fNTupleBrowserPtr->GetReaderPtr() returns the last created RNTupleReader. This can be another RNTupleReader
-   // than the one which contains information about the visited field. Therefore a separate member had to be created.
 
 public:
-   RDisplayHistVisitor(RNTupleBrowser *parntplb, RNTupleReader *readerPtr)
-      : fNtplBrowser{parntplb}, fReader{readerPtr}
+   RDisplayHistVisitor(RNTupleBrowser *ntplBrowser)
+      : fNtplBrowser{ntplBrowser}
    {
    }
 
-   void VisitField(const Detail::RFieldBase & /*field*/, int /*level*/) final {}
-   void VisitRootField(const RFieldRoot & /*field*/, int /*level*/) final {}
-   void VisitFloatField(const RField<float> &field, int /*level*/) { DrawHistogram<float>(field, false); }
-   void VisitDoubleField(const RField<double> &field, int /*level*/) { DrawHistogram<double>(field, false); }
-   void VisitInt32Field(const RField<std::int32_t> &field, int /*level*/) { DrawHistogram<std::int32_t>(field, true); }
-   void VisitUInt32Field(const RField<std::uint32_t> &field, int /*level*/)
+   void VisitField(const Detail::RFieldBase & /*field*/) final {}
+   void VisitRootField(const RFieldRoot & /*field*/) final {}
+   void VisitFloatField(const RField<float> &field) { DrawHistogram<float>(field); }
+   void VisitDoubleField(const RField<double> &field) { DrawHistogram<double>(field); }
+   void VisitInt32Field(const RField<std::int32_t> &field) { DrawHistogram<std::int32_t>(field); }
+   void VisitUInt32Field(const RField<std::uint32_t> &field)
    {
-      DrawHistogram<std::uint32_t>(field, true);
+      DrawHistogram<std::uint32_t>(field);
    }
    void VisitUInt64Field(const RField<std::uint64_t> &field, int /*level*/)
    {
-      DrawHistogram<std::uint64_t>(field, true);
+      DrawHistogram<std::uint64_t>(field);
    }
 
    template <typename T>
-   void DrawHistogram(const Detail::RFieldBase &field, bool isIntegraltype)
+   void DrawHistogram(const Detail::RFieldBase &field)
    {
-      std::cout << "Drawing histogram with " << field.GetQualifiedName() << std::endl;
-      auto ntupleView = fReader->GetView<T>(field.GetQualifiedName());
+      auto ntupleView = fNtplBrowser->GetReader()->GetView<T>(field.GetQualifiedName());
 
       // if min = 3 and max = 10, a histogram with a x-axis range of 3 to 10 is created with 8 bins (3, 4, 5, 6, 7, 8,
       // 9, 10)
@@ -115,16 +118,16 @@ public:
          return; // no histogram for empty field.
 
       // It doesn't make sense to create 100 bins if only integers from 3 to 10 are used to fill the histogram.
-      int nbins = isIntegraltype ? std::min(100, static_cast<int>(std::round(max - min) + 1)) : 100;
-      // deleting the old TH1-histogram after creating a new one makes cling complain if both histograms have the same
-      // name.
-      delete fNtplBrowser->fCurrentTH1F;
+      int nbins = std::is_integral<T>::value ? std::min(100, static_cast<int>(std::round(max - min) + 1)) : 100;
+      // deleting the old TH1-histogram after creating a new one makes cling complain if both histograms
+      // have the same name.
+      fNtplBrowser->SetCurrentHist(nullptr);
       auto h1 = new TH1F(field.GetName().c_str(), field.GetName().c_str(), nbins, min - 0.5, max + 0.5);
       for (auto i : viewRange) {
          h1->Fill(ntupleView(i));
       }
       h1->Draw();
-      fNtplBrowser->fCurrentTH1F = h1;
+      fNtplBrowser->SetCurrentHist(h1);
    }
 };
 

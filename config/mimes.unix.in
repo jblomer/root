@@ -207,7 +207,7 @@ action = ->Browse()
 
 [root/rntuple]
 pattern = ROOT::Experimental::RNTuple
-icon = tree_s.xpm tree_t.xpm
+icon = folder_s.xpm folder_t.xpm
 action = new ROOT::Experimental::RNTupleBrowser(%b, "%s")
 
 [root/tntuple]

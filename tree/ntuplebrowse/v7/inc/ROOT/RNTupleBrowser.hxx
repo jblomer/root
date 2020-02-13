@@ -20,41 +20,32 @@
 #include <ROOT/RNTuple.hxx>
 
 #include <TBrowser.h>
-#include <TDirectory.h>
 #include <TH1.h>
 #include <TNamed.h>
 
 #include <memory>
 #include <vector>
 
-/* Here is a description of how the entire TBrowser-support for ntuple works by explaining the consequence of each
- * action on a TBrowser.
+/* The sequence of actions between TBrowser and RNTuple browser support:
  *
- * Opening the TBrowser:
- * Nothing happens in this class.
+ * Double-clicking a ROOT file containing an RNTuple:
+ *  - The TBrowser finds a key of type RNTuple (it is a TKey object in the TBrowser code)
+ *  - The etc/mimes file tells the TBrowser to create a new RNTupleBrowser upon double-clicking the RNTuple
  *
- * Double-clicking a .root file containing a ntuple:
- * Still nothing happens in this class. A TDirectoryFile with the name of the ntuple is displayed on the TBrowser.
+ * Double-clicking the RNTupleBrowser
+ *  - A new instance of RNTupleBrowser is created through the interpreter
+ *  - The RNTupleBrowser creates a RNTupleReader based on the RNTuple name and the file that gDirectory points to
+ *  - For all direct children of the root field, it visits the RBrowseVisitor
  *
- * Double-clicking a TDirectoryFile emerged from the situation above:
- * In TGFileBrowser an instance of RNTupleBrowser is created (if there isn't already one) and calls the functions
- * RNTupleBrower::SetDirectory() and RNTupleBrowser::Browse(). SetDirectory() ensures, that RNTupleBrowser creates
- * the correct instance of RNTupleReader to read its contents. Browse() uses the RNTupleReader to traverse through
- * the fields and instantiates a RNTupleBrowseLeaf (field has no subfield) or RNTupleBrowseFolder
- * (field has subfields) for the top level fields. Each RNTupleBrowseLeaf and RNTupleBrowseFolder then call
- * AddBrowse(), which adds them on the TBrowser with an icon and name.
+ * RBrowseVisitor
+ *  - A scalar field adds a new RNTupleBrowseLeaf object to the TBrowser
+ *  - A collection or record adds a new RNTupleBrowseFolder object to the TBrowser
  *
- * Double-clicking on a RNTupleBrowseLeaf in TBrowser (field without child):
- * This calls the Browse() method of RNTupleBrowseLeaf. This function draws a histogram of type TH1F for
- * non-vector fields containing numerical data and does nothing for other fields. If a field is suited for
- * drawing a TH1F is checked by fType, which is set when the RNTupleBrowseLeaf is created.
+ * Double-clicking RNTupleBrowseLeaf
+ *  - If the field is numeric, creates a histogram
  *
- * Double-clicking on a RNTupleBrowseFolder in TBrowser (field with child, currently displayed as folder):
- * This calls the Browse() method of RNTupleBrowseFolder, which then calls RFieldBase::TraverseVisitor()
- * (defined in RField.cxx) starting from the current field. This displays it's direct subfields on the TBrowser
- * with RNTupleBrowseFolder::AddBrowse() via RBrowseVisitor::VisitField(). Again if the subfields contain
- * subfields themselves, they are displayed as RNTupleBrowseFolder and if not as RNTupleBrowseLeaf.
- * (Left-click on an element in TBrowser allows to see the class of a displayed object.)
+ * * Double-clicking RNTupleBrowseFolder
+ *  - For all direct children of the root field, it visits the RBrowseVisitor
  */
 
 namespace ROOT {
@@ -66,58 +57,31 @@ namespace Experimental {
 \ingroup NTupleBrowse
 \brief Coordinates the communication between TBrowser and RNTupleReader
 
-.root files created by ntuples have a TDirectory. RNTupleBrowser reads this TDirectory and allows browsing through
- the contents of the .root file. To browse the contents, an instance of RNTupleReader is created, which traverses
- through the fields stored in the .root file. It also stores various objects which shouldn't be deleted until the
- TBrowser is closed, like the displayed histogram.
+The RNTupleBrowser keeps the RNTupleReader used to traverse the fields. It is created by the TBrowser
+via the interpreter, as specified in the ROOT mime file.  It also stores the histogram that is used for
+scalar, numeric fields.
 */
 // clang-format on
 class RNTupleBrowser {
 private:
+   /// The browser instance that called RNTupleBrowser
    TBrowser *fBrowser;
+   /// The reader helps in traversing the fields and in reading data for histograms
    std::unique_ptr<RNTupleReader> fReader;
-
-
-   /// Holds the TDirectory of the .root file, in which the RNTuple is stored.
-   TDirectory *fDirectory;
-   /// Keeps a list of previous directories. When a previously used directory appears again, the necessary
-   /// RNTupleReader-pointer can be used from fReaderPtrVec instead of doing costly operations and creating a new one.
-   std::vector<TDirectory *> fPastDirectories;
-   /// Holds the index of the currently used RNTupleReader in fReaderPtrVec. It is changed when the folder directly
-   /// beneath the .root file is double-clicked (equal to call of RNTupleBrowser::SetDirectory()).
-   int fReaderPtrVecIndex;
-   // holds previously used RNTupleReader pointers. This allows the destructor for RNTupleReader to be called when the
-   // destructor for RNTupleBrowser is called. The problems when deleting a RNTupleReader earlier are:
-   // 1. deleting RNTupleReader causes a chain reaction of destructors being called, which even deletes the currently
-   // displayed TH1F Histo. Instead of modifying code on other places which could influence other parts of the program,
-   // the problem was fixed here.
-   // 2. Browsing a different ntuple shouldn't delete the RNTupleReader of the previous ntuple.
-   /// Stores pointers of created RNTupleReaders so they can be deleted in ~RNTupleBrowser.
-   std::vector<std::unique_ptr<RNTupleReader>> fReaderPtrVec;
+   /// Keeps the histogram for the right side of the browser. This changes from on scalar, numeric field
+   /// to another. Points to currently displayed histogram.
+   TH1F *fCurrentHist = nullptr;
 
 public:
-   // Allows to keep created TH1F histo outside created function. Else user gets to see the histogram for less than a
-   // second. Only points to histograms created through RNTupleElementField.
-   /// Points to currently displayed histogram.
-   TH1F *fCurrentTH1F;
-   // Keeps hold of the pointers of dynamically allocated objects representing RNTuple-fields in TBrowser.
-   // They are all deleted in the destructor and their job is to prevent memory leak.
-   /// Stores instances of RNTupleBrowseLeaf and RNTupleBrowseFolder to prevent memory leak.
-   std::vector<std::unique_ptr<TNamed>> fNTupleBrowsePtrVec;
-
-   RNTupleBrowser(TDirectory *directory);
    RNTupleBrowser(TBrowser *b, const std::string &ntupleName);
    ~RNTupleBrowser();
 
-   RNTupleReader *GetReader() const { return fReader.get(); }
-
-   /// Instantiates the RNTupleReader associated to the TDirectory.
-   void SetDirectory(TDirectory *directory);
-   /// Called when double-clicking the folder which appears afer double-clicking the .root file.
-   void Browse(TBrowser *b);
-   RNTupleReader *GetReaderPtr() const { return fReaderPtrVec.at(fReaderPtrVecIndex).get(); }
    Bool_t IsFolder() const { return kTRUE; }
+
+   RNTupleReader *GetReader() const { return fReader.get(); }
+   void SetCurrentHist(TH1F *h);
 };
+
 
 // clang-format off
 /**
@@ -126,34 +90,33 @@ public:
 \brief Is displayed in the TBrowser as a field with children.
 
 It represents an RNTuple-field which has children. It is displayed in the TBrowser with a folder symbol. The
- subfields can be displayed by double-clicking this object, which calls void Browse(TBrowser *b)
+subfields can be displayed by double-clicking this object, which calls Browse(TBrowser *b)
 */
 // clang-format on
 class RNTupleBrowseFolder : public TNamed {
 private:
    /// Pointer to the field it represents.
-   const Detail::RFieldBase *fFieldPtr;
+   const Detail::RFieldBase *fField = nullptr;
    /// Pointer to the instance of RNTupleBrowser which created it through RBrowseVisitor::VisitField().
-   RNTupleBrowser *fRNTupleBrowserPtr;
+   RNTupleBrowser *fNtplBrowser = nullptr;
 
 public:
-   // ClassDef requires a constructor which can be called without any arguments. The constructor is never called with
-   // default arguments.
-   RNTupleBrowseFolder(RNTupleBrowser *ntplbPtr = nullptr, const Detail::RFieldBase *FieldPtr = nullptr)
-      : fFieldPtr{FieldPtr}, fRNTupleBrowserPtr{ntplbPtr}
+   // ClassDef requires a constructor which can be called without any arguments. Never actually called.
+   RNTupleBrowseFolder() = default;
+
+   RNTupleBrowseFolder(RNTupleBrowser *ntplBrowser, const Detail::RFieldBase *field)
+      : fField(field), fNtplBrowser(ntplBrowser)
    {
-      fName = TString(FieldPtr->GetName());
+      fName = TString(field->GetName());
    }
 
-   /// Displays the field it represents in TBrowser. Called in RBrowseVisitor::VisitField()
-   void AddBrowse(TBrowser *b);
    /// Displays subfields in TBrowser. Called when double-clicked.
    void Browse(TBrowser *b) final;
-
    Bool_t IsFolder() const final { return true; }
 
    ClassDef(RNTupleBrowseFolder, 0)
 };
+
 
 // clang-format off
 /**
@@ -161,30 +124,28 @@ public:
 \ingroup NTupleBrowse
 \brief Is displayed in the TBrowser as a field without children.
 
-It represents an ntuple-field without children. If it represents a field with numerical data, double-clicking
- creates a TH1F-histogram.
+It represents scalar ntuple field. If the field is numeric, double-clicking show the histogram of the field's data.
 */
 // clang-format on
 class RNTupleBrowseLeaf : public TNamed {
 private:
    /// Pointer to the instance of RNTupleBrowser which created it through RBrowseVisitor::VisitField().
-   RNTupleBrowser *fRNTupleBrowserPtr;
+   RNTupleBrowser *fNtplBrowser;
    /// Pointer to the field it represents in TBrowser.
-   const Detail::RFieldBase *fFieldPtr;
+   const Detail::RFieldBase *fField;
 
 public:
-   // ClassDef requires a constructor which can be called without any arguments.
-   RNTupleBrowseLeaf(RNTupleBrowser *ntplb = nullptr, const Detail::RFieldBase *FieldPtr = nullptr)
-      : fRNTupleBrowserPtr{ntplb}, fFieldPtr{FieldPtr}
+   // ClassDef requires a constructor which can be called without any arguments. Never actually called.
+   RNTupleBrowseLeaf() = default;
+
+   RNTupleBrowseLeaf(RNTupleBrowser *ntplBrowser, const Detail::RFieldBase *field)
+      : fNtplBrowser(ntplBrowser), fField(field)
    {
-      fName = TString(FieldPtr->GetName());
+      fName = TString(field->GetName());
    }
 
-   /// Displays the field it represents in TBrowser. Called in RBrowseVisitor::VisitField()
-   void AddBrowse(TBrowser *b);
-   /// Displays a TH1F for certain values of fType in TBrowser. Called when double-clicked.
+   /// Displays a histogram for numerical fields in TBrowser. Called when double-clicked.
    void Browse(TBrowser *b) final;
-
    Bool_t IsFolder() const final { return false; }
 
    ClassDef(RNTupleBrowseLeaf, 0)

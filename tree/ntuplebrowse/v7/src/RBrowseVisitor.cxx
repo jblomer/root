@@ -15,8 +15,6 @@
 
 #include <ROOT/RBrowseVisitor.hxx>
 
-//------------------------ RBrowseVisitor -------------------------------
-
 void ROOT::Experimental::RBrowseVisitor::VisitRootField(const RFieldRoot &field)
 {
    for (auto f : field.GetSubFields())
@@ -26,8 +24,8 @@ void ROOT::Experimental::RBrowseVisitor::VisitRootField(const RFieldRoot &field)
 void ROOT::Experimental::RBrowseVisitor::VisitField(const ROOT::Experimental::Detail::RFieldBase &field)
 {
    if ((field.GetStructure() == kRecord) || (field.GetStructure() == kCollection)) {
-      fBrowser->Add(new RNTupleBrowseFolder(fNTupleBrowserPtr, &field));
+      fBrowser->Add(new RNTupleBrowseFolder(fNtplBrowser, &field));
    } else {
-      fBrowser->Add(new RNTupleBrowseLeaf(fNTupleBrowserPtr, &field));
+      fBrowser->Add(new RNTupleBrowseLeaf(fNtplBrowser, &field));
    }
 }

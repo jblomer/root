@@ -26,6 +26,7 @@
 
 #include <RVersion.h>
 #include <TError.h>
+#include <TFile.h>  // for CreateFromTFile
 
 #include <algorithm>
 #include <cstdio>
@@ -213,6 +214,15 @@ ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view nt
    fFile = ROOT::Internal::RRawFile::Create(path);
    R__ASSERT(fFile);
    fReader = Internal::RNTupleFileReader(fFile.get());
+}
+
+
+ROOT::Experimental::Detail::RPageSourceFile *
+ROOT::Experimental::Detail::RPageSourceFile::CreateFromTFile(std::string_view ntupleName, TFile *file)
+{
+   auto pageSource = new RPageSourceFile(ntupleName, RNTupleReadOptions());
+   pageSource->fReader = Internal::RNTupleFileReader(file);
+   return pageSource;
 }
 
 

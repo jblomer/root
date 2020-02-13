@@ -17,23 +17,17 @@
 
 //------------------------ RBrowseVisitor -------------------------------
 
-void ROOT::Experimental::RBrowseVisitor::VisitField(const ROOT::Experimental::Detail::RFieldBase &field, int level)
+void ROOT::Experimental::RBrowseVisitor::VisitRootField(const RFieldRoot &field)
 {
-   // only print direct subfields (direct subfield <=> (level == 1)).
-   if (level != 1) {
-      return;
-   }
+   for (auto f : field.GetSubFields())
+      f->AcceptVisitor(*this);
+}
 
-   // if the field has no children/subfields a RNTupleBrowseLeaf is created, which displays a histrogram upon
-   // double-click. If the field has children/subfields a RNTupleBrowseFolder is created, which displays it's subfields
-   // when double-clicked.
-   if (field.GetLevelInfo().GetNumChildren() == 0) {
-      RNTupleBrowseLeaf *f = new RNTupleBrowseLeaf(fNTupleBrowserPtr, &field);
-      f->AddBrowse(fBrowser);
-      fNTupleBrowserPtr->fNTupleBrowsePtrVec.emplace_back(f);
+void ROOT::Experimental::RBrowseVisitor::VisitField(const ROOT::Experimental::Detail::RFieldBase &field)
+{
+   if ((field.GetStructure() == kRecord) || (field.GetStructure() == kCollection)) {
+      fBrowser->Add(new RNTupleBrowseFolder(fNTupleBrowserPtr, &field));
    } else {
-      RNTupleBrowseFolder *f = new RNTupleBrowseFolder(fNTupleBrowserPtr, &field);
-      f->AddBrowse(fBrowser);
-      fNTupleBrowserPtr->fNTupleBrowsePtrVec.emplace_back(f);
+      fBrowser->Add(new RNTupleBrowseLeaf(fNTupleBrowserPtr, &field));
    }
 }

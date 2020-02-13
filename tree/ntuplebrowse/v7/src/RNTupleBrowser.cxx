@@ -19,6 +19,8 @@
 #include <ROOT/RPageStorageRoot.hxx>
 
 #include <Rtypes.h>
+#include <TDirectory.h>
+#include <TFile.h>
 
 #include <algorithm>
 #include <cassert>
@@ -28,9 +30,13 @@
 //--------------------------- RNTupleBrowser -----------------------------
 
 ROOT::Experimental::RNTupleBrowser::RNTupleBrowser(TBrowser *b, const std::string &ntupleName)
-   : fDirectory{nullptr}, fCurrentTH1F{nullptr}
+   : fBrowser(b), fDirectory{nullptr}, fCurrentTH1F{nullptr}
 {
-   // TODO(jblomer)
+   auto pageSource = Detail::RPageSourceFile::CreateFromTFile(ntupleName, dynamic_cast<TFile *>(gDirectory));
+   fReader = std::make_unique<RNTupleReader>(std::unique_ptr<Detail::RPageSource>(pageSource));
+
+   RBrowseVisitor browseVisitor(b, this);
+   fReader->GetModel()->GetRootField()->AcceptVisitor(browseVisitor);
 }
 
 ROOT::Experimental::RNTupleBrowser::RNTupleBrowser(TDirectory *directory) : fDirectory{directory}, fCurrentTH1F{nullptr}
@@ -77,8 +83,8 @@ ClassImp(ROOT::Experimental::RNTupleBrowseFolder);
 void ROOT::Experimental::RNTupleBrowseFolder::Browse(TBrowser *b)
 {
    RBrowseVisitor browseVisitor(b, fRNTupleBrowserPtr);
-   if (fFieldPtr) {
-      fFieldPtr->TraverseVisitor(browseVisitor, 0);
+   for (auto f : fFieldPtr->GetSubFields()) {
+      f->AcceptVisitor(browseVisitor);
    }
 }
 
@@ -104,7 +110,7 @@ void ROOT::Experimental::RNTupleBrowseLeaf::AddBrowse(TBrowser *b)
 
 void ROOT::Experimental::RNTupleBrowseLeaf::Browse(TBrowser * /*b*/)
 {
-   RDisplayHistVisitor histVisitor(fRNTupleBrowserPtr, fReaderPtr);
+   RDisplayHistVisitor histVisitor(fRNTupleBrowserPtr, fRNTupleBrowserPtr->GetReader());
    if (fFieldPtr) {
       fFieldPtr->AcceptVisitor(histVisitor, 1 /* 1 is a dummy value*/);
    }

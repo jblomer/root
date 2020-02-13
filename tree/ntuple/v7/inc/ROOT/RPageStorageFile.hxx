@@ -37,6 +37,9 @@ class RRawFile;
 }
 
 namespace Experimental {
+
+class RNTupleBrowser;
+
 namespace Detail {
 
 class RPageAllocatorHeap;
@@ -110,6 +113,8 @@ public:
 */
 // clang-format on
 class RPageSourceFile : public RPageSource {
+   friend class ROOT::Experimental::RNTupleBrowser;
+
 public:
    /// Cannot process pages larger than 1MB
    static constexpr std::size_t kMaxPageSize = 1024 * 1024;
@@ -127,9 +132,13 @@ private:
    /// Takes the fFile to read ntuple blobs from it
    Internal::RNTupleFileReader fReader;
 
+   RPageSourceFile(std::string_view ntupleName);
    RPageSourceFile(std::string_view ntupleName, const RNTupleReadOptions &options);
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor,
                                  ClusterSize_t::ValueType clusterIndex);
+
+   /// Used for browsing, where gDirectory already points to the parent of the ntuple
+   static RPageSourceFile *CreateFromTFile(std::string_view ntupleName, TFile *file);
 
 protected:
    RNTupleDescriptor AttachImpl() final;

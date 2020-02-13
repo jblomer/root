@@ -74,6 +74,10 @@ namespace Experimental {
 // clang-format on
 class RNTupleBrowser {
 private:
+   TBrowser *fBrowser;
+   std::unique_ptr<RNTupleReader> fReader;
+
+
    /// Holds the TDirectory of the .root file, in which the RNTuple is stored.
    TDirectory *fDirectory;
    /// Keeps a list of previous directories. When a previously used directory appears again, the necessary
@@ -104,6 +108,8 @@ public:
    RNTupleBrowser(TDirectory *directory);
    RNTupleBrowser(TBrowser *b, const std::string &ntupleName);
    ~RNTupleBrowser();
+
+   RNTupleReader *GetReader() const { return fReader.get(); }
 
    /// Instantiates the RNTupleReader associated to the TDirectory.
    void SetDirectory(TDirectory *directory);
@@ -142,9 +148,10 @@ public:
    /// Displays the field it represents in TBrowser. Called in RBrowseVisitor::VisitField()
    void AddBrowse(TBrowser *b);
    /// Displays subfields in TBrowser. Called when double-clicked.
-   void Browse(TBrowser *b);
+   void Browse(TBrowser *b) final;
 
-   Bool_t IsFolder() const { return true; }
+   Bool_t IsFolder() const final { return true; }
+
    ClassDef(RNTupleBrowseFolder, 0)
 };
 
@@ -162,8 +169,6 @@ class RNTupleBrowseLeaf : public TNamed {
 private:
    /// Pointer to the instance of RNTupleBrowser which created it through RBrowseVisitor::VisitField().
    RNTupleBrowser *fRNTupleBrowserPtr;
-   /// RNTupleReader used for reading fFieldPtr's subfields.
-   RNTupleReader *fReaderPtr;
    /// Pointer to the field it represents in TBrowser.
    const Detail::RFieldBase *fFieldPtr;
 
@@ -173,19 +178,19 @@ public:
       : fRNTupleBrowserPtr{ntplb}, fFieldPtr{FieldPtr}
    {
       fName = TString(FieldPtr->GetName());
-      fReaderPtr = fRNTupleBrowserPtr->GetReaderPtr();
    }
 
    /// Displays the field it represents in TBrowser. Called in RBrowseVisitor::VisitField()
    void AddBrowse(TBrowser *b);
    /// Displays a TH1F for certain values of fType in TBrowser. Called when double-clicked.
-   void Browse(TBrowser *b);
+   void Browse(TBrowser *b) final;
 
-   Bool_t IsFolder() const { return false; }
+   Bool_t IsFolder() const final { return false; }
+
    ClassDef(RNTupleBrowseLeaf, 0)
 };
 
 } // namespace Experimental
 } // namespace ROOT
 
-#endif /* ROOT7_RNTupleBrowser */
+#endif // ROOT7_RNTupleBrowser

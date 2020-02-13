@@ -548,6 +548,10 @@ TEST(RNTuple, Composable)
    auto fldHits = trackModel->MakeCollection("hits", std::move(hitModel));
    auto fldTracks = eventModel->MakeCollection("tracks", std::move(trackModel));
 
+   EXPECT_EQ("pt", eventModel->GetRootField()->GetSubFields().at(0)->GetQualifiedName());
+   EXPECT_EQ("tracks.energy",
+             eventModel->GetRootField()->GetSubFields().at(1)->GetSubFields().at(0)->GetQualifiedName());
+
    {
       auto ntuple = RNTupleWriter::Recreate(std::move(eventModel), "myNTuple", fileGuard.GetPath());
 

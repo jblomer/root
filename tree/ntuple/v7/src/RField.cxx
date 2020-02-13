@@ -210,6 +210,20 @@ void ROOT::Experimental::Detail::RFieldBase::Attach(
 }
 
 
+std::string ROOT::Experimental::Detail::RFieldBase::GetQualifiedName() const
+{
+   std::string result = fName;
+   auto f = this;
+   while (f->GetParent()) {
+      f = f->GetParent();
+      if (f->fName.empty())
+         continue;
+      result = f->fName + "." + result;
+   }
+   return result;
+}
+
+
 std::vector<const ROOT::Experimental::Detail::RFieldBase *>
 ROOT::Experimental::Detail::RFieldBase::GetSubFields() const
 {

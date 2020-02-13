@@ -36,7 +36,7 @@ namespace Experimental {
 \class ROOT::Experimental::RBrowseVisitor
 \ingroup NTupleBrowse
 \brief Visitor class which traverses fields to display them on the TBrowser.
-    
+
 RBrowseVisitor uses information about a field and creates an instance of RNTupleBrowseLeaf or RNTupleBrowseFolder.
 */
 // clang-format on
@@ -54,7 +54,7 @@ public:
    /// Creates instance of RNTupleBrowseLeaf or RNTupleBrowseFolder and displays it in TBrowser.
    void VisitField(const Detail::RFieldBase &field, int level) final;
    // Do nothing for RootField
-   void VisitRootField(const RFieldRoot & /*field*/, int /*level*/) final {}
+   void VisitRootField(const RFieldRoot &field) final;
 };
 
 // clang-format off
@@ -62,7 +62,7 @@ public:
 \class ROOT::Experimental::RDisplayHistVisitor
 \ingroup NTupleBrowse
 \brief Visitor class which draws a histogram for fields with numerical data.
-    
+
 Visits fields displayed in TBrowser and draws a histogram for appropriate fields. Instances of this class are created
  when a field without subfields is double-clicked in TBrowser. (called by RNTupleBrowseLeaf::Browse(TBrowser* b))
 */
@@ -70,15 +70,15 @@ Visits fields displayed in TBrowser and draws a histogram for appropriate fields
 class RDisplayHistVisitor : public Detail::RNTupleVisitor {
 private:
    /// Allows to access RNTupleBrowser::fCurrentTH1F.
-   RNTupleBrowser *fNTupleBrowserPtr;
+   RNTupleBrowser *fNtplBrowser;
    /// Allows to get entries of a field which will be displayed in the histogram.
-   RNTupleReader *fNTupleReaderPtr;
+   RNTupleReader *fReader;
    // Note: fNTupleBrowserPtr->GetReaderPtr() returns the last created RNTupleReader. This can be another RNTupleReader
    // than the one which contains information about the visited field. Therefore a separate member had to be created.
 
 public:
    RDisplayHistVisitor(RNTupleBrowser *parntplb, RNTupleReader *readerPtr)
-      : fNTupleBrowserPtr{parntplb}, fNTupleReaderPtr{readerPtr}
+      : fNtplBrowser{parntplb}, fReader{readerPtr}
    {
    }
 
@@ -99,26 +99,14 @@ public:
    template <typename T>
    void DrawHistogram(const Detail::RFieldBase &field, bool isIntegraltype)
    {
-      // only leaf-fields should display a histogram.
-      if (field.GetStructure() != kLeaf)
-         return;
-      // Currently subfield of a vector/collection shouldn't display a histogram. TODO (lesimon): think if it should be
-      // displayed and if so how.
-      if (field.GetParent()->GetStructure() == kCollection)
-         return;
-
-      // for now only print fields directly attached to RootField, until RNTupleView is fixed. TODO(lesimon): Remove
-      // this later.
-      if (field.GetLevelInfo().GetLevel() != 1)
-         return;
-
-      auto ntupleView = fNTupleReaderPtr->GetView<T>(field.GetName());
+      std::cout << "Drawing histogram with " << field.GetQualifiedName() << std::endl;
+      auto ntupleView = fReader->GetView<T>(field.GetQualifiedName());
 
       // if min = 3 and max = 10, a histogram with a x-axis range of 3 to 10 is created with 8 bins (3, 4, 5, 6, 7, 8,
       // 9, 10)
       double max{LONG_MIN}, min{LONG_MAX};
       // TODO(lesimon): Think how RNTupleView can be interated only once.
-      for (auto i : fNTupleReaderPtr->GetViewRange()) {
+      for (auto i : fReader->GetViewRange()) {
          max = std::max(max, static_cast<double>(ntupleView(i)));
          min = std::min(min, static_cast<double>(ntupleView(i)));
       }
@@ -129,13 +117,13 @@ public:
       int nbins = isIntegraltype ? std::min(100, static_cast<int>(std::round(max - min) + 1)) : 100;
       // deleting the old TH1-histogram after creating a new one makes cling complain if both histograms have the same
       // name.
-      delete fNTupleBrowserPtr->fCurrentTH1F;
+      delete fNtplBrowser->fCurrentTH1F;
       auto h1 = new TH1F(field.GetName().c_str(), field.GetName().c_str(), nbins, min - 0.5, max + 0.5);
-      for (auto i : fNTupleReaderPtr->GetViewRange()) {
+      for (auto i : fReader->GetViewRange()) {
          h1->Fill(ntupleView(i));
       }
       h1->Draw();
-      fNTupleBrowserPtr->fCurrentTH1F = h1;
+      fNtplBrowser->fCurrentTH1F = h1;
    }
 };
 

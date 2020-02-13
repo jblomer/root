@@ -52,7 +52,7 @@ enum class EPageStorageType {
 \brief Common functionality of an ntuple storage for both reading and writing
 
 The RPageStore provides access to a storage container that keeps the bits of pages and clusters comprising
-an ntuple.  Concrete implementations can use a TFile, a raw file, an object store, and so on.
+an ntuple.  Concrete implementations can use a TFile, a bare file, an object store, and so on.
 */
 // clang-format on
 class RPageStorage {

@@ -106,7 +106,8 @@ public:
       // 9, 10)
       double max{LONG_MIN}, min{LONG_MAX};
       // TODO(lesimon): Think how RNTupleView can be interated only once.
-      for (auto i : fReader->GetViewRange()) {
+      RNTupleGlobalRange viewRange(0, field.GetNElements());
+      for (auto i : viewRange) {
          max = std::max(max, static_cast<double>(ntupleView(i)));
          min = std::min(min, static_cast<double>(ntupleView(i)));
       }
@@ -119,7 +120,7 @@ public:
       // name.
       delete fNtplBrowser->fCurrentTH1F;
       auto h1 = new TH1F(field.GetName().c_str(), field.GetName().c_str(), nbins, min - 0.5, max + 0.5);
-      for (auto i : fReader->GetViewRange()) {
+      for (auto i : viewRange) {
          h1->Fill(ntupleView(i));
       }
       h1->Draw();

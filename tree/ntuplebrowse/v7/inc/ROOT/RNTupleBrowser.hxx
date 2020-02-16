@@ -62,6 +62,7 @@ via the interpreter, as specified in the ROOT mime file.  It also stores the his
 scalar, numeric fields.
 */
 // clang-format on
+
 class RNTupleBrowser {
 private:
    /// The browser instance that called RNTupleBrowser
@@ -78,6 +79,7 @@ public:
 
    Bool_t IsFolder() const { return kTRUE; }
 
+   TBrowser *GetBrowser() const { return fBrowser; }
    RNTupleReader *GetReader() const { return fReader.get(); }
    void SetCurrentHist(TH1F *h);
 };

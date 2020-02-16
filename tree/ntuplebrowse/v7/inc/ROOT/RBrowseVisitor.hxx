@@ -83,26 +83,6 @@ private:
    /// Allows to access RNTupleBrowser::fCurrentHist and the ntuple reader
    RNTupleBrowser *fNtplBrowser;
 
-public:
-   RDisplayHistVisitor(RNTupleBrowser *ntplBrowser)
-      : fNtplBrowser{ntplBrowser}
-   {
-   }
-
-   void VisitField(const Detail::RFieldBase & /*field*/) final {}
-   void VisitRootField(const RFieldRoot & /*field*/) final {}
-   void VisitFloatField(const RField<float> &field) { DrawHistogram<float>(field); }
-   void VisitDoubleField(const RField<double> &field) { DrawHistogram<double>(field); }
-   void VisitInt32Field(const RField<std::int32_t> &field) { DrawHistogram<std::int32_t>(field); }
-   void VisitUInt32Field(const RField<std::uint32_t> &field)
-   {
-      DrawHistogram<std::uint32_t>(field);
-   }
-   void VisitUInt64Field(const RField<std::uint64_t> &field, int /*level*/)
-   {
-      DrawHistogram<std::uint64_t>(field);
-   }
-
    template <typename T>
    void DrawHistogram(const Detail::RFieldBase &field)
    {
@@ -118,6 +98,25 @@ public:
       }
       h1->Draw();
       fNtplBrowser->SetCurrentHist(h1);
+   }
+
+public:
+   RDisplayHistVisitor(RNTupleBrowser *ntplBrowser) : fNtplBrowser{ntplBrowser}
+   {
+   }
+
+   void VisitField(const Detail::RFieldBase & /*field*/) final {}
+   void VisitRootField(const RFieldRoot & /*field*/) final {}
+   void VisitFloatField(const RField<float> &field) { DrawHistogram<float>(field); }
+   void VisitDoubleField(const RField<double> &field) { DrawHistogram<double>(field); }
+   void VisitInt32Field(const RField<std::int32_t> &field) { DrawHistogram<std::int32_t>(field); }
+   void VisitUInt32Field(const RField<std::uint32_t> &field)
+   {
+      DrawHistogram<std::uint32_t>(field);
+   }
+   void VisitUInt64Field(const RField<std::uint64_t> &field, int /*level*/)
+   {
+      DrawHistogram<std::uint64_t>(field);
    }
 };
 

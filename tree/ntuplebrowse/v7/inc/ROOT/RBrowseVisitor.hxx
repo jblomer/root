@@ -25,11 +25,14 @@
 #include <cassert>
 #include <cmath>
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include <limits.h>
 =======
 #include <limits>
 #include <type_traits>
 >>>>>>> [ntuple] beautify ntuple browser code
+=======
+>>>>>>> [ntuple] simplify histogram drawing in browser
 
 class TBrowser;
 
@@ -105,25 +108,12 @@ public:
    {
       auto ntupleView = fNtplBrowser->GetReader()->GetView<T>(field.GetQualifiedName());
 
-      // if min = 3 and max = 10, a histogram with a x-axis range of 3 to 10 is created with 8 bins (3, 4, 5, 6, 7, 8,
-      // 9, 10)
-      double max{LONG_MIN}, min{LONG_MAX};
-      // TODO(lesimon): Think how RNTupleView can be interated only once.
-      RNTupleGlobalRange viewRange(0, field.GetNElements());
-      for (auto i : viewRange) {
-         max = std::max(max, static_cast<double>(ntupleView(i)));
-         min = std::min(min, static_cast<double>(ntupleView(i)));
-      }
-      if (min > max)
-         return; // no histogram for empty field.
-
-      // It doesn't make sense to create 100 bins if only integers from 3 to 10 are used to fill the histogram.
-      int nbins = std::is_integral<T>::value ? std::min(100, static_cast<int>(std::round(max - min) + 1)) : 100;
+      constexpr int nbins = 100;
       // deleting the old TH1-histogram after creating a new one makes cling complain if both histograms
       // have the same name.
       fNtplBrowser->SetCurrentHist(nullptr);
-      auto h1 = new TH1F(field.GetName().c_str(), field.GetName().c_str(), nbins, min - 0.5, max + 0.5);
-      for (auto i : viewRange) {
+      auto h1 = new TH1F(field.GetName().c_str(), field.GetName().c_str(), nbins, 0, 0);
+      for (auto i : RNTupleGlobalRange(0, field.GetNElements())) {
          h1->Fill(ntupleView(i));
       }
       h1->Draw();

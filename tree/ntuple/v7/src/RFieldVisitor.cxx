@@ -188,6 +188,14 @@ void ROOT::Experimental::RPrintValueVisitor::VisitIntField(const RField<int> &fi
 }
 
 
+void ROOT::Experimental::RPrintValueVisitor::VisitInt32Field(const RField<std::int32_t> &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << *fValue.Get<std::int32_t>();
+}
+
+
 void ROOT::Experimental::RPrintValueVisitor::VisitStringField(const RField<std::string> &field)
 {
    PrintIndent();

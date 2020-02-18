@@ -192,6 +192,7 @@ public:
    void VisitDoubleField(const RField<double> &field) final;
    void VisitFloatField(const RField<float> &field) final;
    void VisitIntField(const RField<int> &field) final;
+   void VisitInt32Field(const RField<std::int32_t> &field) final;
    void VisitStringField(const RField<std::string> &field) final;
    void VisitUInt8Field(const RField<std::uint8_t> &field) final;
    void VisitUInt32Field(const RField<std::uint32_t> &field) final;

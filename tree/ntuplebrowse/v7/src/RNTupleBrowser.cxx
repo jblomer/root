@@ -16,7 +16,7 @@
 #include <ROOT/RBrowseVisitor.hxx>
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RNTupleBrowser.hxx>
-#include <ROOT/RPageStorageRoot.hxx>
+#include <ROOT/RPageStorageFile.hxx>
 
 #include <Rtypes.h>
 #include <TDirectory.h>

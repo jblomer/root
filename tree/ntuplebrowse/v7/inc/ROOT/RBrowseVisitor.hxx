@@ -24,15 +24,8 @@
 
 #include <cassert>
 #include <cmath>
-<<<<<<< HEAD
-<<<<<<< HEAD
-#include <limits.h>
-=======
 #include <limits>
 #include <type_traits>
->>>>>>> [ntuple] beautify ntuple browser code
-=======
->>>>>>> [ntuple] simplify histogram drawing in browser
 
 class TBrowser;
 
@@ -46,7 +39,7 @@ namespace Experimental {
 \brief Visitor class which adds the RNTupleBrowseLeaf or RNTupleBrowseFolder shims to the TBrowser.
 */
 // clang-format on
-class RBrowseVisitor : public Detail::RNTupleVisitor {
+class RBrowseVisitor : public Detail::RFieldVisitor {
 private:
    /// Passed down to RNTupleBrowseLeaf or RNTupleBrowseFolder.
    TBrowser *fBrowser;
@@ -57,13 +50,8 @@ public:
    RBrowseVisitor(TBrowser *b, RNTupleBrowser *ntplBrowser) : fBrowser(b), fNtplBrowser(ntplBrowser) {}
 
    /// Creates instance of RNTupleBrowseLeaf or RNTupleBrowseFolder and displays it in TBrowser.
-<<<<<<< HEAD
-   void VisitField(const Detail::RFieldBase &field, int level) final;
-   // Do nothing for RootField
-=======
    void VisitField(const Detail::RFieldBase &field) final;
    // Visit the top-level fields
->>>>>>> [ntuple] beautify ntuple browser code
    void VisitRootField(const RFieldRoot &field) final;
 };
 
@@ -78,7 +66,7 @@ Visits fields displayed in TBrowser and draws a histogram for appropriate fields
  when a field without subfields is double-clicked in TBrowser. (called by RNTupleBrowseLeaf::Browse(TBrowser* b))
 */
 // clang-format on
-class RDisplayHistVisitor : public Detail::RNTupleVisitor {
+class RDisplayHistVisitor : public Detail::RFieldVisitor {
 private:
    /// Allows to access RNTupleBrowser::fCurrentHist and the ntuple reader
    RNTupleBrowser *fNtplBrowser;
@@ -110,14 +98,8 @@ public:
    void VisitFloatField(const RField<float> &field) { DrawHistogram<float>(field); }
    void VisitDoubleField(const RField<double> &field) { DrawHistogram<double>(field); }
    void VisitInt32Field(const RField<std::int32_t> &field) { DrawHistogram<std::int32_t>(field); }
-   void VisitUInt32Field(const RField<std::uint32_t> &field)
-   {
-      DrawHistogram<std::uint32_t>(field);
-   }
-   void VisitUInt64Field(const RField<std::uint64_t> &field, int /*level*/)
-   {
-      DrawHistogram<std::uint64_t>(field);
-   }
+   void VisitUInt32Field(const RField<std::uint32_t> &field) { DrawHistogram<std::uint32_t>(field); }
+   void VisitUInt64Field(const RField<std::uint64_t> &field) { DrawHistogram<std::uint64_t>(field); }
 };
 
 } // namespace Experimental

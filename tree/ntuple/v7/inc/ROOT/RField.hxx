@@ -209,6 +209,8 @@ public:
    void Attach(std::unique_ptr<Detail::RFieldBase> child);
 
    std::string GetName() const { return fName; }
+   /// The qualified name includes the parent fields, e.g. "Jets.Energy". For top-level fields, the
+   /// qualified name is the same than fName
    std::string GetQualifiedName() const;
    std::string GetType() const { return fType; }
    ENTupleStructure GetStructure() const { return fStructure; }

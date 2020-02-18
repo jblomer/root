@@ -23,9 +23,12 @@ void ROOT::Experimental::RBrowseVisitor::VisitRootField(const RFieldRoot &field)
 
 void ROOT::Experimental::RBrowseVisitor::VisitField(const ROOT::Experimental::Detail::RFieldBase &field)
 {
+   RNTupleBrowsable *browsable;
    if ((field.GetStructure() == kRecord) || (field.GetStructure() == kCollection)) {
-      fBrowser->Add(new RNTupleBrowseFolder(fNtplBrowser, &field));
+      browsable = new RNTupleBrowseFolder(fNtplBrowser, &field);
    } else {
-      fBrowser->Add(new RNTupleBrowseLeaf(fNtplBrowser, &field));
+      browsable = new RNTupleBrowseLeaf(fNtplBrowser, &field);
    }
+   fNtplBrowser->AddBrowsable(browsable);
+   fBrowser->Add(browsable);
 }

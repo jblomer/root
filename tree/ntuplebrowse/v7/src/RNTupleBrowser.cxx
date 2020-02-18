@@ -55,6 +55,18 @@ void ROOT::Experimental::RNTupleBrowser::SetCurrentHist(TH1F *h)
 }
 
 
+void ROOT::Experimental::RNTupleBrowser::AddBrowsable(RNTupleBrowsable *browsable)
+{
+   fBrowsables.emplace_back(std::unique_ptr<RNTupleBrowsable>(browsable));
+}
+
+
+//--------------------------- RNTupleBrowsable ---------------------------------
+
+
+ClassImp(ROOT::Experimental::RNTupleBrowsable);
+
+
 //---------------------------- NTupleBrowseFolder ------------------------------
 
 

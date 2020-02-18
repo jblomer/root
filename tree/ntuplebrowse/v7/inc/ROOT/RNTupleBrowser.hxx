@@ -53,6 +53,18 @@ namespace Experimental {
 
 // clang-format off
 /**
+\class ROOT::Experimental::RNTupleBrowsable
+\ingroup NTupleBrowse
+\brief Common base class for TBrowser items below an RNTuple item
+*/
+// clang-format on
+class RNTupleBrowsable : public TNamed {
+   ClassDef(RNTupleBrowsable, 0)
+};
+
+
+// clang-format off
+/**
 \class ROOT::Experimental::RNTupleBrowser
 \ingroup NTupleBrowse
 \brief Coordinates the communication between TBrowser and RNTupleReader
@@ -62,7 +74,6 @@ via the interpreter, as specified in the ROOT mime file.  It also stores the his
 scalar, numeric fields.
 */
 // clang-format on
-
 class RNTupleBrowser {
 private:
    /// The browser instance that called RNTupleBrowser
@@ -73,6 +84,10 @@ private:
    /// to another. Points to currently displayed histogram.
    TH1F *fCurrentHist = nullptr;
 
+   /// Keeps track of RNTupleBrowseFolder and RNTupleBrowseLeaf instances so that they get deleted together
+   /// with the browser
+   std::vector<std::unique_ptr<RNTupleBrowsable>> fBrowsables;
+
 public:
    RNTupleBrowser(TBrowser *b, const std::string &ntupleName);
    ~RNTupleBrowser();
@@ -82,6 +97,7 @@ public:
    TBrowser *GetBrowser() const { return fBrowser; }
    RNTupleReader *GetReader() const { return fReader.get(); }
    void SetCurrentHist(TH1F *h);
+   void AddBrowsable(RNTupleBrowsable *browsable);
 };
 
 
@@ -95,7 +111,7 @@ It represents an RNTuple-field which has children. It is displayed in the TBrows
 subfields can be displayed by double-clicking this object, which calls Browse(TBrowser *b)
 */
 // clang-format on
-class RNTupleBrowseFolder : public TNamed {
+class RNTupleBrowseFolder : public RNTupleBrowsable {
 private:
    /// Pointer to the field it represents.
    const Detail::RFieldBase *fField = nullptr;
@@ -129,7 +145,7 @@ public:
 It represents scalar ntuple field. If the field is numeric, double-clicking show the histogram of the field's data.
 */
 // clang-format on
-class RNTupleBrowseLeaf : public TNamed {
+class RNTupleBrowseLeaf : public RNTupleBrowsable {
 private:
    /// Pointer to the instance of RNTupleBrowser which created it through RBrowseVisitor::VisitField().
    RNTupleBrowser *fNtplBrowser;

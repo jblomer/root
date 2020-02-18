@@ -18,6 +18,7 @@
 #pragma link C++ nestedclasses;
 
 #pragma link C++ class ROOT::Experimental::RNTupleBrowser;
+#pragma link C++ class ROOT::Experimental::RNTupleBrowsable;
 #pragma link C++ class ROOT::Experimental::RNTupleBrowseFolder;
 #pragma link C++ class ROOT::Experimental::RNTupleBrowseLeaf;
 

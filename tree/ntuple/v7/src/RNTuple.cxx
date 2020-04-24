@@ -31,10 +31,10 @@
 #include <TError.h>
 
 
-void ROOT::Experimental::RNTupleReader::ConnectModel() {
+void ROOT::Experimental::RNTupleReader::ConnectModel(RNTupleModel *model) {
    std::unordered_map<const Detail::RFieldBase *, DescriptorId_t> fieldPtr2Id;
-   fieldPtr2Id[fModel->GetRootField()] = fSource->GetDescriptor().FindFieldId("", kInvalidDescriptorId);
-   for (auto &field : *fModel->GetRootField()) {
+   fieldPtr2Id[model->GetRootField()] = fSource->GetDescriptor().FindFieldId("", kInvalidDescriptorId);
+   for (auto &field : *model->GetRootField()) {
       auto parentId = fieldPtr2Id[field.GetParent()];
       auto fieldId = fSource->GetDescriptor().FindFieldId(field.GetName(), parentId);
       R__ASSERT(fieldId != kInvalidDescriptorId);
@@ -51,7 +51,7 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(
    , fMetrics("RNTupleReader")
 {
    fSource->Attach();
-   ConnectModel();
+   ConnectModel(fModel.get());
    fMetrics.ObserveMetrics(fSource->GetMetrics());
 }
 
@@ -87,7 +87,7 @@ ROOT::Experimental::RNTupleModel *ROOT::Experimental::RNTupleReader::GetModel()
 {
    if (!fModel) {
       fModel = fSource->GetDescriptor().GenerateModel();
-      ConnectModel();
+      ConnectModel(fModel.get());
    }
    return fModel.get();
 }
@@ -104,12 +104,8 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
    }
    */
    std::string name = fSource->GetDescriptor().GetName();
-   //prepVisitor traverses through all fields to gather information needed for printing.
-   RPrepareVisitor prepVisitor;
-   //printVisitor traverses through all fields to do the actual printing.
-   RPrintSchemaVisitor printVisitor(output);
    switch (what) {
-   case ENTupleInfo::kSummary:
+   case ENTupleInfo::kSummary: {
       for (int i = 0; i < (width/2 + width%2 - 4); ++i)
             output << frameSymbol;
       output << " NTUPLE ";
@@ -119,7 +115,17 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       // FitString defined in RFieldVisitor.cxx
       output << frameSymbol << " N-Tuple : " << RNTupleFormatter::FitString(name, width-13) << frameSymbol << std::endl; // prints line with name of ntuple
       output << frameSymbol << " Entries : " << RNTupleFormatter::FitString(std::to_string(GetNEntries()), width - 13) << frameSymbol << std::endl;  // prints line with number of entries
-      GetModel()->GetRootField()->AcceptVisitor(prepVisitor);
+
+      // Traverses through all fields to gather information needed for printing.
+      RPrepareVisitor prepVisitor;
+      // Traverses through all fields to do the actual printing.
+      RPrintSchemaVisitor printVisitor(output);
+
+      // Preserve current set of open columns
+      auto columnGuard = fSource->GetColumnGuard();
+      auto fullModel = fSource->GetDescriptor().GenerateModel();
+      ConnectModel(fullModel.get());
+      fullModel->GetRootField()->AcceptVisitor(prepVisitor);
 
       printVisitor.SetFrameSymbol(frameSymbol);
       printVisitor.SetWidth(width);
@@ -129,11 +135,12 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       for (int i = 0; i < width; ++i)
          output << frameSymbol;
       output << std::endl;
-      GetModel()->GetRootField()->AcceptVisitor(printVisitor);
+      fullModel->GetRootField()->AcceptVisitor(printVisitor);
       for (int i = 0; i < width; ++i)
          output << frameSymbol;
       output << std::endl;
       break;
+   }
    case ENTupleInfo::kStorageDetails:
       fSource->GetDescriptor().PrintInfo(output);
       break;

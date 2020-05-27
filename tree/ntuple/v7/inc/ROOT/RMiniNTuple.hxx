@@ -29,11 +29,21 @@ extern "C" {
 struct ROOT_ntpl;
 struct ROOT_ntpl_view;
 
+struct ROOT_ntpl_list {
+  struct ROOT_ntpl_field *next;
+};
+
 struct ROOT_ntpl_field {
+  ROOT_ntpl_list list;
   char *name;
   char *parent;
   char *type;
-  struct ROOT_ntpl_field *next;
+};
+
+struct ROOT_ntpl_cluster {
+  ROOT_ntpl_list list;
+  int first_entry;
+  int nentries;
 };
 
 #define ROOT_NTPL_COLLECTION  0
@@ -47,8 +57,9 @@ int ROOT_ntpl_error(ROOT_ntpl *ntpl);
 void ROOT_ntpl_close(ROOT_ntpl *ntpl);
 
 // Meta-data
-ROOT_ntpl_field *ROOT_ntpl_list(ROOT_ntpl *ntpl);
-void ROOT_ntpl_list_free(ROOT_ntpl_field *list);
+ROOT_ntpl_field *ROOT_ntpl_list_fields(ROOT_ntpl *ntpl);
+ROOT_ntpl_cluster *ROOT_ntpl_list_clusters(ROOT_ntpl *ntpl);
+void ROOT_ntpl_list_free(ROOT_ntpl_list *list);
 
 // Iteration
 bool ROOT_ntpl_entry_next(ROOT_ntpl *ntpl);
@@ -57,7 +68,8 @@ bool ROOT_ntpl_collection_next(ROOT_ntpl_view *view);
 void ROOT_ntpl_collection_rewind(ROOT_ntpl_view *view);
 
 // Runtime type check
-ROOT_ntpl_view *ROOT_ntpl_view(void *ntpl_or_view, const char *field, int type);
+ROOT_ntpl_view *ROOT_ntpl_view_get(void *ntpl_or_view, const char *field, int type);
+void ROOT_ntpl_view_free(ROOT_ntpl_view *view);
 
 float ROOT_ntpl_float(ROOT_ntpl_view *view);
 double ROOT_ntpl_double(ROOT_ntpl_view *view);

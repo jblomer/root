@@ -20,6 +20,12 @@
 extern "C" {
 #endif
 
+// Discussion on
+//  - Naming convention: ROOT_ntpl_... ?
+//  - API versioning
+//  - Error handling: NULL pointers and ROOT_ntpl_error(ntpl)? What about open()?
+//  - API Completeness for a first usable version
+
 struct ROOT_ntpl;
 struct ROOT_ntpl_view;
 
@@ -71,9 +77,9 @@ ROOT_ntpl_view *track_energy = ROOT_ntpl_view(tracks, "E",      ROOT_NTPL_FLOAT)
 printf("%d entries\n"), ROOT_ntpl_size(ntpl));
 
 while (ROOT_ntpl_entry_next(ntpl)) {
-  printf("pt: %f\n"), ROOT_ntpl_float(pt));
-  printf("%d tracks\n"), ROOT_ntpl_size(tracks));
+  printf("pt: %f\n", ROOT_ntpl_float(pt));
 
+  printf("%d tracks\n", ROOT_ntpl_size(tracks));
   int i = 0;
   while (ROOT_ntpl_collection_next(tracks)) {
     printf("E(track %d): %f\n", i, ROOT_ntpl_float(track_energy));

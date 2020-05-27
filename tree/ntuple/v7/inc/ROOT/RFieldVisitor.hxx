@@ -47,7 +47,9 @@ public:
    virtual void VisitRootField(const RFieldRoot &field) { VisitField(field); }
    virtual void VisitArrayField(const RFieldArray &field) { VisitField(field); }
    virtual void VisitBoolField(const RField<bool> &field) { VisitField(field); }
+#ifndef ROOT_RNTUPLE_MINI
    virtual void VisitClassField(const RFieldClass &field) { VisitField(field); }
+#endif
    virtual void VisitClusterSizeField(const RField<ClusterSize_t> &field) { VisitField(field); }
    virtual void VisitDoubleField(const RField<double> &field) { VisitField(field); }
    virtual void VisitFloatField(const RField<float> &field) { VisitField(field); }
@@ -195,7 +197,9 @@ public:
    void VisitUInt64Field(const RField<std::uint64_t> &field) final;
 
    void VisitArrayField(const RFieldArray &field) final;
+#ifndef ROOT_RNTUPLE_MINI
    void VisitClassField(const RFieldClass &field) final;
+#endif
    void VisitVectorField(const RFieldVector &field) final;
    void VisitVectorBoolField(const RField<std::vector<bool>> &field) final;
 };

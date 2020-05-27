@@ -19,8 +19,12 @@
 #include <ROOT/RNTupleZip.hxx>
 
 #include <TError.h>
+#ifndef ROOT_RNTUPLE_MINI
 #include <TFile.h>
 #include <TKey.h>
+#else
+class TFile {};
+#endif
 
 #include <algorithm>
 #include <cstdio>
@@ -864,6 +868,7 @@ static constexpr char const *kNTupleClassName = "ROOT::Experimental::RNTuple";
 
 /// The RKeyBlob writes an invsisble key into a TFile.  That is, a key that is not indexed in the list of keys,
 /// like a TBasket.
+#ifndef ROOT_RNTUPLE_MINI
 class RKeyBlob : public TKey {
 public:
    explicit RKeyBlob(TFile *file) : TKey(file) {
@@ -878,6 +883,7 @@ public:
       *seekKey = fSeekKey;
    }
 };
+#endif
 
 } // anonymous namespace
 
@@ -1041,16 +1047,19 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::Writ
 void ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::Write(
    const void *buffer, size_t nbytes, std::int64_t offset)
 {
+#ifndef ROOT_RNTUPLE_MINI
    R__ASSERT(fFile);
    fFile->Seek(offset);
    bool rv = fFile->WriteBuffer((char *)(buffer), nbytes);
    R__ASSERT(!rv);
+#endif
 }
 
 
 std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::WriteKey(
    const void *buffer, size_t nbytes, size_t len)
 {
+#ifndef ROOT_RNTUPLE_MINI
    std::uint64_t offsetKey;
    RKeyBlob keyBlob(fFile);
    keyBlob.Reserve(nbytes, &offsetKey);
@@ -1073,6 +1082,9 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::Writ
    Write(buffer, nbytes, offset);
 
    return offsetData;
+#else
+   return 0;
+#endif
 }
 
 
@@ -1125,12 +1137,16 @@ ROOT::Experimental::Internal::RNTupleFileWriter *ROOT::Experimental::Internal::R
 ROOT::Experimental::Internal::RNTupleFileWriter *ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(
    std::string_view ntupleName, std::string_view path, std::unique_ptr<TFile> &file)
 {
+#ifndef ROOT_RNTUPLE_MINI
    file = std::unique_ptr<TFile>(TFile::Open(std::string(path.data(), path.size()).c_str(), "RECREATE"));
    R__ASSERT(file && !file->IsZombie());
 
    auto writer = new RNTupleFileWriter(ntupleName);
    writer->fFileProper.fFile = file.get();
    return writer;
+#else
+   return new RNTupleFileWriter(ntupleName);
+#endif
 }
 
 
@@ -1145,6 +1161,7 @@ ROOT::Experimental::Internal::RNTupleFileWriter *ROOT::Experimental::Internal::R
 
 void ROOT::Experimental::Internal::RNTupleFileWriter::Commit()
 {
+#ifndef ROOT_RNTUPLE_MINI
    if (fFileProper) {
       // Easy case, the ROOT file header and the RNTuple streaming is taken care of by TFile
       fFileProper.fFile->WriteObject(&fNTupleAnchor, fNTupleName.c_str());
@@ -1182,6 +1199,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::Commit()
 
    fFileSimple.Write(&fFileSimple.fControlBlock->fHeader, fFileSimple.fControlBlock->fHeader.GetSize(), 0);
    fflush(fFileSimple.fFile);
+#endif
 }
 
 

@@ -81,12 +81,14 @@ ROOT::Internal::RRawFile::Create(std::string_view url, ROptions options)
 #endif
    }
    if (transport == "http" || transport == "https") {
+#ifndef ROOT_RNTUPLE_MINI
       if (TPluginHandler *h = gROOT->GetPluginManager()->FindHandler("ROOT::Internal::RRawFile")) {
          if (h->LoadPlugin() == 0) {
             return std::unique_ptr<RRawFile>(reinterpret_cast<RRawFile *>(h->ExecPlugin(2, &url, &options)));
          }
          throw std::runtime_error("Cannot load plugin handler for RRawFileDavix");
       }
+#endif
       throw std::runtime_error("Cannot find plugin handler for RRawFileDavix");
    }
    throw std::runtime_error("Unsupported transport protocol: " + transport);

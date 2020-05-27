@@ -264,6 +264,7 @@ public:
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
+#ifndef ROOT_RNTUPLE_MINI
 /// The field for a class with dictionary
 class RFieldClass : public Detail::RFieldBase {
 private:
@@ -292,6 +293,7 @@ public:
    size_t GetAlignment() const final { return fMaxAlignment; }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const override;
 };
+#endif
 
 /// The generic field for a (nested) std::vector<Type> except for std::vector<bool>
 class RFieldVector : public Detail::RFieldBase {
@@ -398,6 +400,26 @@ public:
 #endif
 
 
+#ifdef ROOT_RNTUPLE_MINI
+template <typename T>
+class RField : public Detail::RFieldBase {
+public:
+   static std::string TypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
+   RField(std::string_view name) : Detail::RFieldBase(ENTupleStructure::kLeaf, true /* isSimple */) {
+   }
+   RField(RField&& other) = default;
+   RField& operator =(RField&& other) = default;
+   ~RField() = default;
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where, ArgsT&&... args)
+   {
+      return Detail::RFieldValue(this, static_cast<T*>(where), std::forward<ArgsT>(args)...);
+   }
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final { return GenerateValue(where, T()); }
+};
+#else // ROOT_RNTUPLE_MINI
 /// Classes with dictionaries that can be inspected by TClass
 template <typename T, typename=void>
 class RField : public RFieldClass {
@@ -418,7 +440,7 @@ public:
    }
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final { return GenerateValue(where, T()); }
 };
-
+#endif
 
 class RFieldCollection : public ROOT::Experimental::Detail::RFieldBase {
 private:

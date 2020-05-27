@@ -226,7 +226,7 @@ void ROOT::Experimental::RPrintValueVisitor::VisitArrayField(const RFieldArray &
    PrintCollection(field);
 }
 
-
+#ifndef ROOT_RNTUPLE_MINI
 void ROOT::Experimental::RPrintValueVisitor::VisitClassField(const RFieldClass &field)
 {
    PrintIndent();
@@ -255,6 +255,7 @@ void ROOT::Experimental::RPrintValueVisitor::VisitClassField(const RFieldClass &
    PrintIndent();
    fOutput << "}";
 }
+#endif
 
 
 void ROOT::Experimental::RPrintValueVisitor::VisitVectorField(const RFieldVector &field)

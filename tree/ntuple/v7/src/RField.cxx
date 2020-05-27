@@ -181,10 +181,12 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
 #endif
    // TODO: create an RFieldCollection?
    if (normalizedType == ":Collection:") return new RField<ClusterSize_t>(fieldName);
+#ifndef ROOT_RNTUPLE_MINI
    auto cl = TClass::GetClass(normalizedType.c_str());
    if (cl != nullptr) {
       return new RFieldClass(fieldName, normalizedType);
    }
+#endif
    R__ERROR_HERE("NTuple") << "Field " << fieldName << " has unknown type " << normalizedType;
    R__ASSERT(false);
    return nullptr;
@@ -498,6 +500,7 @@ void ROOT::Experimental::RField<std::string>::AcceptVisitor(Detail::RFieldVisito
 
 //------------------------------------------------------------------------------
 
+#ifndef ROOT_RNTUPLE_MINI
 
 ROOT::Experimental::RFieldClass::RFieldClass(std::string_view fieldName, std::string_view className)
    : ROOT::Experimental::Detail::RFieldBase(fieldName, className, ENTupleStructure::kRecord, false /* isSimple */)
@@ -598,6 +601,8 @@ void ROOT::Experimental::RFieldClass::AcceptVisitor(Detail::RFieldVisitor &visit
 {
    visitor.VisitClassField(*this);
 }
+
+#endif // ROOT_RNTUPLE_MINI
 
 //------------------------------------------------------------------------------
 

@@ -34,7 +34,10 @@ struct ROOT_ntpl_field {
 #define ROOT_NTPL_FLOAT       1
 #define ROOT_NTPL_DOUBLE      2
 
+// ROOT_ntpl * and derived objects are thread friendly. They can be used from multiple threads but
+// not concurrently.  Multiple ROOT_ntpl * objects can be opened for the same RNTuple.
 ROOT_ntpl *ROOT_ntpl_open(const char *ntpl_name, const char *path);
+int ROOT_ntpl_error(ROOT_ntpl *ntpl);
 void ROOT_ntpl_close(ROOT_ntpl *ntpl);
 
 // Meta-data
@@ -73,7 +76,7 @@ while (ROOT_ntpl_entry_next(ntpl)) {
 
   int i = 0;
   while (ROOT_ntpl_collection_next(tracks)) {
-    printf("E(track %d): %f\n"), i, ROOT_ntpl_float(track_energy));
+    printf("E(track %d): %f\n", i, ROOT_ntpl_float(track_energy));
     i++;
   }
 }

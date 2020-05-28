@@ -145,8 +145,8 @@ while (clusters) {
     ROOT_ntpl_page_buffer buffer_jets = ROOT_ntpl_page_get(column_jets, clusters->id, pages_jets->id);
     ROOT_ntpl_page_buffer buffer_jet_E = ROOT_ntpl_page_find(column_jets_e, clusters->id, 0);
     std::uint32_t *offsets = (std::uint32_t *)buffer_jets.buffer;
-    for (unsigned i = 0; i < pages_jets->nelements - 1; ++i) {
-      printf("jet vector size: %u\n", offsets[i+1] - offsets[i]);
+    for (unsigned i = 0; i < pages_jets->nelements; ++i) {
+      printf("jet vector size: %u\n", i ? (offsets[i] - offsets[i-1]) : offsets[0]);
 
       // Note: this accesses only the first element of jets.E, subsequent elements might be
       // in the following pages

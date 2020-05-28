@@ -45,36 +45,31 @@ extern "C" {
 
 
 struct ROOT_ntpl;
-struct ROOT_ntpl_view;
-
-struct ROOT_ntpl_list {
-  struct ROOT_ntpl_list *next;
-};
 
 struct ROOT_ntpl_column_list {
-  ROOT_ntpl_list list;
+  ROOT_ntpl_column_list *next;
   ROOT_NTPL_ID id;
   int type;
 };
 
 struct ROOT_ntpl_field_list {
-  ROOT_ntpl_list list;
+  ROOT_ntpl_field_list *next;
   ROOT_NTPL_ID id;
   char *name;
-  char *parent;
   char *type;
+  ROOT_ntpl_field_list *parent;
   ROOT_ntpl_column_list *columns;
 };
 
 struct ROOT_ntpl_cluster_list {
-  ROOT_ntpl_list list;
+  ROOT_ntpl_cluster_list *next;
   ROOT_NTPL_ID id;
   ROOT_NTPL_SIZE first_entry;
   ROOT_NTPL_SIZE nentries;
 };
 
 struct ROOT_ntpl_page_list {
-  ROOT_ntpl_list list;
+  ROOT_ntpl_page_list *next;
   ROOT_NTPL_ID id;
   ROOT_NTPL_SIZE first_element;
   ROOT_NTPL_SIZE nelements;
@@ -82,6 +77,8 @@ struct ROOT_ntpl_page_list {
 
 ROOT_ntpl_page_buffer {
   void *buffer;
+  ROOT_NTPL_SIZE first_element;
+  ROOT_NTPL_SIZE nelements;
   void *interal;
 };
 
@@ -115,16 +112,16 @@ ROOT_NTPL_ID column_pt;
 ROOT_NTPL_ID column_jets;
 ROOT_NTPL_ID column_jet_E;
 while (fields)
-  if (fields->parent == NULL && strcmp(fields->name, "pt") == 0) {
+  if (!fields->parent && strcmp(fields->name, "pt") == 0) {
     column_pt = fields->columns->id;
-  } else if (fields->parent == NULL && strcmp(fields->name, "jets") == 0) {
+  } else if (!fields->parent && strcmp(fields->name, "jets") == 0) {
     column_jets = fields->columns->id;
   } else if (fields->parent && strcmp(fields->parent->name, "jets") == 0 &&
              strcmp(fields->name, "jets") == 0)
   {
     column_jet_E = fields->columns->id;
   }
-  fields = fields->list.next;
+  fields = fields->next;
 };
 ROOT_ntpl_list_free(fields);
 
@@ -139,25 +136,35 @@ while (clusters) {
       //...
     }
     ROOT_ntpl_page_release(buffer_pt);
-    pages_pt = pages_pt->list.next;
+    pages_pt = pages_pt->next;
   }
   ROOT_ntpl_list_free(pages_pt);
 
   ROOT_ntpl_page_list *pages_jets = ROOT_ntpl_list_pages(column_jets, clusters->id);
   while (pages_jets) {
     ROOT_ntpl_page_buffer buffer_jets = ROOT_ntpl_page_get(column_jets, clusters->id, pages_jets->id);
+    ROOT_ntpl_page_buffer buffer_jet_E = ROOT_ntpl_page_find(column_jets_e, clusters->id, 0);
     std::uint32_t *offsets = (std::uint32_t *)buffer_jets.buffer;
     for (unsigned i = 0; i < pages_jets->nelements - 1; ++i) {
       printf("jet vector size: %u\n", offsets[i+1] - offsets[i]);
 
+      // Note: this accesses only the first element of jets.E, subsequent elements might be
+      // in the following pages
+      if (offsets[i] < buffer_jet_E.first_element + buffer_jet_E.nelements) {
+        // in current page
+      } else {
+        ROOT_ntpl_page_release(buffer_jet_E);
+        buffer_jet_E = ROOT_ntpl_page_find(column_jets_e, clusters->id, offsets[i]);
+      }
       // Use ROOT_ntpl_page_find to get the page of jets.E that corresponds to the offset
     }
-    ROOT_ntpl_page_release(buffer_pt);
-    pages_jets = pages_pt->list.next;
+    ROOT_ntpl_page_release(buffer_jet_E);
+    ROOT_ntpl_page_release(buffer_jets);
+    pages_jets = pages_jets->next;
   }
   ROOT_ntpl_list_free(pages_jets);
 
-  clusters = cluster->list.next;
+  clusters = clusters->next;
 }
 ROOT_ntpl_list_free(clusters);
 

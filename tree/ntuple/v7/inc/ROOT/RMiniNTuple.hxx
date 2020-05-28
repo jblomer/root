@@ -46,13 +46,13 @@ extern "C" {
 
 struct ROOT_ntpl;
 
-struct ROOT_ntpl_column_list {
+struct ROOT_ntpl_column {
   ROOT_ntpl_column_list *next;
   ROOT_NTPL_ID id;
   int type;
 };
 
-struct ROOT_ntpl_field_list {
+struct ROOT_ntpl_field {
   ROOT_ntpl_field_list *next;
   ROOT_NTPL_ID id;
   char *name;
@@ -61,21 +61,21 @@ struct ROOT_ntpl_field_list {
   ROOT_ntpl_column_list *columns;
 };
 
-struct ROOT_ntpl_cluster_list {
+struct ROOT_ntpl_cluster {
   ROOT_ntpl_cluster_list *next;
   ROOT_NTPL_ID id;
   ROOT_NTPL_SIZE first_entry;
   ROOT_NTPL_SIZE nentries;
 };
 
-struct ROOT_ntpl_page_list {
+struct ROOT_ntpl_page {
   ROOT_ntpl_page_list *next;
   ROOT_NTPL_ID id;
   ROOT_NTPL_SIZE first_element;
   ROOT_NTPL_SIZE nelements;
 };
 
-ROOT_ntpl_page_buffer {
+struct ROOT_ntpl_page_buffer {
   void *buffer;
   ROOT_NTPL_SIZE first_element;
   ROOT_NTPL_SIZE nelements;
@@ -90,10 +90,10 @@ int ROOT_ntpl_error(ROOT_ntpl *ntpl);
 void ROOT_ntpl_close(ROOT_ntpl *ntpl);
 
 // Meta-data
-ROOT_ntpl_field_list *ROOT_ntpl_list_fields(ROOT_ntpl *ntpl);
-ROOT_ntpl_cluster_list *ROOT_ntpl_list_clusters(ROOT_ntpl *ntpl);
-ROOT_ntpl_page_list *ROOT_ntpl_list_pages(ROOT_NTPL_ID column_id, ROOT_NTPL_ID cluster_id);
-void ROOT_ntpl_list_free(ROOT_ntpl_list *list);
+ROOT_ntpl_field *ROOT_ntpl_list_fields(ROOT_ntpl *ntpl);
+ROOT_ntpl_cluster *ROOT_ntpl_list_clusters(ROOT_ntpl *ntpl);
+ROOT_ntpl_page *ROOT_ntpl_list_pages(ROOT_NTPL_ID column_id, ROOT_NTPL_ID cluster_id);
+void ROOT_ntpl_list_free(void *list);
 
 ROOT_ntpl_page_buffer ROOT_ntpl_page_get(ROOT_NTPL_ID column_id, ROOT_NTPL_ID cluster_id, ROOT_NTPL_ID page_id);
 ROOT_ntpl_page_buffer ROOT_ntpl_page_find(ROOT_NTPL_ID column_id, ROOT_NTPL_ID cluster_id,
@@ -107,7 +107,7 @@ void ROOT_ntpl_page_release(ROOT_ntpl_page_buffer buffer);
 ROOT_ntpl *ntpl = ROOT_ntpl_open("MyNtuple", "data.root");
 
 // Collect column ids
-ROOT_ntpl_field_list *fields = ROOT_ntpl_list_fields(ntpl);
+ROOT_ntpl_field *fields = ROOT_ntpl_list_fields(ntpl);
 ROOT_NTPL_ID column_pt;
 ROOT_NTPL_ID column_jets;
 ROOT_NTPL_ID column_jet_E;
@@ -126,9 +126,9 @@ while (fields)
 ROOT_ntpl_list_free(fields);
 
 // Iterate through the data set
-ROOT_ntpl_list_clusters *clusters = ROOT_ntpl_list_clusters(ntpl);
+ROOT_ntpl_cluster *clusters = ROOT_ntpl_list_clusters(ntpl);
 while (clusters) {
-  ROOT_ntpl_page_list *pages_pt = ROOT_ntpl_list_pages(column_pt, clusters->id);
+  ROOT_ntpl_page *pages_pt = ROOT_ntpl_list_pages(column_pt, clusters->id);
   while (pages_pt) {
     ROOT_ntpl_page_buffer buffer_pt = ROOT_ntpl_page_get(column_pt, clusters->id, pages_pt->id);
     float *pt = (float *)buffer_pt.buffer;
@@ -140,7 +140,7 @@ while (clusters) {
   }
   ROOT_ntpl_list_free(pages_pt);
 
-  ROOT_ntpl_page_list *pages_jets = ROOT_ntpl_list_pages(column_jets, clusters->id);
+  ROOT_ntpl_page *pages_jets = ROOT_ntpl_list_pages(column_jets, clusters->id);
   while (pages_jets) {
     ROOT_ntpl_page_buffer buffer_jets = ROOT_ntpl_page_get(column_jets, clusters->id, pages_jets->id);
     ROOT_ntpl_page_buffer buffer_jet_E = ROOT_ntpl_page_find(column_jets_e, clusters->id, 0);

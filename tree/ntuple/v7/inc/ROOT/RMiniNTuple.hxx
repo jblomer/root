@@ -79,7 +79,6 @@ struct ROOT_ntpl_page_buffer {
   void *buffer;
   ROOT_NTPL_SIZE first_element;
   ROOT_NTPL_SIZE nelements;
-  void *interal;
 };
 
 

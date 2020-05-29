@@ -52,7 +52,6 @@ bool ROOT::Experimental::Detail::RClusterPool::RInFlightCluster::operator <(cons
 ROOT::Experimental::Detail::RClusterPool::RClusterPool(RPageSource *pageSource, unsigned int size)
    : fPageSource(pageSource)
    , fPool(size, nullptr)
-   , fThreadUnzip(&RClusterPool::ExecUnzipClusters, this)
    , fThreadIo(&RClusterPool::ExecLoadClusters, this)
 {
    R__ASSERT(size > 0);
@@ -67,20 +66,13 @@ ROOT::Experimental::Detail::RClusterPool::RClusterPool(RPageSource *pageSource, 
 
 ROOT::Experimental::Detail::RClusterPool::~RClusterPool()
 {
-   // Controlled shutdown of the I/O thread and the unzip thread
+   // Controlled shutdown of the I/O thread
    {
       std::unique_lock<std::mutex> lock(fLockIOQueue);
       fIOQueue.emplace(RIOItem());
       fCvHasIOWork.notify_one();
    }
    fThreadIo.join();
-
-   {
-      std::unique_lock<std::mutex> lock(fLockUnzipQueue);
-      fUnzipQueue.emplace(RUnzipItem());
-      fCvHasUnzipWork.notify_one();
-   }
-   fThreadUnzip.join();
 }
 
 void ROOT::Experimental::Detail::RClusterPool::ExecLoadClusters()
@@ -121,28 +113,7 @@ void ROOT::Experimental::Detail::RClusterPool::ExecLoadClusters()
             continue;
          }
 
-         // Todo: move to unzip queue
-         item.fPromise.set_value(std::move(cluster));
-      }
-   } // while (true)
-}
-
-void ROOT::Experimental::Detail::RClusterPool::ExecUnzipClusters()
-{
-   while (true) {
-      std::vector<RUnzipItem> unzipItems;
-      {
-         std::unique_lock<std::mutex> lock(fLockUnzipQueue);
-         fCvHasUnzipWork.wait(lock, [&]{ return !fUnzipQueue.empty(); });
-         while (!fUnzipQueue.empty()) {
-            unzipItems.emplace_back(std::move(fUnzipQueue.front()));
-            fUnzipQueue.pop();
-         }
-      }
-
-      for (auto &item : unzipItems) {
-         if (!item.fCluster)
-            return;
+         fPageSource->UnzipClusterAsync(std::move(cluster), std::move(item.fPromise));
       }
    } // while (true)
 }

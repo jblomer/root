@@ -114,6 +114,12 @@ ROOT::Experimental::ColumnId_t ROOT::Experimental::Detail::RPageSource::GetColum
    return columnHandle.fId;
 }
 
+void ROOT::Experimental::Detail::RPageSource::UnzipClusterAsync(
+   std::unique_ptr<RCluster> cluster, std::promise<std::unique_ptr<RCluster>> promise)
+{
+   promise.set_value(std::move(cluster));
+}
+
 
 //------------------------------------------------------------------------------
 

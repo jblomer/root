@@ -25,6 +25,7 @@
 
 #include <atomic>
 #include <cstddef>
+#include <future>
 #include <memory>
 #include <stack>
 #include <unordered_set>
@@ -230,6 +231,7 @@ public:
    /// any pages, but the corresponding column ids must be registered in the cluster nevertheless.
    /// LoadCluster in general runs in parallel to other methods of the page source.
    virtual std::unique_ptr<RCluster> LoadCluster(DescriptorId_t clusterId, const ColumnSet_t &columns) = 0;
+   virtual void UnzipClusterAsync(std::unique_ptr<RCluster> cluster, std::promise<std::unique_ptr<RCluster>> promise);
 };
 
 } // namespace Detail

@@ -46,7 +46,7 @@ The cluster pool steers the preloading of (partial) clusters.
 // clang-format on
 class RClusterPool {
 private:
-   /// Maximum number of queued cluster requests for the I/O thread and the unzip thread.
+   /// Maximum number of queued cluster requests for the I/O thread.
    /// A single request can span mutliple clusters.
    static constexpr unsigned int kWorkQueueLimit = 4;
 
@@ -57,14 +57,6 @@ private:
       DescriptorId_t fClusterId = kInvalidDescriptorId;
       RPageSource::ColumnSet_t fColumns;
       RIOItem() = default;
-   };
-
-   /// Request to unzip the pages of a previously loaded cluster.  The promise is passed
-   /// from the I/O thread to the unzip thread (pipeline).
-   struct RUnzipItem {
-      std::unique_ptr<RCluster> fCluster;
-      std::promise<std::unique_ptr<RCluster>> fPromise;
-      RUnzipItem() = default;
    };
 
    /// Clusters that are currently being processed by the I/O thread.  Every in flight cluster has a corresponding
@@ -99,12 +91,6 @@ private:
    /// The communication channel to the I/O thread
    std::queue<RIOItem> fIOQueue;
 
-   std::mutex fLockUnzipQueue;
-   std::condition_variable fCvHasUnzipWork;
-   /// The communication channel to the unzip thread
-   std::queue<RUnzipItem> fUnzipQueue;
-
-   std::thread fThreadUnzip;
    std::thread fThreadIo;
 
    /// Every cluster id has at most one corresponding RCluster pointer in the pool

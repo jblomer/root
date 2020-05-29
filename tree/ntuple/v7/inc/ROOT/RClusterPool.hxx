@@ -46,16 +46,25 @@ The cluster pool steers the preloading of (partial) clusters.
 // clang-format on
 class RClusterPool {
 private:
-   /// Maximum number of queued cluster requests for the I/O thread. A single request can span mutliple clusters.
+   /// Maximum number of queued cluster requests for the I/O thread and the unzip thread.
+   /// A single request can span mutliple clusters.
    static constexpr unsigned int kWorkQueueLimit = 4;
 
    /// Request to load a subset of the columns of a particular cluster.
-   /// Work items come in groups and are executed by the page source.
-   struct RWorkItem {
+   /// I/O work items come in groups and are executed by the page source.
+   struct RIOItem {
       std::promise<std::unique_ptr<RCluster>> fPromise;
       DescriptorId_t fClusterId = kInvalidDescriptorId;
       RPageSource::ColumnSet_t fColumns;
-      RWorkItem() = default;
+      RIOItem() = default;
+   };
+
+   /// Request to unzip the pages of a previously loaded cluster.  The promise is passed
+   /// from the I/O thread to the unzip thread (pipeline).
+   struct RUnzipItem {
+      std::unique_ptr<RCluster> fCluster;
+      std::promise<std::unique_ptr<RCluster>> fPromise;
+      RUnzipItem() = default;
    };
 
    /// Clusters that are currently being processed by the I/O thread.  Every in flight cluster has a corresponding
@@ -85,11 +94,17 @@ private:
    /// The clusters that were handed off to the I/O thread
    std::vector<RInFlightCluster> fInFlightClusters;
 
-   std::mutex fLockWorkQueue;
-   std::condition_variable fCvHasWork;
+   std::mutex fLockIOQueue;
+   std::condition_variable fCvHasIOWork;
    /// The communication channel to the I/O thread
-   std::queue<RWorkItem> fWorkQueue;
+   std::queue<RIOItem> fIOQueue;
 
+   std::mutex fLockUnzipQueue;
+   std::condition_variable fCvHasUnzipWork;
+   /// The communication channel to the unzip thread
+   std::queue<RUnzipItem> fUnzipQueue;
+
+   std::thread fThreadUnzip;
    std::thread fThreadIo;
 
    /// Every cluster id has at most one corresponding RCluster pointer in the pool
@@ -98,6 +113,10 @@ private:
    size_t FindFreeSlot();
    /// The I/O thread routine, there is exactly one I/O thread in flight for every cluster pool
    void ExecLoadClusters();
+   /// The unzip thread routine, there is exactly one unzip thread running for every cluster pool
+   /// The actual unzipping is offloaded to the page source, which is supposed to handle the request asynchronously
+   /// (non-blocking)
+   void ExecUnzipClusters();
    /// Returns the given cluster from the pool, which needs to contain at least the columns `columns`.
    /// Executed at the end of GetCluster when all missing data pieces have been sent to the load queue.
    /// Ideally, the function returns without blocking if the cluster is already in the pool.

@@ -1,7 +1,10 @@
 #include "ntuple_test.hxx"
 
+#include "TROOT.h"
+
 TEST(RNTuple, RealWorld1)
 {
+   ROOT::EnableImplicitMT();
    FileRaii fileGuard("test_ntuple_realworld1.root");
 
    // See https://github.com/olifre/root-io-bench/blob/master/benchmark.cpp
@@ -69,6 +72,7 @@ TEST(RNTuple, RealWorld1)
 // Stress test the asynchronous cluster pool by a deliberately unfavourable read pattern
 TEST(RNTuple, RandomAccess)
 {
+   ROOT::EnableImplicitMT();
    FileRaii fileGuard("test_ntuple_random_access.root");
 
    auto modelWrite = RNTupleModel::Create();
@@ -104,6 +108,7 @@ TEST(RNTuple, RandomAccess)
 #if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
 TEST(RNTuple, LargeFile)
 {
+   ROOT::EnableImplicitMT();
    FileRaii fileGuard("test_large_file.root");
 
    auto modelWrite = RNTupleModel::Create();

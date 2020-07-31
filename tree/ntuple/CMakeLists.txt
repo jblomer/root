@@ -60,6 +60,7 @@ SOURCES
 LINKDEF
   LinkDef.h
 DEPENDENCIES
+  Imt
   RIO
   ROOTVecOps
 )

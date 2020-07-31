@@ -13,22 +13,27 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RNTuple.hxx"
+#include <ROOT/RNTuple.hxx>
 
-#include "ROOT/RFieldVisitor.hxx"
-#include "ROOT/RNTupleModel.hxx"
-#include "ROOT/RPageStorage.hxx"
+#include <ROOT/RFieldVisitor.hxx>
+#include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RPageStorage.hxx>
+#ifdef R__USE_IMT
+#include <ROOT/TTaskGroup.hxx>
+#endif
+
+#include <TError.h>
+#include <TROOT.h> // for IsImplicitMTEnabled()
 
 #include <algorithm>
 #include <exception>
+#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
-
-#include <TError.h>
 
 
 void ROOT::Experimental::RNTupleReader::ConnectModel(const RNTupleModel &model) {
@@ -43,6 +48,18 @@ void ROOT::Experimental::RNTupleReader::ConnectModel(const RNTupleModel &model) 
    }
 }
 
+void ROOT::Experimental::RNTupleReader::InitPageSource()
+{
+#ifdef R__USE_IMT
+   if (IsImplicitMTEnabled()) {
+      fUnzipTasks = std::make_unique<TTaskGroup>();
+      fSource->SetTaskScheduleFunc([this](const std::function<void()> &task) { fUnzipTasks->Run(task); });
+   }
+#endif
+   fSource->Attach();
+   fMetrics.ObserveMetrics(fSource->GetMetrics());
+}
+
 ROOT::Experimental::RNTupleReader::RNTupleReader(
    std::unique_ptr<ROOT::Experimental::RNTupleModel> model,
    std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
@@ -50,9 +67,8 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(
    , fModel(std::move(model))
    , fMetrics("RNTupleReader")
 {
-   fSource->Attach();
+   InitPageSource();
    ConnectModel(*fModel);
-   fMetrics.ObserveMetrics(fSource->GetMetrics());
 }
 
 ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
@@ -60,12 +76,12 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimen
    , fModel(nullptr)
    , fMetrics("RNTupleReader")
 {
-   fSource->Attach();
-   fMetrics.ObserveMetrics(fSource->GetMetrics());
+   InitPageSource();
 }
 
 ROOT::Experimental::RNTupleReader::~RNTupleReader()
 {
+   fSource->SetTaskScheduleFunc(Detail::RPageSource::TaskScheduleFunc_t());
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleReader::Open(

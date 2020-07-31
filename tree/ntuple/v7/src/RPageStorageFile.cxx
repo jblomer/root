@@ -268,7 +268,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFil
 
 
 ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::PopulatePageFromCluster(
-   ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor, ClusterSize_t::ValueType clusterIndex)
+   ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor, ClusterSize_t::ValueType idxInCluster)
 {
    const auto columnId = columnHandle.fId;
    const auto clusterId = clusterDescriptor.GetId();
@@ -276,18 +276,18 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
 
    // TODO(jblomer): binary search
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
-   decltype(clusterIndex) firstInPage = 0;
+   decltype(idxInCluster) firstInPage = 0;
    NTupleSize_t pageNo = 0;
    for (const auto &pi : pageRange.fPageInfos) {
-      if (firstInPage + pi.fNElements > clusterIndex) {
+      if (firstInPage + pi.fNElements > idxInCluster) {
          pageInfo = pi;
          break;
       }
       firstInPage += pi.fNElements;
       ++pageNo;
    }
-   R__ASSERT(firstInPage <= clusterIndex);
-   R__ASSERT((firstInPage + pageInfo.fNElements) > clusterIndex);
+   R__ASSERT(firstInPage <= idxInCluster);
+   R__ASSERT((firstInPage + pageInfo.fNElements) > idxInCluster);
 
    const auto element = columnHandle.fColumn->GetElement();
    const auto elementSize = element->GetSize();
@@ -306,7 +306,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
          fCurrentCluster = fClusterPool->GetCluster(clusterId, fActiveColumns);
       R__ASSERT(fCurrentCluster->ContainsColumn(columnId));
 
-      auto cachedPage = fPagePool->GetPage(columnId, RClusterIndex(clusterId, clusterIndex));
+      auto cachedPage = fPagePool->GetPage(columnId, RClusterIndex(clusterId, idxInCluster));
       if (!cachedPage.IsNull())
          return cachedPage;
 
@@ -365,7 +365,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
    ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex)
 {
    const auto clusterId = clusterIndex.GetClusterId();
-   const auto index = clusterIndex.GetIndex();
+   const auto idxInCluster = clusterIndex.GetIndex();
    const auto columnId = columnHandle.fId;
    auto cachedPage = fPagePool->GetPage(columnId, clusterIndex);
    if (!cachedPage.IsNull())
@@ -373,7 +373,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
 
    R__ASSERT(clusterId != kInvalidDescriptorId);
    const auto &clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
-   return PopulatePageFromCluster(columnHandle, clusterDescriptor, index);
+   return PopulatePageFromCluster(columnHandle, clusterDescriptor, idxInCluster);
 }
 
 void ROOT::Experimental::Detail::RPageSourceFile::ReleasePage(RPage &page)

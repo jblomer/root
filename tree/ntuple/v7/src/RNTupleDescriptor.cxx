@@ -928,9 +928,10 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddClustersFromFooter(void* f
    }
 }
 
-void ROOT::Experimental::RNTupleDescriptorBuilder::AddRawPages(void* footerBuffer) {
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::RRawColumns::AddRawPages(void* footerBuffer) {
    auto pos = reinterpret_cast<unsigned char *>(footerBuffer);
-   auto base = pos;
+   const auto base = pos;
 
    std::uint32_t frameSize;
    pos += DeserializeFrame(RNTupleDescriptor::kFrameVersionCurrent, pos, &frameSize);
@@ -944,7 +945,6 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddRawPages(void* footerBuffe
    for (std::uint64_t i = 0; i < nClusters; ++i) {
       RNTupleUuid uuid;
       pos += DeserializeUuid(pos, &uuid);
-      R__ASSERT(uuid == fDescriptor.fOwnUuid);
       auto clusterBase = pos;
       pos += DeserializeFrame(RClusterDescriptor::kFrameVersionCurrent, clusterBase, &frameSize);
 
@@ -957,10 +957,8 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddRawPages(void* footerBuffe
       pos += DeserializeUInt64(pos, &firstEntry);
       pos += DeserializeUInt64(pos, &nEntries);
       std::cout << "nEntries: " << nEntries << "\n";
-      AddCluster(clusterId, version, firstEntry, ROOT::Experimental::ClusterSize_t(nEntries));
       RClusterDescriptor::RLocator locator;
       pos += DeserializeLocator(pos, &locator);
-      SetClusterLocator(clusterId, locator);
 
       pos = clusterBase + frameSize;
 
@@ -974,22 +972,23 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddRawPages(void* footerBuffe
          RClusterDescriptor::RColumnRange columnRange;
          columnRange.fColumnId = columnId;
          pos += DeserializeColumnRange(pos, &columnRange);
-         AddClusterColumnRange(clusterId, columnRange);
-         std::cout << "nElements in column " << columnRange.fNElements << "\n";
-
-         RClusterDescriptor::RPageRange pageRange;
-         pageRange.fColumnId = columnId;
          uint32_t nPages;
          pos += DeserializeUInt32(pos, &nPages);
+         std::vector<RClusterDescriptor::RPageRange::RPageInfo> pageInfos;
+         pageInfos.reserve(nPages);
          for (unsigned int k = 0; k < nPages; ++k) {
             RClusterDescriptor::RPageRange::RPageInfo pageInfo;
             pos += DeserializePageInfo(pos, &pageInfo);
             std::cout << "\tpage " << k << " has " << pageInfo.fNElements << " elements\n";
-            pageRange.fPageInfos.emplace_back(pageInfo);
+            pageInfos.emplace_back(pageInfo);
          }
-         AddClusterPageRange(clusterId, std::move(pageRange));
+         auto res = AddPagesToColumn(columnId, std::move(pageInfos));
+         if (!res) {
+            return R__FORWARD_ERROR(res);
+         }
       }
    }
+   return RResult<void>::Success();
 }
 
 

@@ -125,7 +125,7 @@ void ROOT::Internal::RRawFileUnix::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
          ev.fOffset = ioVec[i].fOffset;
          ev.fSize = ioVec[i].fSize;
          ev.fFileDes = fFileDes;
-         reads.push_back(ev);
+         reads.emplace_back(ev);
       }
       ring.SubmitReadsAndWait(reads.data(), nReq);
       for (std::size_t i = 0; i < nReq; ++i) {

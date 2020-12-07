@@ -87,7 +87,7 @@ public:
       return available;
    }
 
-   std::uint32_t GetQueueDepth() {
+   std::uint32_t GetQueueDepth() const {
       return fDepth;
    }
 
@@ -179,9 +179,9 @@ public:
          }
          readPos += batchSize;
          batch += 1;
-      }
+      } // while (readPos < nReads)
       return;
-   }
+   } // SubmitReadsAndWait
 };
 
 } // namespace Internal

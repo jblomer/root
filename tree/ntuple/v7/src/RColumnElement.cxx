@@ -21,6 +21,7 @@
 #include <bitset>
 #include <cstdint>
 #include <memory>
+#include <utility>
 
 std::unique_ptr<ROOT::Experimental::Detail::RColumnElementBase>
 ROOT::Experimental::Detail::RColumnElementBase::Generate(EColumnType type) {

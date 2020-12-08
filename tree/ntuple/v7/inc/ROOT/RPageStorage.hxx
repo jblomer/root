@@ -25,6 +25,7 @@
 
 #include <atomic>
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <unordered_set>
 
@@ -58,8 +59,21 @@ an ntuple.  Concrete implementations can use a TFile, a raw file, an object stor
 */
 // clang-format on
 class RPageStorage {
+public:
+   /// The interface of a task scheduler to schedule page (de)compression tasks
+   class RTaskScheduler {
+   public:
+      /// Start a new set of tasks
+      virtual void Reset() = 0;
+      /// Take a callable that represents a task
+      virtual void AddTask(const std::function<void(void)> &taskFunc) = 0;
+      /// Blocks until all scheduled tasks finished
+      virtual void Wait() = 0;
+   };
+
 protected:
    std::string fNTupleName;
+   RTaskScheduler *fTaskScheduler = nullptr;
 
 public:
    explicit RPageStorage(std::string_view name);
@@ -96,6 +110,8 @@ public:
 
    /// Returns an empty metrics.  Page storage implementations usually have their own metrics.
    virtual RNTupleMetrics &GetMetrics();
+
+   void SetTaskScheduler(RTaskScheduler *taskScheduler) { fTaskScheduler = taskScheduler; }
 };
 
 // clang-format off
@@ -185,6 +201,9 @@ protected:
    ColumnSet_t fActiveColumns;
 
    virtual RNTupleDescriptor AttachImpl() = 0;
+   // Only called if a task scheduler is set. No-op be default.
+   virtual void UnzipClusterImpl(RCluster * /* cluster */)
+      { }
 
 public:
    RPageSource(std::string_view ntupleName, const RNTupleReadOptions &fOptions);
@@ -223,6 +242,13 @@ public:
    /// LoadCluster() is typically called from the I/O thread of a cluster pool, i.e. the method runs
    /// concurrently to other methods of the page source.
    virtual std::unique_ptr<RCluster> LoadCluster(DescriptorId_t clusterId, const ColumnSet_t &columns) = 0;
+
+   /// Parallel decompression and unpacking of the pages in the given cluster. The unzipped pages are supposed
+   /// to be preloaded in a page pool attached to the source. The method is triggered by the cluster pool's
+   /// unzip thread. It is an optional optimization, the method can safely do nothing. In particular, the
+   /// actual implementation will only run if a task scheduler is set. In practice, a task scheduler is set
+   /// if implicit multi-threading is turned on.
+   void UnzipCluster(RCluster *cluster);
 };
 
 } // namespace Detail

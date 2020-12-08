@@ -37,6 +37,7 @@ namespace Experimental {
 
 class REntry;
 class RNTupleModel;
+class TTaskGroup;
 
 namespace Detail {
 class RPageSink;
@@ -62,6 +63,15 @@ enum class ENTupleShowFormat {
 };
 
 
+class RNTupleImtTaskScheduler : public Detail::RPageStorage::RTaskScheduler {
+private:
+   std::unique_ptr<TTaskGroup> fTaskGroup;
+public:
+   void Reset() final;
+   void AddTask(const std::function<void(void)> &taskFunc) final;
+   void Wait() final;
+};
+
 // clang-format off
 /**
 \class ROOT::Experimental::RNTupleReader
@@ -84,9 +94,12 @@ private:
    /// is a clone of the original reader.
    std::unique_ptr<RNTupleReader> fDisplayReader;
    Detail::RNTupleMetrics fMetrics;
+   /// Set as the page source's scheduler for parallel page decompression if IMT is on
+   RNTupleImtTaskScheduler fUnzipTasks;
 
    void ConnectModel(const RNTupleModel &model);
    RNTupleReader *GetDisplayReader();
+   void InitPageSource();
 
 public:
    // Browse through the entries

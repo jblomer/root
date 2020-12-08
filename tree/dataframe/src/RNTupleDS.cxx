@@ -19,12 +19,14 @@
 #include <ROOT/RFieldValue.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleDS.hxx>
+#include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <TError.h>
 
+#include <iostream>
 #include <string>
 #include <vector>
 #include <typeinfo>
@@ -175,7 +177,11 @@ public:
 } // namespace Detail
 
 
-RNTupleDS::~RNTupleDS() = default;
+RNTupleDS::~RNTupleDS()
+{
+   for (auto &s : fSources)
+      s->GetMetrics().Print(std::cout);
+}
 
 
 void RNTupleDS::AddField(
@@ -273,6 +279,7 @@ void RNTupleDS::AddField(
 
 RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pageSource)
 {
+   pageSource->GetMetrics().Enable();
    pageSource->Attach();
    const auto &descriptor = pageSource->GetDescriptor();
    fSources.emplace_back(std::move(pageSource));

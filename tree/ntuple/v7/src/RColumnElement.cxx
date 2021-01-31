@@ -198,9 +198,7 @@ void ROOT::Experimental::Detail::RColumnElement<
    std::uint32_t *unpackedOffsets = reinterpret_cast<std::uint32_t *>(dst);
 
    unpackedOffsets[0] = packedOffsets[0];
-   auto sum = unpackedOffsets[0];
    for (std::size_t i = 1; i < count; ++i) {
-      unpackedOffsets[i] = sum + packedOffsets[i];
-      sum += packedOffsets[i];
+      unpackedOffsets[i] = unpackedOffsets[i-1] + packedOffsets[i];
    }
 }

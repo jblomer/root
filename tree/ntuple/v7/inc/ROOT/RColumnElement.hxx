@@ -120,23 +120,29 @@ public:
 template <>
 class RColumnElement<float, EColumnType::kReal32> : public RColumnElementBase {
 public:
-   static constexpr bool kIsMappable = true;
+   static constexpr bool kIsMappable = false;
    static constexpr std::size_t kSize = sizeof(float);
    static constexpr std::size_t kBitsOnStorage = kSize * 8;
    explicit RColumnElement(float *value) : RColumnElementBase(value, kSize) {}
    bool IsMappable() const final { return kIsMappable; }
    std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+
+   void Pack(void *dst, void *src, std::size_t count) const final;
+   void Unpack(void *dst, void *src, std::size_t count) const final;
 };
 
 template <>
 class RColumnElement<double, EColumnType::kReal64> : public RColumnElementBase {
 public:
-   static constexpr bool kIsMappable = true;
+   static constexpr bool kIsMappable = false;
    static constexpr std::size_t kSize = sizeof(double);
    static constexpr std::size_t kBitsOnStorage = kSize * 8;
    explicit RColumnElement(double *value) : RColumnElementBase(value, kSize) {}
    bool IsMappable() const final { return kIsMappable; }
    std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+
+   void Pack(void *dst, void *src, std::size_t count) const final;
+   void Unpack(void *dst, void *src, std::size_t count) const final;
 };
 
 template <>
@@ -197,12 +203,15 @@ public:
 template <>
 class RColumnElement<ClusterSize_t, EColumnType::kIndex> : public RColumnElementBase {
 public:
-   static constexpr bool kIsMappable = true;
+   static constexpr bool kIsMappable = false;
    static constexpr std::size_t kSize = sizeof(ROOT::Experimental::ClusterSize_t);
    static constexpr std::size_t kBitsOnStorage = kSize * 8;
    explicit RColumnElement(ClusterSize_t *value) : RColumnElementBase(value, kSize) {}
    bool IsMappable() const final { return kIsMappable; }
    std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+
+   void Pack(void *dst, void *src, std::size_t count) const final;
+   void Unpack(void *dst, void *src, std::size_t count) const final;
 };
 
 template <>

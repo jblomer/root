@@ -32,3 +32,82 @@ TEST(Packing, Bitfield)
       EXPECT_EQ(b9[i], e9[i]);
    }
 }
+
+
+TEST(Packing, FloatSplit)
+{
+   ROOT::Experimental::Detail::RColumnElement<float, ROOT::Experimental::EColumnType::kReal32> element(nullptr);
+   element.Pack(nullptr, nullptr, 0);
+   element.Unpack(nullptr, nullptr, 0);
+
+   float f = 42.0;
+   char fPacked[4];
+   element.Pack(fPacked, &f, 1);
+   element.Unpack(&f, fPacked, 1);
+   EXPECT_EQ(42.0, f);
+
+   float mf[] = {1.0, 2.0, 3.0};
+   char mfPacked[12];
+   element.Pack(mfPacked, mf, 3);
+   element.Unpack(mf, mfPacked, 3);
+   EXPECT_EQ(1.0, mf[0]);
+   EXPECT_EQ(2.0, mf[1]);
+   EXPECT_EQ(3.0, mf[2]);
+}
+
+
+TEST(Packing, DoubleSplit)
+{
+   ROOT::Experimental::Detail::RColumnElement<double, ROOT::Experimental::EColumnType::kReal64> element(nullptr);
+   element.Pack(nullptr, nullptr, 0);
+   element.Unpack(nullptr, nullptr, 0);
+
+   double f = 42.0;
+   char fPacked[8];
+   element.Pack(fPacked, &f, 1);
+   element.Unpack(&f, fPacked, 1);
+   EXPECT_EQ(42.0, f);
+
+   double mf[] = {1.0, 2.0, 3.0};
+   char mfPacked[24];
+   element.Pack(mfPacked, mf, 3);
+   element.Unpack(mf, mfPacked, 3);
+   EXPECT_EQ(1.0, mf[0]);
+   EXPECT_EQ(2.0, mf[1]);
+   EXPECT_EQ(3.0, mf[2]);
+}
+
+
+TEST(Packing, OffsetSplit)
+{
+   ROOT::Experimental::Detail::RColumnElement<
+      ROOT::Experimental::ClusterSize_t, ROOT::Experimental::EColumnType::kIndex> element(nullptr);
+   element.Pack(nullptr, nullptr, 0);
+   element.Unpack(nullptr, nullptr, 0);
+
+   ROOT::Experimental::ClusterSize_t v(42);
+   char vPacked[4];
+   element.Pack(vPacked, &v, 1);
+   element.Unpack(&v, vPacked, 1);
+   EXPECT_EQ(42u, v);
+
+   ROOT::Experimental::ClusterSize_t mv2[2];
+   mv2[0] = 0;
+   mv2[1] = 5;
+   char mvPacked2[8];
+   element.Pack(mvPacked2, mv2, 2);
+   element.Unpack(mv2, mvPacked2, 2);
+   EXPECT_EQ(0u, std::uint32_t(mv2[0]));
+   EXPECT_EQ(5u, std::uint32_t(mv2[1]));
+
+   ROOT::Experimental::ClusterSize_t mv3[3];
+   mv3[0] = 1;
+   mv3[1] = 4;
+   mv3[2] = 5;
+   char mvPacked3[12];
+   element.Pack(mvPacked3, mv3, 3);
+   element.Unpack(mv3, mvPacked3, 3);
+   EXPECT_EQ(1u, std::uint32_t(mv3[0]));
+   EXPECT_EQ(4u, std::uint32_t(mv3[1]));
+   EXPECT_EQ(5u, std::uint32_t(mv3[2]));
+}

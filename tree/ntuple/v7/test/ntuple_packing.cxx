@@ -111,3 +111,91 @@ TEST(Packing, OffsetSplit)
    EXPECT_EQ(4u, std::uint32_t(mv3[1]));
    EXPECT_EQ(5u, std::uint32_t(mv3[2]));
 }
+
+
+TEST(Packing, Int32Split)
+{
+   ROOT::Experimental::Detail::RColumnElement<std::int32_t, ROOT::Experimental::EColumnType::kInt32> element(nullptr);
+   element.Pack(nullptr, nullptr, 0);
+   element.Unpack(nullptr, nullptr, 0);
+
+   std::int32_t i = 42;
+   char iPacked[4];
+   element.Pack(iPacked, &i, 1);
+   element.Unpack(&i, iPacked, 1);
+   EXPECT_EQ(42, i);
+
+   std::int32_t mi[] = {-1, 2, -3};
+   char miPacked[12];
+   element.Pack(miPacked, mi, 3);
+   element.Unpack(mi, miPacked, 3);
+   EXPECT_EQ(-1, mi[0]);
+   EXPECT_EQ(2, mi[1]);
+   EXPECT_EQ(-3, mi[2]);
+}
+
+
+TEST(Packing, UInt32Split)
+{
+   ROOT::Experimental::Detail::RColumnElement<std::uint32_t, ROOT::Experimental::EColumnType::kInt32> element(nullptr);
+   element.Pack(nullptr, nullptr, 0);
+   element.Unpack(nullptr, nullptr, 0);
+
+   std::uint32_t i = 42;
+   char iPacked[4];
+   element.Pack(iPacked, &i, 1);
+   element.Unpack(&i, iPacked, 1);
+   EXPECT_EQ(42u, i);
+
+   std::uint32_t mi[] = {1, 2, 3};
+   char miPacked[12];
+   element.Pack(miPacked, mi, 3);
+   element.Unpack(mi, miPacked, 3);
+   EXPECT_EQ(1u, mi[0]);
+   EXPECT_EQ(2u, mi[1]);
+   EXPECT_EQ(3u, mi[2]);
+}
+
+
+TEST(Packing, Int64Split)
+{
+   ROOT::Experimental::Detail::RColumnElement<std::int64_t, ROOT::Experimental::EColumnType::kInt64> element(nullptr);
+   element.Pack(nullptr, nullptr, 0);
+   element.Unpack(nullptr, nullptr, 0);
+
+   std::int64_t i = 42;
+   char iPacked[8];
+   element.Pack(iPacked, &i, 1);
+   element.Unpack(&i, iPacked, 1);
+   EXPECT_EQ(42, i);
+
+   std::int64_t mi[] = {-1, 2, -3};
+   char miPacked[24];
+   element.Pack(miPacked, mi, 3);
+   element.Unpack(mi, miPacked, 3);
+   EXPECT_EQ(-1, mi[0]);
+   EXPECT_EQ(2, mi[1]);
+   EXPECT_EQ(-3, mi[2]);
+}
+
+
+TEST(Packing, UInt64Split)
+{
+   ROOT::Experimental::Detail::RColumnElement<std::uint64_t, ROOT::Experimental::EColumnType::kInt64> element(nullptr);
+   element.Pack(nullptr, nullptr, 0);
+   element.Unpack(nullptr, nullptr, 0);
+
+   std::uint64_t i = 42;
+   char iPacked[8];
+   element.Pack(iPacked, &i, 1);
+   element.Unpack(&i, iPacked, 1);
+   EXPECT_EQ(42u, i);
+
+   std::uint64_t mi[] = {1, 2, 3};
+   char miPacked[24];
+   element.Pack(miPacked, mi, 3);
+   element.Unpack(mi, miPacked, 3);
+   EXPECT_EQ(1u, mi[0]);
+   EXPECT_EQ(2u, mi[1]);
+   EXPECT_EQ(3u, mi[2]);
+}

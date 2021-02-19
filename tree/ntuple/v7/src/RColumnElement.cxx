@@ -330,12 +330,24 @@ void ROOT::Experimental::Detail::RColumnElement<
       return;
 
    std::uint32_t *unpackedOffsets = reinterpret_cast<std::uint32_t *>(src);
-   std::uint32_t *packedOffsets = reinterpret_cast<std::uint32_t *>(dst);
 
-   packedOffsets[0] = unpackedOffsets[0];
+   // TODO(jblomer): inplace transformation, don't allocate helper buffer
+   std::uint32_t *helper = new std::uint32_t[count];
+   helper[0] = unpackedOffsets[0];
    for (std::size_t i = 1; i < count; ++i) {
-      packedOffsets[i] = unpackedOffsets[i] - unpackedOffsets[i - 1];
+      helper[i] = unpackedOffsets[i] - unpackedOffsets[i - 1];
    }
+
+   char *unsplitArray = reinterpret_cast<char *>(helper);
+   char *splitArray = reinterpret_cast<char *>(dst);
+   for (std::size_t i = 0; i < count; ++i) {
+      splitArray[i]             = unsplitArray[4 * i];
+      splitArray[count + i]     = unsplitArray[4 * i + 1];
+      splitArray[2 * count + i] = unsplitArray[4 * i + 2];
+      splitArray[3 * count + i] = unsplitArray[4 * i + 3];
+   }
+
+   delete[] helper;
 }
 
 void ROOT::Experimental::Detail::RColumnElement<
@@ -345,11 +357,17 @@ void ROOT::Experimental::Detail::RColumnElement<
    if (!count)
       return;
 
-   std::uint32_t *packedOffsets = reinterpret_cast<std::uint32_t *>(src);
-   std::uint32_t *unpackedOffsets = reinterpret_cast<std::uint32_t *>(dst);
+   char *splitArray = reinterpret_cast<char *>(src);
+   char *unsplitArray = reinterpret_cast<char *>(dst);
+   for (std::size_t i = 0; i < count; ++i) {
+      unsplitArray[4 * i]     = splitArray[i];
+      unsplitArray[4 * i + 1] = splitArray[count + i];
+      unsplitArray[4 * i + 2] = splitArray[2 * count + i];
+      unsplitArray[4 * i + 3] = splitArray[3 * count + i];
+   }
 
-   unpackedOffsets[0] = packedOffsets[0];
+   std::uint32_t *unpackedOffsets = reinterpret_cast<std::uint32_t *>(dst);
    for (std::size_t i = 1; i < count; ++i) {
-      unpackedOffsets[i] = unpackedOffsets[i-1] + packedOffsets[i];
+      unpackedOffsets[i] = unpackedOffsets[i-1] + unpackedOffsets[i];
    }
 }

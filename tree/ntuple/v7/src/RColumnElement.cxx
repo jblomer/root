@@ -139,7 +139,14 @@ void ROOT::Experimental::Detail::RColumnElement<float, ROOT::Experimental::EColu
 void ROOT::Experimental::Detail::RColumnElement<std::int32_t, ROOT::Experimental::EColumnType::kInt32>::Pack(
   void *dst, void *src, std::size_t count) const
 {
-   char *unsplitArray = reinterpret_cast<char *>(src);
+   // TODO(jblomer): inplace transformation, don't allocate helper buffer
+   std::uint32_t *helper = new std::uint32_t[count];
+   for (std::size_t i = 0; i < count; ++i) {
+      std::uint32_t *x = reinterpret_cast<std::uint32_t *>(src);
+      helper[i] = (x[i] << 1) ^ -(x[i] >> 31);
+   }
+
+   char *unsplitArray = reinterpret_cast<char *>(helper);
    char *splitArray = reinterpret_cast<char *>(dst);
    for (std::size_t i = 0; i < count; ++i) {
       splitArray[i]             = unsplitArray[4 * i];
@@ -147,6 +154,8 @@ void ROOT::Experimental::Detail::RColumnElement<std::int32_t, ROOT::Experimental
       splitArray[2 * count + i] = unsplitArray[4 * i + 2];
       splitArray[3 * count + i] = unsplitArray[4 * i + 3];
    }
+
+   delete[] helper;
 }
 
 void ROOT::Experimental::Detail::RColumnElement<std::int32_t, ROOT::Experimental::EColumnType::kInt32>::Unpack(
@@ -159,6 +168,11 @@ void ROOT::Experimental::Detail::RColumnElement<std::int32_t, ROOT::Experimental
       unsplitArray[4 * i + 1] = splitArray[count + i];
       unsplitArray[4 * i + 2] = splitArray[2 * count + i];
       unsplitArray[4 * i + 3] = splitArray[3 * count + i];
+   }
+
+   std::uint32_t *ip = reinterpret_cast<std::uint32_t *>(dst);
+   for (std::size_t i = 0; i < count; ++i) {
+      ip[i] = (ip[i] >> 1) ^ -(ip[i] & 1);
    }
 }
 
@@ -227,7 +241,14 @@ void ROOT::Experimental::Detail::RColumnElement<double, ROOT::Experimental::ECol
 void ROOT::Experimental::Detail::RColumnElement<std::int64_t, ROOT::Experimental::EColumnType::kInt64>::Pack(
   void *dst, void *src, std::size_t count) const
 {
-   char *unsplitArray = reinterpret_cast<char *>(src);
+   // TODO(jblomer): inplace transformation, don't allocate helper buffer
+   std::uint64_t *helper = new std::uint64_t[count];
+   for (std::size_t i = 0; i < count; ++i) {
+      std::uint64_t *x = reinterpret_cast<std::uint64_t *>(src);
+      helper[i] = (x[i] << 1) ^ -(x[i] >> 63);
+   }
+
+   char *unsplitArray = reinterpret_cast<char *>(helper);
    char *splitArray = reinterpret_cast<char *>(dst);
    for (std::size_t i = 0; i < count; ++i) {
       splitArray[i]             = unsplitArray[8 * i];
@@ -239,6 +260,8 @@ void ROOT::Experimental::Detail::RColumnElement<std::int64_t, ROOT::Experimental
       splitArray[6 * count + i] = unsplitArray[8 * i + 6];
       splitArray[7 * count + i] = unsplitArray[8 * i + 7];
    }
+
+   delete[] helper;
 }
 
 void ROOT::Experimental::Detail::RColumnElement<std::int64_t, ROOT::Experimental::EColumnType::kInt64>::Unpack(
@@ -255,6 +278,11 @@ void ROOT::Experimental::Detail::RColumnElement<std::int64_t, ROOT::Experimental
       unsplitArray[8 * i + 5] = splitArray[5 * count + i];
       unsplitArray[8 * i + 6] = splitArray[6 * count + i];
       unsplitArray[8 * i + 7] = splitArray[7 * count + i];
+   }
+
+   std::uint64_t *ip = reinterpret_cast<std::uint64_t *>(dst);
+   for (std::size_t i = 0; i < count; ++i) {
+      ip[i] = (ip[i] >> 1) ^ -(ip[i] & 1);
    }
 }
 

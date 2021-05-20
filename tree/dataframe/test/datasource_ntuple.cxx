@@ -65,16 +65,15 @@ TEST_F(RNTupleDSTest, CardinalityColumn)
    auto df = ROOT::Experimental::MakeNTupleDataFrame(fNtplName, fFileName);
 
    // Check that the special column #<collection> works without jitting...
-   // FIXME the type of the size columns should be std::size_t
-   auto identity = [](unsigned int sz) { return sz; };
-   auto max_njets = df.Define("njets", identity, {"__rdf_sizeof_jets"}).Max<unsigned int>("njets");
-   auto max_njets2 = df.Max<unsigned int>("#jets");
-   //EXPECT_EQ(*max_njets, *max_njets2);
+   auto identity = [](std::size_t sz) { return sz; };
+   auto max_njets = df.Define("njets", identity, {"__rdf_sizeof_jets"}).Max<std::size_t>("njets");
+   auto max_njets2 = df.Max<std::size_t>("#jets");
+   EXPECT_EQ(*max_njets, *max_njets2);
    EXPECT_EQ(*max_njets, 2);
 
-   // ...and now with jitting
-   auto max_njets_jitted = df.Define("njets", "__rdf_sizeof_jets").Max<unsigned int>("njets");
-   auto max_njets_jitted2 = df.Define("njets", "#jets").Max<unsigned int>("njets");
+   // ...and with jitting
+   auto max_njets_jitted = df.Define("njets", "__rdf_sizeof_jets").Max<std::size_t>("njets");
+   auto max_njets_jitted2 = df.Define("njets", "#jets").Max<std::size_t>("njets");
    auto max_njets_jitted3 = df.Max("#jets");
    EXPECT_EQ(*max_njets_jitted, *max_njets_jitted2);
    EXPECT_EQ(*max_njets_jitted3, *max_njets_jitted2);

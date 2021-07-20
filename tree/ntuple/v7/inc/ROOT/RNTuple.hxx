@@ -26,6 +26,7 @@
 #include <ROOT/RSpan.hxx>
 #include <ROOT/RStringView.hxx>
 
+#include <functional>
 #include <iterator>
 #include <memory>
 #include <sstream>
@@ -67,7 +68,9 @@ enum class ENTupleShowFormat {
 class TTaskGroup;
 class RNTupleImtTaskScheduler : public Detail::RPageStorage::RTaskScheduler {
 private:
+   static constexpr unsigned int kBatchSize = 16;
    std::unique_ptr<TTaskGroup> fTaskGroup;
+   std::vector<std::function<void(void)>> fTaskQueue;
 public:
    RNTupleImtTaskScheduler();
    virtual ~RNTupleImtTaskScheduler() = default;

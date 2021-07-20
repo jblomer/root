@@ -43,6 +43,7 @@
 ROOT::Experimental::RNTupleImtTaskScheduler::RNTupleImtTaskScheduler()
 {
    Reset();
+   fTaskQueue.reserve(kBatchSize);
 }
 
 void ROOT::Experimental::RNTupleImtTaskScheduler::Reset()
@@ -53,12 +54,20 @@ void ROOT::Experimental::RNTupleImtTaskScheduler::Reset()
 
 void ROOT::Experimental::RNTupleImtTaskScheduler::AddTask(const std::function<void(void)> &taskFunc)
 {
-   fTaskGroup->Run(taskFunc);
+   fTaskQueue.emplace_back(taskFunc);
+   if (fTaskQueue.size() == kBatchSize) {
+      decltype(fTaskQueue) q;
+      std::swap(fTaskQueue, q);
+      fTaskGroup->Run([q]() { for (const auto &f : q) f(); });
+   }
 }
 
 
 void ROOT::Experimental::RNTupleImtTaskScheduler::Wait()
 {
+   decltype(fTaskQueue) q;
+   std::swap(fTaskQueue, q);
+   fTaskGroup->Run([q]() { for (const auto &f : q) f(); });
    fTaskGroup->Wait();
 }
 #endif

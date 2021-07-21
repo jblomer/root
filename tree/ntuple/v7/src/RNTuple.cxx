@@ -29,15 +29,131 @@
 #include <TROOT.h> // for IsImplicitMTEnabled()
 
 #include <algorithm>
+#include <condition_variable>
 #include <exception>
 #include <functional>
 #include <iomanip>
 #include <iostream>
+#include <memory>
+#include <mutex>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <utility>
 
+
+namespace {
+
+class RNTupleThreadScheduler : public ROOT::Experimental::Detail::RPageStorage::RTaskScheduler {
+private:
+   static constexpr unsigned int kBatchSize = 16;
+
+   unsigned int fNThreads;
+   std::vector<std::thread> fThreadPool;
+
+   std::vector<std::unique_ptr<std::mutex>> fLockAction;
+   std::vector<std::unique_ptr<std::condition_variable>> fCvAction;
+   std::vector<std::vector<std::function<void(void)>>> fTasks;
+
+   std::vector<std::unique_ptr<std::mutex>> fLockDone;
+   std::vector<std::unique_ptr<std::condition_variable>> fCvDone;
+   // We cannot use std::vector<bool> because the elements are not accessed independently from each other
+   std::vector<int> fIsDone;
+
+   std::vector<std::function<void(void)>> fTaskQueue;
+   unsigned int fNextThread = 0;
+
+   void ThreadFunc(int threadId)
+   {
+      while (true) {
+         std::vector<std::function<void(void)>> tasks;
+         {
+            std::unique_lock<std::mutex> lock(*fLockAction[threadId]);
+            fCvAction[threadId]->wait(lock, [&]{ return !fTasks[threadId].empty(); });
+            if (!fTasks[threadId][0])
+               break;
+            std::swap(fTasks[threadId], tasks);
+         }
+
+         for (auto &f : tasks)
+            f();
+      }
+   }
+
+public:
+   RNTupleThreadScheduler()
+   {
+      fNThreads = 12;
+      for (unsigned int i = 0; i < fNThreads; ++i) {
+         fTasks.emplace_back(std::vector<std::function<void(void)>>());
+         fLockAction.emplace_back(std::make_unique<std::mutex>());
+         fLockDone.emplace_back(std::make_unique<std::mutex>());
+         fCvAction.emplace_back(std::make_unique<std::condition_variable>());
+         fCvDone.emplace_back(std::make_unique<std::condition_variable>());
+         fIsDone.emplace_back(0);
+      }
+
+      for (unsigned i = 0; i < fNThreads; ++i)
+         fThreadPool.emplace_back(std::thread(&RNTupleThreadScheduler::ThreadFunc, this, i));
+   }
+
+   virtual ~RNTupleThreadScheduler() {
+      for (unsigned int i = 0; i < fNThreads; ++i) {
+         std::unique_lock<std::mutex> lock(*fLockAction[i]);
+         fTasks[i] = { std::function<void(void)>() };
+         fCvAction[i]->notify_one();
+      }
+
+      for (auto &t : fThreadPool)
+         t.join();
+   }
+
+   void Reset() final
+   {
+      for (unsigned i = 0; i < fNThreads; ++i)
+         fIsDone[i] = 0;
+   }
+
+   void AddTask(const std::function<void(void)> &taskFunc) final
+   {
+      fTaskQueue.emplace_back(taskFunc);
+      if (fTaskQueue.size() == kBatchSize) {
+         {
+            std::unique_lock<std::mutex> lock(*fLockAction[fNextThread]);
+            fTasks[fNextThread].insert(fTasks[fNextThread].end(), fTaskQueue.begin(), fTaskQueue.end());
+            fCvAction[fNextThread]->notify_one();
+         }
+
+         fNextThread = (fNextThread + 1) % fNThreads;
+         fTaskQueue.clear();
+      }
+   }
+
+   void Wait() final
+   {
+      for (unsigned int i = 0; i < fNThreads; ++i) {
+         std::unique_lock<std::mutex> lock(*fLockAction[i]);
+         if (i == fNextThread)
+            fTasks[i].insert(fTasks[i].end(), fTaskQueue.begin(), fTaskQueue.end());
+         fTasks[i].emplace_back( [i, this]() {
+               std::unique_lock<std::mutex> l(*fLockDone[i]);
+               fIsDone[i] = 1;
+               fCvDone[i]->notify_one();
+            } );
+         fCvAction[i]->notify_one();
+      }
+
+      fTaskQueue.clear();
+
+      for (unsigned int i = 0; i < fNThreads; ++i) {
+         std::unique_lock<std::mutex> lock(*fLockDone[i]);
+         fCvDone[i]->wait(lock, [&]{ return fIsDone[i]; });
+      }
+   }
+};
+
+} // anonymous namespace
 
 #ifdef R__USE_IMT
 ROOT::Experimental::RNTupleImtTaskScheduler::RNTupleImtTaskScheduler()
@@ -93,7 +209,8 @@ void ROOT::Experimental::RNTupleReader::InitPageSource()
 {
 #ifdef R__USE_IMT
    if (IsImplicitMTEnabled()) {
-      fUnzipTasks = std::make_unique<RNTupleImtTaskScheduler>();
+      //fUnzipTasks = std::make_unique<RNTupleImtTaskScheduler>();
+      fUnzipTasks = std::make_unique<RNTupleThreadScheduler>();
       fSource->SetTaskScheduler(fUnzipTasks.get());
    }
 #endif
@@ -297,7 +414,8 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(
    }
 #ifdef R__USE_IMT
    if (IsImplicitMTEnabled()) {
-      fZipTasks = std::make_unique<RNTupleImtTaskScheduler>();
+      //fZipTasks = std::make_unique<RNTupleImtTaskScheduler>();
+      fZipTasks = std::make_unique<RNTupleThreadScheduler>();
       fSink->SetTaskScheduler(fZipTasks.get());
    }
 #endif

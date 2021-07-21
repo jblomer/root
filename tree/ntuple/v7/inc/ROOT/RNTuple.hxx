@@ -71,6 +71,7 @@ private:
    static constexpr unsigned int kBatchSize = 16;
    std::unique_ptr<TTaskGroup> fTaskGroup;
    std::vector<std::function<void(void)>> fTaskQueue;
+
 public:
    RNTupleImtTaskScheduler();
    virtual ~RNTupleImtTaskScheduler() = default;

@@ -507,6 +507,8 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadClusters(std::span<RCluster::RK
    fCounters->fNReadV.Inc();
    fCounters->fNRead.Add(nReqs);
 
+   printf("READ %lu clusters, %lu REQs\n", clusterKeys.size(), nReqs);
+
    return clusters;
 }
 

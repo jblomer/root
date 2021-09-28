@@ -442,4 +442,7 @@ TEST(RClusterDescriptor, GetBytesOnStorage)
    auto clusterID = desc.FindClusterId(0, 0);
    ASSERT_NE(ROOT::Experimental::kInvalidDescriptorId, clusterID);
    EXPECT_EQ(4 + 8 + 4 + 3, desc.GetClusterDescriptor(clusterID).GetBytesOnStorage());
+   std::unordered_set<DescriptorId_t> columnIds;
+   columnIds.insert(desc.FindColumnId(desc.FindFieldId("jets"), 0));
+   EXPECT_EQ(4, desc.GetClusterDescriptor(clusterID).GetBytesOnStorage(columnIds));
 }

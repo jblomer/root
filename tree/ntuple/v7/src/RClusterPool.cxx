@@ -49,20 +49,12 @@ bool ROOT::Experimental::Detail::RClusterPool::RInFlightCluster::operator <(cons
    return fClusterKey.fClusterId < other.fClusterKey.fClusterId;
 }
 
-ROOT::Experimental::Detail::RClusterPool::RClusterPool(RPageSource &pageSource, unsigned int size)
+ROOT::Experimental::Detail::RClusterPool::RClusterPool(RPageSource &pageSource)
    : fPageSource(pageSource)
-   , fPool(size)
+   , fWindowPre(1)
    , fThreadIo(&RClusterPool::ExecReadClusters, this)
    , fThreadUnzip(&RClusterPool::ExecUnzipClusters, this)
 {
-   R__ASSERT(size > 0);
-   fWindowPre = 0;
-   fWindowPost = size;
-   // Large pools maintain a small look-back window together with the large look-ahead window
-   while ((1u << fWindowPre) < (fWindowPost - (fWindowPre + 1))) {
-      fWindowPre++;
-      fWindowPost--;
-   }
 }
 
 ROOT::Experimental::Detail::RClusterPool::~RClusterPool()
@@ -165,15 +157,14 @@ ROOT::Experimental::Detail::RClusterPool::FindInPool(DescriptorId_t clusterId) c
    return nullptr;
 }
 
-size_t ROOT::Experimental::Detail::RClusterPool::FindFreeSlot() const
+size_t ROOT::Experimental::Detail::RClusterPool::FindFreeSlot()
 {
-   auto N = fPool.size();
+   const auto N = fPool.size();
    for (unsigned i = 0; i < N; ++i) {
       if (!fPool[i])
          return i;
    }
-
-   R__ASSERT(false);
+   fPool.resize(N + 1);
    return N;
 }
 
@@ -185,14 +176,24 @@ class RProvides {
    using DescriptorId_t = ROOT::Experimental::DescriptorId_t;
    using ColumnSet_t = ROOT::Experimental::Detail::RCluster::ColumnSet_t;
 
+   struct RClusterInfo {
+      RClusterInfo(const ColumnSet_t &c, std::uint64_t s) : fSize(s), fColumnSet(c) {}
+      std::uint64_t fSize = 0;
+      ColumnSet_t fColumnSet;
+   };
+
 private:
-   std::map<DescriptorId_t, ColumnSet_t> fMap;
+   std::map<DescriptorId_t, RClusterInfo> fMap;
+   bool fContainsLastCluster = false;
 
 public:
-   void Insert(DescriptorId_t clusterId, const ColumnSet_t &columns)
+   void Insert(DescriptorId_t clusterId, const ColumnSet_t &columns, std::uint64_t size)
    {
-      fMap.emplace(clusterId, columns);
+      fMap.emplace(clusterId, RClusterInfo(columns, size));
    }
+
+   void SetContainsLastCluster() { fContainsLastCluster = true; }
+   bool GetContainsLastCluster() const { return fContainsLastCluster; }
 
    bool Contains(DescriptorId_t clusterId) {
       return fMap.count(clusterId) > 0;
@@ -204,12 +205,14 @@ public:
       if (itr == fMap.end())
          return;
       ColumnSet_t d;
-      std::copy_if(itr->second.begin(), itr->second.end(), std::inserter(d, d.end()),
+      std::copy_if(itr->second.fColumnSet.begin(), itr->second.fColumnSet.end(), std::inserter(d, d.end()),
          [&columns] (DescriptorId_t needle) { return columns.count(needle) == 0; });
       if (d.empty()) {
          fMap.erase(itr);
       } else {
-         itr->second = d;
+         // Re-using itr->second.fSize is of course wrong because we removed columns from the set.
+         // It doesn't seem worthwhile though to recalculate the size for the rare case of column merging.
+         itr->second = RClusterInfo(d, itr->second.fSize);
       }
    }
 
@@ -237,16 +240,24 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
 
    // Determine following cluster ids and the column ids that we want to make available
    RProvides provide;
-   provide.Insert(clusterId, columns);
+   auto clusterSize = desc.GetClusterDescriptor(clusterId).GetBytesOnStorage(columns);
+   provide.Insert(clusterId, columns, clusterSize);
    auto next = clusterId;
+   auto prefetchSize = clusterSize;
    // TODO(jblomer): instead of a fixed-sized window, eventually we should determine the window size based on
    // a user-defined memory limit.  The size of the preloaded data can be determined at the beginning of
    // GetCluster from the descriptor and the current contents of fPool.
-   for (unsigned int i = 1; i < fWindowPost; ++i) {
+   while (true) {
       next = desc.FindNextClusterId(next);
-      if (next == kInvalidDescriptorId)
+      if (next == kInvalidDescriptorId) {
+         provide.SetContainsLastCluster();
          break;
-      provide.Insert(next, columns);
+      }
+      clusterSize = desc.GetClusterDescriptor(next).GetBytesOnStorage(columns);
+      if (prefetchSize + clusterSize > kPrefetchTargetSize)
+         break;
+      prefetchSize += clusterSize;
+      provide.Insert(next, columns, clusterSize);
    }
 
    // Clear the cache from clusters not the in the look-ahead or the look-back window
@@ -300,11 +311,27 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
          itr = fInFlightClusters.erase(itr);
       }
 
-      // Determine clusters which get triggered for background loading
+      // Determine clusters which get triggered for background loading.
+      // If we find the needed cluster in the pool, remember it for the next step.
+      RCluster *cluster = nullptr;
       for (auto &cptr : fPool) {
          if (!cptr)
             continue;
+         if (cptr->GetId() == clusterId)
+            cluster = cptr.get();
          provide.Erase(cptr->GetId(), cptr->GetAvailColumns());
+      }
+
+      // We may decide to skip prefetching if
+      //   - The needed cluster is already in the pool
+      //   - We would preload less than kPrefetchMinSize
+      //   - We are not at the end of the data set
+      if (cluster && !provide.GetContainsLastCluster()) {
+         prefetchSize = 0;
+         for (const auto &p : provide)
+            prefetchSize += p.second.fSize;
+         if (prefetchSize < kPrefetchMinSize)
+            return cluster;
       }
 
       // Update the work queue and the in-flight cluster list with new requests. We already hold the work queue
@@ -312,15 +339,15 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
       // TODO(jblomer): we should ensure that clusterId is given first to the I/O thread.  That is usually the
       // case but it's not ensured by the code
       for (const auto &kv : provide) {
-         R__ASSERT(!kv.second.empty());
+         R__ASSERT(!kv.second.fColumnSet.empty());
 
          RReadItem readItem;
          readItem.fClusterKey.fClusterId = kv.first;
-         readItem.fClusterKey.fColumnSet = kv.second;
+         readItem.fClusterKey.fColumnSet = kv.second.fColumnSet;
 
          RInFlightCluster inFlightCluster;
          inFlightCluster.fClusterKey.fClusterId = kv.first;
-         inFlightCluster.fClusterKey.fColumnSet = kv.second;
+         inFlightCluster.fClusterKey.fColumnSet = kv.second.fColumnSet;
          inFlightCluster.fFuture = readItem.fPromise.get_future();
          fInFlightClusters.emplace_back(std::move(inFlightCluster));
 

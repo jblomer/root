@@ -56,6 +56,9 @@ class RClusterPool {
 private:
    /// Maximum number of queued cluster requests for the I/O thread. A single request can span mutliple clusters.
    static constexpr unsigned int kWorkQueueLimit = 4;
+   /// 8MB lookahead window
+   static constexpr std::size_t kPrefetchTargetSize = 8 * 1000 * 1000;
+   static constexpr std::size_t kPrefetchMinSize = 4 * 1000 * 1000;
 
    /// Request to load a subset of the columns of a particular cluster.
    /// Work items come in groups and are executed by the page source.
@@ -93,8 +96,6 @@ private:
    RPageSource &fPageSource;
    /// The number of clusters before the currently active cluster that should stay in the pool if present
    unsigned int fWindowPre;
-   /// The number of desired clusters in the pool, including the currently active cluster
-   unsigned int fWindowPost;
    /// The cache of clusters around the currently active cluster
    std::vector<std::unique_ptr<RCluster>> fPool;
 
@@ -125,9 +126,8 @@ private:
 
    /// Every cluster id has at most one corresponding RCluster pointer in the pool
    RCluster *FindInPool(DescriptorId_t clusterId) const;
-   /// Returns an index of an unused element in fPool; callers of this function (GetCluster() and WaitFor())
-   /// make sure that a free slot actually exists
-   size_t FindFreeSlot() const;
+   /// Returns an index of an unused element in fPool; if all slots are busy, the fPool vector is enlarged.
+   size_t FindFreeSlot();
    /// The I/O thread routine, there is exactly one I/O thread in-flight for every cluster pool
    void ExecReadClusters();
    /// The unzip thread routine which takes a loaded cluster and passes it to fPageSource.UnzipCluster (which
@@ -139,15 +139,10 @@ private:
    RCluster *WaitFor(DescriptorId_t clusterId, const RCluster::ColumnSet_t &columns);
 
 public:
-   static constexpr unsigned int kDefaultPoolSize = 4;
-   RClusterPool(RPageSource &pageSource, unsigned int size);
-   explicit RClusterPool(RPageSource &pageSource) : RClusterPool(pageSource, kDefaultPoolSize) {}
+   explicit RClusterPool(RPageSource &pageSource);
    RClusterPool(const RClusterPool &other) = delete;
    RClusterPool &operator =(const RClusterPool &other) = delete;
    ~RClusterPool();
-
-   unsigned int GetWindowPre() const { return fWindowPre; }
-   unsigned int GetWindowPost() const { return fWindowPost; }
 
    /// Returns the requested cluster either from the pool or, in case of a cache miss, lets the I/O thread load
    /// the cluster in the pool, blocks until done, and then returns it.  Triggers along the way the background loading

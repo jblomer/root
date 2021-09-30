@@ -115,7 +115,7 @@ private:
    /// The I/O thread calls RPageSource::LoadCluster() asynchronously.  The thread is mostly waiting for the
    /// data to arrive (blocked by the kernel) and therefore can safely run in addition to the application
    /// main threads.
-   std::thread fThreadIo;
+   std::vector<std::thread> fThreadPoolIo;
    /// The unzip thread takes a loaded cluster and passes it to fPageSource->UnzipCluster() on it. If implicit
    /// multi-threading is turned off, the UnzipCluster() call is a no-op. Otherwise, the UnzipCluster() call
    /// schedules the unzipping of pages using the application's task scheduler.

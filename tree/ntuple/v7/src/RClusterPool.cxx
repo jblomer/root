@@ -50,10 +50,11 @@ bool ROOT::Experimental::Detail::RClusterPool::RInFlightCluster::operator <(cons
 ROOT::Experimental::Detail::RClusterPool::RClusterPool(RPageSource &pageSource, unsigned int size)
    : fPageSource(pageSource)
    , fPool(size)
-   , fThreadIo(&RClusterPool::ExecReadClusters, this)
    , fThreadUnzip(&RClusterPool::ExecUnzipClusters, this)
 {
    R__ASSERT(size > 0);
+   for (unsigned i = 0; i < 4; ++i)
+      fThreadPoolIo.emplace_back(std::thread(&RClusterPool::ExecReadClusters, this));
    fWindowPre = 0;
    fWindowPost = size;
    // Large pools maintain a small look-back window together with the large look-ahead window
@@ -65,13 +66,13 @@ ROOT::Experimental::Detail::RClusterPool::RClusterPool(RPageSource &pageSource, 
 
 ROOT::Experimental::Detail::RClusterPool::~RClusterPool()
 {
-   {
-      // Controlled shutdown of the I/O thread
+   for (unsigned i = 0; i < fThreadPoolIo.size(); ++i) {
       std::unique_lock<std::mutex> lock(fLockWorkQueue);
       fReadQueue.emplace(RReadItem());
       fCvHasReadWork.notify_one();
    }
-   fThreadIo.join();
+   for (unsigned i = 0; i < fThreadPoolIo.size(); ++i)
+      fThreadPoolIo[i].join();
 
    {
       // Controlled shutdown of the unzip thread
@@ -110,44 +111,40 @@ void ROOT::Experimental::Detail::RClusterPool::ExecUnzipClusters()
 void ROOT::Experimental::Detail::RClusterPool::ExecReadClusters()
 {
    while (true) {
-      std::vector<RReadItem> readItems;
+      RReadItem item;
       {
          std::unique_lock<std::mutex> lock(fLockWorkQueue);
          fCvHasReadWork.wait(lock, [&]{ return !fReadQueue.empty(); });
-         while (!fReadQueue.empty()) {
-            readItems.emplace_back(std::move(fReadQueue.front()));
-            fReadQueue.pop();
-         }
+         item = std::move(fReadQueue.front());
+         fReadQueue.pop();
       }
 
-      for (auto &item : readItems) {
-         if (item.fClusterId == kInvalidDescriptorId)
-            return;
+      if (item.fClusterId == kInvalidDescriptorId)
+         return;
 
-         // TODO(jblomer): the page source needs to be capable of loading multiple clusters in one go
-         auto cluster = fPageSource.LoadCluster(item.fClusterId, item.fColumns);
+      // TODO(jblomer): the page source needs to be capable of loading multiple clusters in one go
+      auto cluster = fPageSource.LoadCluster(item.fClusterId, item.fColumns);
 
-         // Meanwhile, the user might have requested clusters outside the look-ahead window, so that we don't
-         // need the cluster anymore, in which case we simply discard it right away, before moving it to the pool
-         bool discard = false;
-         {
-            std::unique_lock<std::mutex> lock(fLockWorkQueue);
-            for (auto &inFlight : fInFlightClusters) {
-               if (inFlight.fClusterId != item.fClusterId)
-                  continue;
-               discard = inFlight.fIsExpired;
-               break;
-            }
+      // Meanwhile, the user might have requested clusters outside the look-ahead window, so that we don't
+      // need the cluster anymore, in which case we simply discard it right away, before moving it to the pool
+      bool discard = false;
+      {
+         std::unique_lock<std::mutex> lock(fLockWorkQueue);
+         for (auto &inFlight : fInFlightClusters) {
+            if (inFlight.fClusterId != item.fClusterId)
+               continue;
+            discard = inFlight.fIsExpired;
+            break;
          }
-         if (discard) {
-            cluster.reset();
-            item.fPromise.set_value(std::move(cluster));
-         } else {
-            // Hand-over the loaded cluster pages to the unzip thread
-            std::unique_lock<std::mutex> lock(fLockUnzipQueue);
-            fUnzipQueue.emplace(RUnzipItem{std::move(cluster), std::move(item.fPromise)});
-            fCvHasUnzipWork.notify_one();
-         }
+      }
+      if (discard) {
+         cluster.reset();
+         item.fPromise.set_value(std::move(cluster));
+      } else {
+         // Hand-over the loaded cluster pages to the unzip thread
+         std::unique_lock<std::mutex> lock(fLockUnzipQueue);
+         fUnzipQueue.emplace(RUnzipItem{std::move(cluster), std::move(item.fPromise)});
+         fCvHasUnzipWork.notify_one();
       }
    } // while (true)
 }
@@ -323,7 +320,7 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
          fReadQueue.emplace(std::move(readItem));
       }
       if (fReadQueue.size() > 0)
-         fCvHasReadWork.notify_one();
+         fCvHasReadWork.notify_all();
    } // work queue lock guard
 
    return WaitFor(clusterId, columns);

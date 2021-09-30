@@ -199,21 +199,25 @@ public:
       return fMap.count(clusterId) > 0;
    }
 
-   void Erase(DescriptorId_t clusterId, const ColumnSet_t &columns)
+   // Returns the removed size
+   std::uint64_t Erase(DescriptorId_t clusterId, const ColumnSet_t &columns)
    {
+      std::uint64_t result = 0;
       auto itr = fMap.find(clusterId);
       if (itr == fMap.end())
-         return;
+         return result;
       ColumnSet_t d;
       std::copy_if(itr->second.fColumnSet.begin(), itr->second.fColumnSet.end(), std::inserter(d, d.end()),
          [&columns] (DescriptorId_t needle) { return columns.count(needle) == 0; });
       if (d.empty()) {
+         result = itr->second.fSize;
          fMap.erase(itr);
       } else {
          // Re-using itr->second.fSize is of course wrong because we removed columns from the set.
          // It doesn't seem worthwhile though to recalculate the size for the rare case of column merging.
          itr->second = RClusterInfo(d, itr->second.fSize);
       }
+      return result;
    }
 
    decltype(fMap)::iterator begin() { return fMap.begin(); }
@@ -254,10 +258,10 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
          break;
       }
       clusterSize = desc.GetClusterDescriptor(next).GetBytesOnStorage(columns);
-      if (prefetchSize + clusterSize > kPrefetchTargetSize)
-         break;
       prefetchSize += clusterSize;
       provide.Insert(next, columns, clusterSize);
+      if (prefetchSize >= kPrefetchTargetSize)
+         break;
    }
 
    // Clear the cache from clusters not the in the look-ahead or the look-back window
@@ -319,20 +323,15 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
             continue;
          if (cptr->GetId() == clusterId)
             cluster = cptr.get();
-         provide.Erase(cptr->GetId(), cptr->GetAvailColumns());
+         prefetchSize -= provide.Erase(cptr->GetId(), cptr->GetAvailColumns());
       }
 
       // We may decide to skip prefetching if
       //   - The needed cluster is already in the pool
       //   - We would preload less than kPrefetchMinSize
       //   - We are not at the end of the data set
-      if (cluster && !provide.GetContainsLastCluster()) {
-         prefetchSize = 0;
-         for (const auto &p : provide)
-            prefetchSize += p.second.fSize;
-         if (prefetchSize < kPrefetchMinSize)
-            return cluster;
-      }
+      if (cluster && !provide.GetContainsLastCluster() && (prefetchSize < kPrefetchMinSize))
+         return cluster;
 
       // Update the work queue and the in-flight cluster list with new requests. We already hold the work queue
       // mutex

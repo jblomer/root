@@ -54,8 +54,6 @@ compressed pages and the page source has to uncompresses pages at a later point 
 // clang-format on
 class RClusterPool {
 private:
-   /// Maximum number of queued cluster requests for the I/O thread. A single request can span mutliple clusters.
-   static constexpr unsigned int kWorkQueueLimit = 4;
    /// 8MB lookahead window
    static constexpr std::size_t kPrefetchTargetSize = 8 * 1000 * 1000;
    static constexpr std::size_t kPrefetchMinSize = 4 * 1000 * 1000;

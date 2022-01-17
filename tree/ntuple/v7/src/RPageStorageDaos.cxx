@@ -369,17 +369,17 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceDao
    auto ntplDesc = descBuilder.MoveDescriptor();
 
    for (const auto &cgDesc : ntplDesc.GetClusterGroupIterable()) {
-      buffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLength());
-      zipBuffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLocator().fBytesOnStorage);
+      buffer = std::make_unique<unsigned char[]>(cgDesc.GetEnvelopeLink().fLength);
+      zipBuffer = std::make_unique<unsigned char[]>(cgDesc.GetEnvelopeLink().fLocator.fBytesOnStorage);
       fDaosContainer->ReadSingleAkey(
-         zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage,
-         {static_cast<decltype(daos_obj_id_t::lo)>(cgDesc.GetPageListLocator().fPosition), 0}, kDistributionKey,
+         zipBuffer.get(), cgDesc.GetEnvelopeLink().fLocator.fBytesOnStorage,
+         {static_cast<decltype(daos_obj_id_t::lo)>(cgDesc.GetEnvelopeLink().fLocator.fPosition), 0}, kDistributionKey,
          kAttributeKey, kCidMetadata);
-      fDecompressor->Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage, cgDesc.GetPageListLength(),
-                           buffer.get());
+      fDecompressor->Unzip(zipBuffer.get(), cgDesc.GetEnvelopeLink().fLocator.fBytesOnStorage,
+                           cgDesc.GetEnvelopeLink().fLength, buffer.get());
 
       auto clusters = RClusterGroupDescriptorBuilder::GetClusterSummaries(ntplDesc, 0);
-      Internal::RNTupleSerializer::DeserializePageListV1(buffer.get(), cgDesc.GetPageListLength(), clusters);
+      Internal::RNTupleSerializer::DeserializePageListV1(buffer.get(), cgDesc.GetEnvelopeLink().fLength, clusters);
       for (std::size_t i = 0; i < clusters.size(); ++i) {
          ntplDesc.AddClusterDetails(clusters[i].MoveDescriptor().Unwrap());
       }

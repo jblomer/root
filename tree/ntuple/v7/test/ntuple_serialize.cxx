@@ -564,9 +564,9 @@ TEST(RNTuple, SerializeFooter)
    EXPECT_EQ(1u, desc.GetNClusterGroups());
    const auto &clusterGroupDesc = desc.GetClusterGroupDescriptor(0);
    EXPECT_EQ(1u, clusterGroupDesc.GetNClusters());
-   EXPECT_EQ(137u, clusterGroupDesc.GetPageListLength());
-   EXPECT_EQ(1337u, clusterGroupDesc.GetPageListLocator().fPosition);
-   EXPECT_EQ(42u, clusterGroupDesc.GetPageListLocator().fBytesOnStorage);
+   EXPECT_EQ(137u, clusterGroupDesc.GetEnvelopeLink().fLength);
+   EXPECT_EQ(1337u, clusterGroupDesc.GetEnvelopeLink().fLocator.fPosition);
+   EXPECT_EQ(42u, clusterGroupDesc.GetEnvelopeLink().fLocator.fBytesOnStorage);
 
    std::vector<RClusterDescriptorBuilder> clusters = RClusterGroupDescriptorBuilder::GetClusterSummaries(desc, 0);
    RNTupleSerializer::DeserializePageListV1(bufPageList.get(), sizePageList, clusters);

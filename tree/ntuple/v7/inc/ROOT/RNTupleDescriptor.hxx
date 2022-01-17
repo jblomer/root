@@ -332,9 +332,7 @@ private:
    DescriptorId_t fClusterGroupId = kInvalidDescriptorId;
    std::vector<DescriptorId_t> fClusterIds;
    /// The page list that corresponds to the cluster group
-   RNTupleLocator fPageListLocator;
-   /// Uncompressed size of the page list
-   std::uint32_t fPageListLength = 0;
+   RNTupleEnvelopeLink fEnvelopeLink;
 
 public:
    RClusterGroupDescriptor() = default;
@@ -347,8 +345,7 @@ public:
 
    DescriptorId_t GetId() const { return fClusterGroupId; }
    std::uint64_t GetNClusters() const { return fClusterIds.size(); }
-   RNTupleLocator GetPageListLocator() const { return fPageListLocator; }
-   std::uint32_t GetPageListLength() const { return fPageListLength; }
+   RNTupleEnvelopeLink GetEnvelopeLink() const { return fEnvelopeLink; }
    bool Contains(DescriptorId_t clusterId) const
    {
       return std::find(fClusterIds.begin(), fClusterIds.end(), clusterId) != fClusterIds.end();
@@ -868,14 +865,9 @@ public:
       fClusterGroup.fClusterGroupId = clusterGroupId;
       return *this;
    }
-   RClusterGroupDescriptorBuilder &PageListLocator(const RNTupleLocator &pageListLocator)
+   RClusterGroupDescriptorBuilder &EnvelopeLink(const RNTupleEnvelopeLink &envelopeLink)
    {
-      fClusterGroup.fPageListLocator = pageListLocator;
-      return *this;
-   }
-   RClusterGroupDescriptorBuilder &PageListLength(std::uint32_t pageListLength)
-   {
-      fClusterGroup.fPageListLength = pageListLength;
+      fClusterGroup.fEnvelopeLink = envelopeLink;
       return *this;
    }
    void AddCluster(DescriptorId_t clusterId) { fClusterGroup.fClusterIds.emplace_back(clusterId); }

@@ -281,15 +281,15 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFil
    auto ntplDesc = descBuilder.MoveDescriptor();
 
    for (const auto &cgDesc : ntplDesc.GetClusterGroupIterable()) {
-      buffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLength());
-      zipBuffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLocator().fBytesOnStorage);
-      fReader.ReadBuffer(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage,
-                         cgDesc.GetPageListLocator().fPosition);
-      fDecompressor->Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage, cgDesc.GetPageListLength(),
-                           buffer.get());
+      buffer = std::make_unique<unsigned char[]>(cgDesc.GetEnvelopeLink().fLength);
+      zipBuffer = std::make_unique<unsigned char[]>(cgDesc.GetEnvelopeLink().fLocator.fBytesOnStorage);
+      fReader.ReadBuffer(zipBuffer.get(), cgDesc.GetEnvelopeLink().fLocator.fBytesOnStorage,
+                         cgDesc.GetEnvelopeLink().fLocator.fPosition);
+      fDecompressor->Unzip(zipBuffer.get(), cgDesc.GetEnvelopeLink().fLocator.fBytesOnStorage,
+                           cgDesc.GetEnvelopeLink().fLength, buffer.get());
 
       auto clusters = RClusterGroupDescriptorBuilder::GetClusterSummaries(ntplDesc, 0);
-      Internal::RNTupleSerializer::DeserializePageListV1(buffer.get(), cgDesc.GetPageListLength(), clusters);
+      Internal::RNTupleSerializer::DeserializePageListV1(buffer.get(), cgDesc.GetEnvelopeLink().fLength, clusters);
       for (std::size_t i = 0; i < clusters.size(); ++i) {
          ntplDesc.AddClusterDetails(clusters[i].MoveDescriptor().Unwrap());
       }

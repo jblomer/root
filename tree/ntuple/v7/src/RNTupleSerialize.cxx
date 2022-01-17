@@ -1290,9 +1290,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
 
       descBuilder.AddToOnDiskFooterSize(clusterGroup.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
       RClusterGroupDescriptorBuilder clusterGroupBuilder;
-      clusterGroupBuilder.ClusterGroupId(groupId)
-         .PageListLocator(clusterGroup.fPageListEnvelopeLink.fLocator)
-         .PageListLength(clusterGroup.fPageListEnvelopeLink.fLength);
+      clusterGroupBuilder.ClusterGroupId(groupId).EnvelopeLink(clusterGroup.fPageListEnvelopeLink);
       for (std::uint64_t i = 0; i < clusterGroup.fNClusters; ++i)
          clusterGroupBuilder.AddCluster(clusterId + i);
       clusterId += clusterGroup.fNClusters;

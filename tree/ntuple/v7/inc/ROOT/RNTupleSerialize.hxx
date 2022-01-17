@@ -67,11 +67,6 @@ public:
 
    static constexpr DescriptorId_t kZeroFieldId = std::uint64_t(-2);
 
-   struct REnvelopeLink {
-      std::uint32_t fUnzippedSize = 0;
-      RNTupleLocator fLocator;
-   };
-
    struct RClusterSummary {
       std::uint64_t fFirstEntry = 0;
       std::uint64_t fNEntries = 0;
@@ -81,7 +76,7 @@ public:
 
    struct RClusterGroup {
       std::uint32_t fNClusters = 0;
-      REnvelopeLink fPageListEnvelopeLink;
+      RNTupleEnvelopeLink fPageListEnvelopeLink;
    };
 
    /// The serialization context is used for the piecewise serialization of a descriptor.  During header serialization,
@@ -103,7 +98,7 @@ public:
       std::uint32_t GetHeaderSize() const { return fHeaderSize; }
       void SetHeaderCRC32(std::uint32_t crc32) { fHeaderCrc32 = crc32; }
       std::uint32_t GetHeaderCRC32() const { return fHeaderCrc32; }
-      void AddClusterGroup(std::uint32_t nClusters, const REnvelopeLink &pageListEnvelope) {
+      void AddClusterGroup(std::uint32_t nClusters, const RNTupleEnvelopeLink &pageListEnvelope) {
          fClusterGroups.push_back({nClusters, pageListEnvelope});
       }
       const std::vector<RClusterGroup> &GetClusterGroups() const {
@@ -190,10 +185,10 @@ public:
                                                          std::vector<std::int64_t> &flags);
 
    static std::uint32_t SerializeLocator(const RNTupleLocator &locator, void *buffer);
-   static std::uint32_t SerializeEnvelopeLink(const REnvelopeLink &envelopeLink, void *buffer);
+   static std::uint32_t SerializeEnvelopeLink(const RNTupleEnvelopeLink &envelopeLink, void *buffer);
    static RResult<std::uint32_t> DeserializeLocator(const void *buffer, std::uint32_t bufSize, RNTupleLocator &locator);
    static RResult<std::uint32_t> DeserializeEnvelopeLink(const void *buffer, std::uint32_t bufSize,
-                                                         REnvelopeLink &envelopeLink);
+                                                         RNTupleEnvelopeLink &envelopeLink);
 
    static std::uint32_t SerializeClusterSummary(const RClusterSummary &clusterSummary, void *buffer);
    static std::uint32_t SerializeClusterGroup(const RClusterGroup &clusterGroup, void *buffer);

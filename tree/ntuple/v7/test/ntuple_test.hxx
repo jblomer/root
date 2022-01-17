@@ -70,6 +70,7 @@ using RFieldDescriptor = ROOT::Experimental::RFieldDescriptor;
 using RFieldMerger = ROOT::Experimental::RFieldMerger;
 using RFieldValue = ROOT::Experimental::Detail::RFieldValue;
 using RNTupleLocator = ROOT::Experimental::RNTupleLocator;
+using RNTupleEnvelopeLink = ROOT::Experimental::RNTupleEnvelopeLink;
 using RMiniFileReader = ROOT::Experimental::Internal::RMiniFileReader;
 using RNTuple = ROOT::Experimental::RNTuple;
 using RNTupleAtomicCounter = ROOT::Experimental::Detail::RNTupleAtomicCounter;

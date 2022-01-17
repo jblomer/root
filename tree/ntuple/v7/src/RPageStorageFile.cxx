@@ -179,8 +179,8 @@ void ROOT::Experimental::Detail::RPageSinkFile::CommitDatasetImpl()
       [&bufPageListZip](const void *b, size_t n, size_t o){ memcpy(bufPageListZip.get() + o, b, n); } );
    auto offPageList = fWriter->WriteBlob(bufPageListZip.get(), szPageListZip, szPageList);
 
-   Internal::RNTupleSerializer::REnvelopeLink pageListEnvelope;
-   pageListEnvelope.fUnzippedSize = szPageList;
+   RNTupleEnvelopeLink pageListEnvelope;
+   pageListEnvelope.fLength = szPageList;
    pageListEnvelope.fLocator.fPosition = offPageList;
    pageListEnvelope.fLocator.fBytesOnStorage = szPageListZip;
    fSerializationContext.AddClusterGroup(physClusterIDs.size(), pageListEnvelope);

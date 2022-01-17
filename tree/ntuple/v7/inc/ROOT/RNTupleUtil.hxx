@@ -130,6 +130,18 @@ struct RNTupleLocator {
    }
 };
 
+/// An RNTupleLocator together with the uncompressed size of the referenced data block.
+/// Envelopes are the highes-levels data blocks in the RNTuple binary representation (see format specification).
+struct RNTupleEnvelopeLink {
+   RNTupleLocator fLocator;
+   std::uint32_t fLength = 0;
+
+   bool operator==(const RNTupleEnvelopeLink &other) const
+   {
+      return fLocator == other.fLocator && fLength == other.fLength;
+   }
+};
+
 } // namespace Experimental
 } // namespace ROOT
 

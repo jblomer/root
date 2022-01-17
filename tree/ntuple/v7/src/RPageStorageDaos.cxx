@@ -234,8 +234,8 @@ void ROOT::Experimental::Detail::RPageSinkDaos::CommitDatasetImpl()
    fDaosContainer->WriteSingleAkey(bufPageListZip.get(), szPageListZip, kOidPageList, kDistributionKey, kAttributeKey,
                                    kCidMetadata);
 
-   Internal::RNTupleSerializer::REnvelopeLink pageListEnvelope;
-   pageListEnvelope.fUnzippedSize = szPageList;
+   RNTupleEnvelopeLink pageListEnvelope;
+   pageListEnvelope.fLength = szPageList;
    pageListEnvelope.fLocator.fPosition = kOidPageList.lo;
    pageListEnvelope.fLocator.fBytesOnStorage = szPageListZip;
    fSerializationContext.AddClusterGroup(physClusterIDs.size(), pageListEnvelope);

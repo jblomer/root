@@ -797,22 +797,22 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
 }
 
 std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelopeLink(
-   const REnvelopeLink &envelopeLink, void *buffer)
+   const RNTupleEnvelopeLink &envelopeLink, void *buffer)
 {
-   auto size = SerializeUInt32(envelopeLink.fUnzippedSize, buffer);
+   auto size = SerializeUInt32(envelopeLink.fLength, buffer);
    size += SerializeLocator(envelopeLink.fLocator,
                             buffer ? reinterpret_cast<unsigned char *>(buffer) + size : nullptr);
    return size;
 }
 
 RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::DeserializeEnvelopeLink(
-   const void *buffer, std::uint32_t bufSize, REnvelopeLink &envelopeLink)
+   const void *buffer, std::uint32_t bufSize, RNTupleEnvelopeLink &envelopeLink)
 {
    if (bufSize < sizeof(std::int32_t))
       return R__FAIL("too short envelope link");
 
    auto bytes = reinterpret_cast<const unsigned char *>(buffer);
-   bytes += DeserializeUInt32(bytes, envelopeLink.fUnzippedSize);
+   bytes += DeserializeUInt32(bytes, envelopeLink.fLength);
    bufSize -= sizeof(std::uint32_t);
    auto result = DeserializeLocator(bytes, bufSize, envelopeLink.fLocator);
    if (!result)
@@ -1292,7 +1292,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
       RClusterGroupDescriptorBuilder clusterGroupBuilder;
       clusterGroupBuilder.ClusterGroupId(groupId)
          .PageListLocator(clusterGroup.fPageListEnvelopeLink.fLocator)
-         .PageListLength(clusterGroup.fPageListEnvelopeLink.fUnzippedSize);
+         .PageListLength(clusterGroup.fPageListEnvelopeLink.fLength);
       for (std::uint64_t i = 0; i < clusterGroup.fNClusters; ++i)
          clusterGroupBuilder.AddCluster(clusterId + i);
       clusterId += clusterGroup.fNClusters;

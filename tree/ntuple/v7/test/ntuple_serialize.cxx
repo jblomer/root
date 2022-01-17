@@ -337,8 +337,8 @@ TEST(RNTuple, SerializeLocator)
 
 TEST(RNTuple, SerializeEnvelopeLink)
 {
-   RNTupleSerializer::REnvelopeLink link;
-   link.fUnzippedSize = 42;
+   RNTupleEnvelopeLink link;
+   link.fLength = 42;
    link.fLocator.fPosition = 137;
    link.fLocator.fBytesOnStorage = 7;
 
@@ -352,10 +352,9 @@ TEST(RNTuple, SerializeEnvelopeLink)
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
 
-   RNTupleSerializer::REnvelopeLink reconstructedLink;
+   RNTupleEnvelopeLink reconstructedLink;
    EXPECT_EQ(16u, RNTupleSerializer::DeserializeEnvelopeLink(buffer, 16, reconstructedLink).Unwrap());
-   EXPECT_EQ(link.fUnzippedSize, reconstructedLink.fUnzippedSize);
-   EXPECT_EQ(link.fLocator, reconstructedLink.fLocator);
+   EXPECT_EQ(link, reconstructedLink);
 }
 
 TEST(RNTuple, SerializeClusterSummary)
@@ -398,7 +397,7 @@ TEST(RNTuple, SerializeClusterGroup)
 {
    RNTupleSerializer::RClusterGroup group;
    group.fNClusters = 42;
-   group.fPageListEnvelopeLink.fUnzippedSize = 42;
+   group.fPageListEnvelopeLink.fLength = 42;
    group.fPageListEnvelopeLink.fLocator.fPosition = 137;
    group.fPageListEnvelopeLink.fLocator.fBytesOnStorage = 7;
 
@@ -414,9 +413,7 @@ TEST(RNTuple, SerializeClusterGroup)
    }
    EXPECT_EQ(24u, RNTupleSerializer::DeserializeClusterGroup(buffer, 24, reco).Unwrap());
    EXPECT_EQ(group.fNClusters, reco.fNClusters);
-   EXPECT_EQ(group.fPageListEnvelopeLink.fUnzippedSize, reco.fPageListEnvelopeLink.fUnzippedSize);
-   EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.fPosition, reco.fPageListEnvelopeLink.fLocator.fPosition);
-   EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.fBytesOnStorage, reco.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
+   EXPECT_EQ(group.fPageListEnvelopeLink, reco.fPageListEnvelopeLink);
 
    // Test frame evolution
    auto pos = buffer;
@@ -428,9 +425,7 @@ TEST(RNTuple, SerializeClusterGroup)
    pos += RNTupleSerializer::SerializeUInt16(13, pos);
    EXPECT_EQ(26u, RNTupleSerializer::DeserializeClusterGroup(buffer, 26, reco).Unwrap());
    EXPECT_EQ(group.fNClusters, reco.fNClusters);
-   EXPECT_EQ(group.fPageListEnvelopeLink.fUnzippedSize, reco.fPageListEnvelopeLink.fUnzippedSize);
-   EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.fPosition, reco.fPageListEnvelopeLink.fLocator.fPosition);
-   EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.fBytesOnStorage, reco.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
+   EXPECT_EQ(group.fPageListEnvelopeLink, reco.fPageListEnvelopeLink);
    std::uint16_t remainder;
    RNTupleSerializer::DeserializeUInt16(buffer + 24, remainder);
    EXPECT_EQ(7u, remainder);
@@ -550,8 +545,8 @@ TEST(RNTuple, SerializeFooter)
    auto bufPageList = std::make_unique<unsigned char []>(sizePageList);
    EXPECT_EQ(sizePageList, RNTupleSerializer::SerializePageListV1(bufPageList.get(), desc, physClusterIDs, context));
 
-   RNTupleSerializer::REnvelopeLink pageListEnvelope;
-   pageListEnvelope.fUnzippedSize = 137;
+   RNTupleEnvelopeLink pageListEnvelope;
+   pageListEnvelope.fLength = 137;
    pageListEnvelope.fLocator.fPosition = 1337;
    pageListEnvelope.fLocator.fBytesOnStorage = 42;
    context.AddClusterGroup(physClusterIDs.size(), pageListEnvelope);

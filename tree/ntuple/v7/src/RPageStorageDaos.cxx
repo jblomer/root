@@ -212,6 +212,11 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitClusterImpl(ROOT::Experimental:
    return std::exchange(fNBytesCurrentCluster, 0);
 }
 
+ROOT::Experimental::RNTupleEnvelopeLink
+ROOT::Experimental::Detail::RPageSinkDaos::CommitClusterGroupImpl(std::uint64_t firstCluster, std::uint32_t nClusters)
+{
+
+}
 
 void ROOT::Experimental::Detail::RPageSinkDaos::CommitDatasetImpl()
 {

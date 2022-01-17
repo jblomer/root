@@ -178,6 +178,8 @@ protected:
    DescriptorId_t fLastFieldId = 0;
    DescriptorId_t fLastColumnId = 0;
    DescriptorId_t fLastClusterId = 0;
+   DescriptorId_t fLastClusterGroupId = 0;
+   DescriptorId_t fFirstInClusterGroup = 0; /// The first cluster id in the next cluster group
    NTupleSize_t fPrevClusterNEntries = 0;
    /// Keeps track of the number of elements in the currently open cluster. Indexed by column id.
    std::vector<RClusterDescriptor::RColumnRange> fOpenColumnRanges;
@@ -191,6 +193,12 @@ protected:
                                                const RPageStorage::RSealedPage &sealedPage) = 0;
    /// Returns the number of bytes written to storage (excluding metadata)
    virtual std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) = 0;
+   /// Returns the page list envelope of the given cluster range. We don't need to pass a list of cluster IDs
+   /// because we ensure that cluster IDs are issued consecutively (through fLastClusterId).
+   /// Cluster summaries and details of the given cluster range are already registered in the descriptor when
+   /// CommitClusterGroupImpl is called. Every cluster ID is exactly once part of a call to CommitClusterGroupImpl().
+   /// Empty cluster groups are possible.
+   virtual RNTupleEnvelopeLink CommitClusterGroupImpl(std::uint64_t firstCluster, std::uint32_t nClusters) = 0;
    virtual void CommitDatasetImpl() = 0;
 
    /// Helper for streaming a page. This is commonly used in derived, concrete page sinks. Note that if
@@ -246,6 +254,9 @@ public:
    /// Finalize the current cluster and create a new one for the following data.
    /// Returns the number of bytes written to storage (excluding meta-data).
    std::uint64_t CommitCluster(NTupleSize_t nEntries);
+   /// Write out the page locations (page list envelope) for all the committed clusters since the last call of
+   /// CommitClusterGroup (or the beginning of writing).
+   void CommitClusterGroup();
    /// Finalize the current cluster and the entrire data set.
    void CommitDataset() { CommitDatasetImpl(); }
 

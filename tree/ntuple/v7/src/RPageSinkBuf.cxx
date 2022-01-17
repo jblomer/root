@@ -103,6 +103,15 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::
    return fInnerSink->CommitCluster(nEntries);
 }
 
+ROOT::Experimental::RNTupleEnvelopeLink
+ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterGroupImpl(
+   std::uint64_t /* firstCluster */, std::uint32_t /* nClusters */)
+{
+   fInnerSink->CommitClusterGroup();
+   // we're not using that envelope link any further, so it is safe to return a dummy one
+   return RNTupleEnvelopeLink{};
+}
+
 void ROOT::Experimental::Detail::RPageSinkBuf::CommitDatasetImpl()
 {
    fInnerSink->CommitDataset();

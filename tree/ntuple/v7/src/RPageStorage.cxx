@@ -365,6 +365,22 @@ std::uint64_t ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experim
    return nbytes;
 }
 
+void ROOT::Experimental::Detail::RPageSink::CommitClusterGroup()
+{
+   auto nClusters = fLastClusterId - fFirstInClusterGroup;
+   auto envelopeLink = CommitClusterGroupImpl(fFirstInClusterGroup, nClusters);
+   fDescriptorBuilder.AddToOnDiskFooterSize(envelopeLink.fLocator.fBytesOnStorage);
+
+   RClusterGroupDescriptorBuilder cgBuilder;
+   cgBuilder.ClusterGroupId(fLastClusterGroupId).EnvelopeLink(envelopeLink);
+   for (std::uint64_t i = 0; i < nClusters; ++i)
+      cgBuilder.AddCluster(fFirstInClusterGroup + i);
+   fDescriptorBuilder.AddClusterGroup(std::move(cgBuilder));
+
+   fFirstInClusterGroup += nClusters;
+   fLastClusterGroupId++;
+}
+
 ROOT::Experimental::Detail::RPageStorage::RSealedPage
 ROOT::Experimental::Detail::RPageSink::SealPage(const RPage &page,
    const RColumnElementBase &element, int compressionSetting, void *buf)

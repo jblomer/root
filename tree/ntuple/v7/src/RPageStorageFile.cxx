@@ -158,6 +158,33 @@ ROOT::Experimental::Detail::RPageSinkFile::CommitClusterImpl(ROOT::Experimental:
    return result;
 }
 
+ROOT::Experimental::RNTupleEnvelopeLink
+ROOT::Experimental::Detail::RPageSinkFile::CommitClusterGroupImpl(std::uint64_t firstCluster, std::uint32_t nClusters)
+{
+   const auto &descriptor = fDescriptorBuilder.GetDescriptor();
+
+   std::vector<DescriptorId_t> physClusterIDs;
+   for (std::uint64_t i = firstCluster; i < firstCluster + nClusters; ++i) {
+      physClusterIDs.emplace_back(fSerializationContext.MapClusterId(i));
+   }
+
+   auto szPageList = Internal::RNTupleSerializer::SerializePageListV1(
+      nullptr, descriptor, physClusterIDs, fSerializationContext);
+   auto bufPageList = std::make_unique<unsigned char []>(szPageList);
+   Internal::RNTupleSerializer::SerializePageListV1(
+      bufPageList.get(), descriptor, physClusterIDs, fSerializationContext);
+
+   auto bufPageListZip = std::make_unique<unsigned char []>(szPageList);
+   auto szPageListZip = fCompressor->Zip(bufPageList.get(), szPageList, GetWriteOptions().GetCompression(),
+      [&bufPageListZip](const void *b, size_t n, size_t o){ memcpy(bufPageListZip.get() + o, b, n); } );
+   auto offPageList = fWriter->WriteBlob(bufPageListZip.get(), szPageListZip, szPageList);
+
+   RNTupleEnvelopeLink pageListEnvelope;
+   pageListEnvelope.fLength = szPageList;
+   pageListEnvelope.fLocator.fPosition = offPageList;
+   pageListEnvelope.fLocator.fBytesOnStorage = szPageListZip;
+   return pageListEnvelope;
+}
 
 void ROOT::Experimental::Detail::RPageSinkFile::CommitDatasetImpl()
 {

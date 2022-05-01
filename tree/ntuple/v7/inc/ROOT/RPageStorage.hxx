@@ -359,6 +359,11 @@ protected:
    std::unique_ptr<RNTupleDecompressor> fDecompressor;
 
    virtual RNTupleDescriptor AttachImpl() = 0;
+   /// Adds the cluster details (i.e., page locations) that correspond to the given cluster group.
+   /// The vector of cluster descriptors is already filled with the cluster summaries corresponding
+   /// to the cluster group.
+   virtual void LoadPageList(const RClusterGroupDescriptor &cgDesc,
+                             std::vector<RClusterDescriptor> &clusterSummaries) = 0;
    // Only called if a task scheduler is set. No-op be default.
    virtual void UnzipClusterImpl(RCluster * /* cluster */)
       { }
@@ -411,9 +416,16 @@ public:
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) override;
    void DropColumn(ColumnHandle_t columnHandle) override;
 
-   /// Open the physical storage container for the tree
+   /// Open the physical storage container for the ntuple.  This loads the header and footer information but it does
+   /// not load any page lists. In order to read data, one needs to call SetEntryRange() as well.
    void Attach() { GetExclDescriptorGuard().MoveIn(AttachImpl()); }
+   /// Setting an entry ranges causes the corresponding page lists to be loaded into fDescriptor.
+   /// Loading pages and clusters must respect the entry range or they can fail with an exception.
+   void SetEntryRange(std::uint64_t firstEntry, std::uint64_t lastEntry);
+
    NTupleSize_t GetNEntries();
+   /// TODO(jblomer): the number of elements of a column is only known if the complete entry range is loaded.
+   /// We should find a way to remove this method.
    NTupleSize_t GetNElements(ColumnHandle_t columnHandle);
    ColumnId_t GetColumnId(ColumnHandle_t columnHandle);
 

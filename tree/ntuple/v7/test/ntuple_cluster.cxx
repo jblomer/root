@@ -50,6 +50,8 @@ public:
 class RPageSourceMock : public RPageSource {
 protected:
    RNTupleDescriptor AttachImpl() final { return RNTupleDescriptor(); }
+   void LoadPageList(const ROOT::Experimental::RClusterGroupDescriptor & /* cgDesc */,
+                     std::vector<ROOT::Experimental::RClusterDescriptor> & /* clusterSummaries */) final {}
 
 public:
    /// Records the cluster IDs requests by LoadClusters() calls

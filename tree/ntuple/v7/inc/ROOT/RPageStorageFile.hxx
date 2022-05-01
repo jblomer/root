@@ -152,6 +152,9 @@ protected:
    RNTupleDescriptor AttachImpl() final;
    void UnzipClusterImpl(RCluster *cluster) final;
 
+   void LoadPageList(const RClusterGroupDescriptor &cgDesc,
+                     std::vector<RClusterDescriptor> &clusterSummaries) final {}
+
 public:
    RPageSourceFile(std::string_view ntupleName, std::string_view path, const RNTupleReadOptions &options);
    /// The cloned page source creates a new raw file and reader and opens its own file descriptor to the data.

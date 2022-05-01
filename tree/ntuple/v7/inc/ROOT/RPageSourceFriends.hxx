@@ -85,6 +85,8 @@ private:
 
 protected:
    RNTupleDescriptor AttachImpl() final;
+   void LoadPageList(const RClusterGroupDescriptor &cgDesc,
+                     std::vector<RClusterDescriptor> &clusterSummaries) final {}
 
 public:
    RPageSourceFriends(std::string_view ntupleName, std::span<std::unique_ptr<RPageSource>> sources);

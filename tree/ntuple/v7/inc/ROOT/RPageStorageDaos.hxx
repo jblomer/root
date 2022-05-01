@@ -179,6 +179,8 @@ private:
 
 protected:
    RNTupleDescriptor AttachImpl() final;
+   void LoadPageList(const RClusterGroupDescriptor &cgDesc,
+                     std::vector<RClusterDescriptor> &clusterSummaries) final {}
    void UnzipClusterImpl(RCluster *cluster) final;
 
 public:

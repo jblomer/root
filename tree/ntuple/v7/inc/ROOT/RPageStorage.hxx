@@ -363,7 +363,7 @@ protected:
    /// The vector of cluster descriptors is already filled with the cluster summaries corresponding
    /// to the cluster group.
    virtual void LoadPageList(const RClusterGroupDescriptor &cgDesc,
-                             std::vector<RClusterDescriptor> &clusterSummaries) = 0;
+                             std::vector<RClusterDescriptorBuilder> &clusters) = 0;
    // Only called if a task scheduler is set. No-op be default.
    virtual void UnzipClusterImpl(RCluster * /* cluster */)
       { }

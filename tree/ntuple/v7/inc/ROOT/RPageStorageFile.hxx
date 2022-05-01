@@ -150,10 +150,8 @@ private:
 
 protected:
    RNTupleDescriptor AttachImpl() final;
+   void LoadPageList(const RClusterGroupDescriptor &cgDesc, std::vector<RClusterDescriptorBuilder> &clusters) final;
    void UnzipClusterImpl(RCluster *cluster) final;
-
-   void LoadPageList(const RClusterGroupDescriptor &cgDesc,
-                     std::vector<RClusterDescriptor> &clusterSummaries) final {}
 
 public:
    RPageSourceFile(std::string_view ntupleName, std::string_view path, const RNTupleReadOptions &options);

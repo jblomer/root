@@ -274,6 +274,19 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFil
    return ntplDesc;
 }
 
+void ROOT::Experimental::Detail::RPageSourceFile::LoadPageList(
+   const RClusterGroupDescriptor &cgDesc, std::vector<RClusterDescriptorBuilder> &clusters)
+{
+   auto buffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLength());
+   auto zipBuffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLocator().fBytesOnStorage);
+   fReader.ReadBuffer(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage,
+                      cgDesc.GetPageListLocator().fPosition);
+   fDecompressor->Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage, cgDesc.GetPageListLength(),
+                        buffer.get());
+
+   Internal::RNTupleSerializer::DeserializePageListV1(buffer.get(), cgDesc.GetPageListLength(), clusters);
+}
+
 
 void ROOT::Experimental::Detail::RPageSourceFile::LoadSealedPage(
    DescriptorId_t columnId, const RClusterIndex &clusterIndex, RSealedPage &sealedPage)

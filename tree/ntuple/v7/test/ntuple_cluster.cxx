@@ -49,7 +49,19 @@ public:
  */
 class RPageSourceMock : public RPageSource {
 protected:
-   RNTupleDescriptor AttachImpl() final { return RNTupleDescriptor(); }
+   RNTupleDescriptor AttachImpl() final
+   {
+      ROOT::Experimental::RNTupleDescriptorBuilder descBuilder;
+      for (unsigned i = 0; i <= 5; ++i) {
+         descBuilder.AddClusterSummary(i, i, 1);
+      }
+      auto descriptor = descBuilder.MoveDescriptor();
+      for (unsigned i = 0; i <= 5; ++i) {
+         descriptor.AddClusterDetails(
+            ROOT::Experimental::RClusterDescriptorBuilder(i, i, 1).MoveDescriptor().Unwrap());
+      }
+      return descriptor;
+   }
    void LoadPageList(const ROOT::Experimental::RClusterGroupDescriptor & /* cgDesc */,
                      std::vector<ROOT::Experimental::RClusterDescriptorBuilder> & /* clusters */) final {}
 
@@ -58,18 +70,7 @@ public:
    std::vector<ROOT::Experimental::DescriptorId_t> fReqsClusterIds;
    std::vector<ROOT::Experimental::Detail::RCluster::ColumnSet_t> fReqsColumns;
 
-   RPageSourceMock() : RPageSource("test", ROOT::Experimental::RNTupleReadOptions()) {
-      ROOT::Experimental::RNTupleDescriptorBuilder descBuilder;
-      for (unsigned i = 0; i <= 5; ++i) {
-         descBuilder.AddClusterSummary(i, i, 1);
-      }
-      auto descriptorGuard = GetExclDescriptorGuard();
-      descriptorGuard.MoveIn(descBuilder.MoveDescriptor());
-      for (unsigned i = 0; i <= 5; ++i) {
-         descriptorGuard->AddClusterDetails(
-            ROOT::Experimental::RClusterDescriptorBuilder(i, i, 1).MoveDescriptor().Unwrap());
-      }
-   }
+   RPageSourceMock() : RPageSource("test", ROOT::Experimental::RNTupleReadOptions()) {}
    std::unique_ptr<RPageSource> Clone() const final { return nullptr; }
    RPage PopulatePage(ColumnHandle_t, ROOT::Experimental::NTupleSize_t) final { return RPage(); }
    RPage PopulatePage(ColumnHandle_t, const ROOT::Experimental::RClusterIndex &) final { return RPage(); }
@@ -213,6 +214,7 @@ TEST(Cluster, AdoptClusters)
 TEST(ClusterPool, GetClusterBasics)
 {
    RPageSourceMock p1;
+   p1.Attach();
    RClusterPool c1(p1, 1);
    c1.GetCluster(3, {0});
    c1.WaitForInFlightClusters();
@@ -223,6 +225,7 @@ TEST(ClusterPool, GetClusterBasics)
    EXPECT_EQ(RCluster::ColumnSet_t({0}), p1.fReqsColumns[1]);
 
    RPageSourceMock p2;
+   p2.Attach();
    {
       RClusterPool c2(p2, 2);
       c2.GetCluster(0, {0});
@@ -239,6 +242,7 @@ TEST(ClusterPool, GetClusterBasics)
    EXPECT_EQ(RCluster::ColumnSet_t({0}), p2.fReqsColumns[3]);
 
    RPageSourceMock p3;
+   p3.Attach();
    {
       RClusterPool c3(p3, 2);
       c3.GetCluster(0, {0});
@@ -252,6 +256,7 @@ TEST(ClusterPool, GetClusterBasics)
    EXPECT_EQ(3U, p3.fReqsClusterIds[3]);
 
    RPageSourceMock p4;
+   p4.Attach();
    {
       RClusterPool c4(p4, 3);
       c4.GetCluster(2, {0});
@@ -268,6 +273,7 @@ TEST(ClusterPool, GetClusterBasics)
 TEST(ClusterPool, GetClusterIncrementally)
 {
    RPageSourceMock p1;
+   p1.Attach();
    RClusterPool c1(p1, 1);
    c1.GetCluster(3, {0});
    c1.WaitForInFlightClusters();

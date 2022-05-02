@@ -324,6 +324,9 @@ private:
    RNTupleDescriptor fDescriptor;
    mutable std::shared_mutex fDescriptorLock;
 
+   /// Note that the underlying lock is not recursive. See GetSharedDescriptorGuard() for further information.
+   RExclDescriptorGuard GetExclDescriptorGuard() { return RExclDescriptorGuard(fDescriptor, fDescriptorLock); }
+
 protected:
    /// Default I/O performance counters that get registered in fMetrics
    struct RCounters {
@@ -381,9 +384,6 @@ protected:
    /// Alternatively, a subclass might provide its own RNTupleMetrics object by overriding the
    /// GetMetrics() member function.
    void EnableDefaultMetrics(const std::string &prefix);
-
-   /// Note that the underlying lock is not recursive. See GetSharedDescriptorGuard() for further information.
-   RExclDescriptorGuard GetExclDescriptorGuard() { return RExclDescriptorGuard(fDescriptor, fDescriptorLock); }
 
 public:
    RPageSource(std::string_view ntupleName, const RNTupleReadOptions &fOptions);

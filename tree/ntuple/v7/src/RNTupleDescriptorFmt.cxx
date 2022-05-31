@@ -26,6 +26,23 @@
 
 namespace {
 
+struct ClusterGroupInfo {
+   std::uint64_t fFirstEntry = static_cast<std::uint64_t>(-1);
+   std::uint64_t fNEntries = 0;
+   std::uint64_t fNPages = 0;
+   std::uint32_t fNClusters = 0;
+   std::uint32_t fPageListSizeOnStorage = 0;
+   std::uint32_t fPageListSizeInMemory = 0;
+
+   bool operator ==(const ClusterGroupInfo &other) const {
+      return fFirstEntry == other.fFirstEntry;
+   }
+
+   bool operator <(const ClusterGroupInfo &other) const {
+      return fFirstEntry < other.fFirstEntry;
+   }
+};
+
 struct ClusterInfo {
    std::uint64_t fFirstEntry = 0;
    std::uint32_t fNPages = 0;
@@ -83,6 +100,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
 {
    std::vector<ColumnInfo> columns;
    std::vector<ClusterInfo> clusters;
+   std::vector<ClusterGroupInfo> clusterGroups;
    std::unordered_map<DescriptorId_t, unsigned int> cluster2Idx;
    for (const auto &cluster : fClusterDescriptors) {
       ClusterInfo info;
@@ -129,6 +147,20 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
       }
       columns.emplace_back(info);
    }
+
+   for (const auto &cg : fClusterGroupDescriptors) {
+      ClusterGroupInfo info;
+      info.fNClusters = cg.second.GetNClusters();
+      info.fPageListSizeOnStorage = cg.second.GetPageListLocator().fBytesOnStorage;
+      info.fPageListSizeInMemory = cg.second.GetPageListLength();
+      for (const auto &c : cg.second.GetClusterIds()) {
+         info.fFirstEntry = std::min(info.fFirstEntry, clusters[c].fFirstEntry);
+         info.fNPages += clusters[c].fNPages;
+         info.fNEntries += clusters[c].fNEntries;
+      }
+      clusterGroups.emplace_back(info);
+   }
+
    auto headerSize = GetOnDiskHeaderSize();
    auto footerSize = GetOnDiskFooterSize();
    output << "============================================================" << std::endl;
@@ -139,6 +171,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    output << "  # Fields:         " << GetNFields() << std::endl;
    output << "  # Columns:        " << GetNColumns() << std::endl;
    output << "  # Pages:          " << nPages << std::endl;
+   output << "  # Cluster Groups: " << GetNClusterGroups() << std::endl;
    output << "  # Clusters:       " << GetNClusters() << std::endl;
    output << "  Size on storage:  " << bytesOnStorage << " B" << std::endl;
    output << "  Compression rate: " << std::fixed << std::setprecision(2)
@@ -147,6 +180,26 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    output << "  Footer size:      " << footerSize << " B" << std::endl;
    output << "  Meta-data / data: " << std::fixed << std::setprecision(3)
                                     << float(headerSize + footerSize) / float(bytesOnStorage) << std::endl;
+   output << "------------------------------------------------------------" << std::endl;
+   output << "CLUSTER GROUP DETAILS" << std::endl;
+   output << "------------------------------------------------------------" << std::endl;
+
+   std::sort(clusterGroups.begin(), clusterGroups.end());
+   for (unsigned int i = 0; i < clusterGroups.size(); ++i) {
+      output << "  # " << std::setw(5) << i
+             << "   Entry range:     [" << clusterGroups[i].fFirstEntry << ".."
+             << clusterGroups[i].fFirstEntry + clusterGroups[i].fNEntries - 1 << "]  --  "
+             << clusterGroups[i].fNEntries << std::endl;
+      output << "         "
+             << "   # Pages:                  " << clusterGroups[i].fNPages << std::endl;
+      output << "         "
+             << "   Metadata size in memory:  " << clusterGroups[i].fPageListSizeInMemory << " B" << std::endl;
+      output << "         "
+             << "   Compression:              " << std::fixed << std::setprecision(2)
+             << float(clusterGroups[i].fPageListSizeInMemory) / float(float(clusterGroups[i].fPageListSizeOnStorage))
+             << std::endl;
+   }
+
    output << "------------------------------------------------------------" << std::endl;
    output << "CLUSTER DETAILS" << std::endl;
    output << "------------------------------------------------------------" << std::endl;

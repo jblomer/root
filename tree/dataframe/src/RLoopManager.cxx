@@ -454,8 +454,12 @@ void RLoopManager::RunEmptySourceMT()
       R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({"an empty source", range.first, range.second, slot});
       try {
          UpdateSampleInfo(slot, range);
-         for (auto currEntry = range.first; currEntry < range.second; ++currEntry) {
-            RunAndCheckFilters(slot, currEntry, /*bulkSize*/1u);
+         ULong64_t currEntry = range.first;
+         std::size_t bulkSize = std::min(ULong64_t(fMaxEventsPerBulk), range.second - currEntry);
+         while (currEntry != range.second) {
+            RunAndCheckFilters(slot, currEntry, bulkSize);
+            currEntry += bulkSize;
+            bulkSize = std::min(ULong64_t(fMaxEventsPerBulk), range.second - currEntry);
          }
       } catch (...) {
          // Error might throw in experiment frameworks like CMSSW
@@ -478,8 +482,12 @@ void RLoopManager::RunEmptySource()
    RCallCleanUpTask cleanup(*this);
    try {
       UpdateSampleInfo(/*slot*/0, {0, fNEmptyEntries});
-      for (ULong64_t currEntry = 0; currEntry < fNEmptyEntries && fNStopsReceived < fNChildren; ++currEntry) {
-         RunAndCheckFilters(/*slot*/0, currEntry, /*bulkSize*/1u);
+      ULong64_t currEntry = 0;
+      std::size_t bulkSize = std::min(ULong64_t(fMaxEventsPerBulk), fNEmptyEntries - currEntry);
+      while (currEntry != fNEmptyEntries && fNStopsReceived < fNChildren) {
+         RunAndCheckFilters(/*slot*/ 0, currEntry, bulkSize);
+         currEntry += bulkSize;
+         bulkSize = std::min(ULong64_t(fMaxEventsPerBulk), fNEmptyEntries - currEntry);
       }
    } catch (...) {
       std::cerr << "RDataFrame::Run: event loop was interrupted\n";

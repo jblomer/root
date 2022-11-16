@@ -346,14 +346,15 @@ RLoopManager::RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
    : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultColumns(defaultBranches),
      fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
-     fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots), fAllTrueMasks(fNSlots, {1ll})
+     fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots),
+     fAllTrueMasks(fNSlots, {fMaxEventsPerBulk})
 {
 }
 
 RLoopManager::RLoopManager(ULong64_t nEmptyEntries)
    : fNEmptyEntries(nEmptyEntries), fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kNoFilesMT : ELoopType::kNoFiles), fNewSampleNotifier(fNSlots),
-     fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots), fAllTrueMasks(fNSlots, {1ll})
+     fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots), fAllTrueMasks(fNSlots, {fMaxEventsPerBulk})
 {
 }
 
@@ -361,7 +362,7 @@ RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t 
    : fDefaultColumns(defaultBranches), fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kDataSourceMT : ELoopType::kDataSource),
      fDataSource(std::move(ds)), fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots),
-     fAllTrueMasks(fNSlots, {1ll})
+     fAllTrueMasks(fNSlots, {fMaxEventsPerBulk})
 {
    fDataSource->SetNSlots(fNSlots);
 }
@@ -370,7 +371,8 @@ RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
    : fBeginEntry(spec.GetEntryRangeBegin()), fEndEntry(spec.GetEntryRangeEnd()),
      fDatasetGroups(spec.MoveOutDatasetGroups()), fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
-     fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots), fAllTrueMasks(fNSlots, {1ll})
+     fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots),
+     fAllTrueMasks(fNSlots, {fMaxEventsPerBulk})
 {
    auto chain = std::make_shared<TChain>("");
    for (auto &group : fDatasetGroups) {

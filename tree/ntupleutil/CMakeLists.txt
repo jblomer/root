@@ -18,12 +18,14 @@ HEADERS
   ROOT/RNTupleImporter.hxx
   ROOT/RNTupleInspector.hxx
 SOURCES
+  v7/src/RNTupleDrawOnDiskLayout.cxx
   v7/src/RNTupleImporter.cxx
   v7/src/RNTupleInspector.cxx
 LINKDEF
   LinkDef.h
 DEPENDENCIES
   ROOTNTuple
+  Gpad
   Tree
 )
 

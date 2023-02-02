@@ -31,7 +31,6 @@ ROOT::Experimental::RNTupleInspector::RNTupleInspector(
    std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource)
    : fPageSource(std::move(pageSource))
 {
-   fPageSource->Attach();
    auto descriptorGuard = fPageSource->GetSharedDescriptorGuard();
    fDescriptor = descriptorGuard->Clone();
 }
@@ -134,6 +133,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleInspector>
 ROOT::Experimental::RNTupleInspector::Create(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource)
 {
    auto inspector = std::unique_ptr<RNTupleInspector>(new RNTupleInspector(std::move(pageSource)));
+   inspector->fPageSource->Attach();
 
    inspector->CollectColumnInfo();
    inspector->CollectFieldTreeInfo(inspector->GetDescriptor()->GetFieldZeroId());

@@ -20,6 +20,7 @@
 #include <ROOT/RNTupleDescriptor.hxx>
 
 #include <TFile.h>
+#include <TBox.h>
 #include <TH1D.h>
 #include <THStack.h>
 
@@ -35,12 +36,66 @@ class RNTuple;
 
 namespace Experimental {
 
-namespace Internal {
-class RPageSource;
-} // namespace Internal
-
 enum class ENTupleInspectorPrintFormat { kTable, kCSV };
 enum class ENTupleInspectorHist { kCount, kNElems, kCompressedSize, kUncompressedSize };
+
+namespace Internal {
+class RPageSource;
+
+struct RNTupleDrawOnDiskLayout;
+
+class RDrawOnDiskLayoutHandler {
+public:
+   static void RPageBoxClicked();
+};
+
+class RNTupleBox : public TBox {
+public:
+   std::uint64_t fPosition = 0;
+   std::uint32_t fNBytes = 0;
+   RNTupleDrawOnDiskLayout *fParent = nullptr;
+   DescriptorId_t fFieldId = kInvalidDescriptorId;
+
+   RNTupleBox(double x1, double y1, double x2, double y2, RNTupleDrawOnDiskLayout *p)
+      : TBox(x1, y1, x2, y2), fParent(p) {}
+
+   ClassDef(RNTupleBox, 1)
+};
+
+// A TBox which contains metadata information of a RNTuple. It is drawn on the TCanvas showing the RNTuple
+// storage layout and represents some metadata (header, footer, page list). It also holds some data of the metadata it
+// represents, like its byte size.
+class RNTupleMetaDataBox : public RNTupleBox {
+public:
+   std::string fDescription; // e.g. "Header", "Footer" or "Page List"
+
+   RNTupleMetaDataBox(double x1, double y1, double x2, double y2, RNTupleDrawOnDiskLayout *p)
+      : RNTupleBox(x1, y1, x2, y2, p) {}
+
+   void Dump() const final; // *MENU*
+   void Inspect() const final; // *MENU*
+
+   ClassDef(RNTupleMetaDataBox, 1)
+};
+
+/// A RPageBox is drawn on the TCanvas showing the RNTuple storage layout and represents a page in the RNTuple. It also
+/// holds various data of a page, which allows the user to dump/inspect the RPageBox to obtain information about the
+/// page.
+class RNTuplePageBox : public RNTupleBox {
+public:
+   std::uint64_t fPageNum = 0;
+   DescriptorId_t fClusterId = kInvalidDescriptorId;
+   DescriptorId_t fColumnId = kInvalidDescriptorId;
+
+   RNTuplePageBox(double x1, double y1, double x2, double y2, RNTupleDrawOnDiskLayout *p)
+      : RNTupleBox(x1, y1, x2, y2, p) {}
+   void Dump() const final; // *MENU*
+   void Inspect() const final; // *MENU*
+
+   ClassDef(RNTuplePageBox, 1)
+};
+
+} // namespace Internal
 
 // clang-format off
 /**
@@ -132,6 +187,10 @@ public:
    };
 
 private:
+   struct RDrawOnDiskLayoutDeleter {
+      void operator()(Internal::RNTupleDrawOnDiskLayout *p);
+   };
+
    std::unique_ptr<Internal::RPageSource> fPageSource;
    std::unique_ptr<RNTupleDescriptor> fDescriptor;
    int fCompressionSettings = -1;
@@ -140,6 +199,8 @@ private:
 
    std::unordered_map<int, RColumnInspector> fColumnInfo;
    std::unordered_map<int, RFieldTreeInspector> fFieldTreeInfo;
+
+   std::unique_ptr<Internal::RNTupleDrawOnDiskLayout, RDrawOnDiskLayoutDeleter> fDrawOnDiskLayout;
 
    RNTupleInspector(std::unique_ptr<Internal::RPageSource> pageSource);
 
@@ -469,6 +530,8 @@ public:
    {
       return GetFieldsByName(std::regex{std::string(fieldNamePattern)}, searchInSubFields);
    }
+
+   void DrawOnDiskLayout();
 };
 } // namespace Experimental
 } // namespace ROOT

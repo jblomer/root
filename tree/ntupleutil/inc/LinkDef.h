@@ -10,4 +10,9 @@
 
 #ifdef __CLING__
 
+#pragma link C++ class ROOT::Experimental::Internal::RDrawOnDiskLayoutHandler - ;
+#pragma link C++ class ROOT::Experimental::Internal::RNTupleBox + ;
+#pragma link C++ class ROOT::Experimental::Internal::RNTupleMetaDataBox + ;
+#pragma link C++ class ROOT::Experimental::Internal::RNTuplePageBox + ;
+
 #endif

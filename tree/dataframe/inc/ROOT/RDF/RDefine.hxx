@@ -63,7 +63,10 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    ValuesPerSlot_t fLastResults;
 
    /// Column readers per slot and per input column
-   std::vector<std::array<RColumnReaderBase *, ColumnTypes_t::list_size>> fValues;
+   std::vector<std::array<RColumnReaderBase *, ColumnTypes_t::list_size>> fValueReaders;
+
+   /// Arrays of type-erased raw pointers to the beginning of bulks of column values, one per slot.
+   std::vector<std::array<void *, ColumnTypes_t::list_size>> fValuePtrs;
 
    /// Define objects corresponding to systematic variations other than nominal for this defined column.
    /// The map key is the full variation name, e.g. "pt:up".
@@ -74,7 +77,7 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
                  std::index_sequence<S...>, NoneTag)
    {
       // counting on copy elision
-      return fExpression(fValues[slot][S]->template Get<ColTypes>(idx)...);
+      return fExpression(*(static_cast<ColTypes *>(fValuePtrs[slot][S]) + idx)...);
       // avoid unused variable warnings (gcc 12)
       (void)slot;
       (void)idx;
@@ -85,7 +88,7 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
                  std::index_sequence<S...>, SlotTag)
    {
       // counting on copy elision
-      return fExpression(slot, fValues[slot][S]->template Get<ColTypes>(idx)...);
+      return fExpression(slot, *(static_cast<ColTypes *>(fValuePtrs[slot][S]) + idx)...);
       (void)idx; // avoid unused variable warnings (gcc 12)
    }
 
@@ -94,7 +97,7 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
                  SlotAndEntryTag)
    {
       // counting on copy elision
-      return fExpression(slot, entry, fValues[slot][S]->template Get<ColTypes>(idx)...);
+      return fExpression(slot, entry, *(static_cast<ColTypes *>(fValuePtrs[slot][S]) + idx)...);
       (void)idx; // avoid unused variable warnings (gcc 12)
    }
 
@@ -103,7 +106,8 @@ public:
            const RDFInternal::RColumnRegister &colRegister, RLoopManager &lm,
            const std::string &variationName = "nominal")
       : RDefineBase(name, type, colRegister, lm, columns, variationName), fExpression(std::move(expression)),
-        fLastResults(lm.GetNSlots() * RDFInternal::CacheLineStep<ret_type>()), fValues(lm.GetNSlots())
+        fLastResults(lm.GetNSlots() * RDFInternal::CacheLineStep<ret_type>()), fValueReaders(lm.GetNSlots()),
+        fValuePtrs(lm.GetNSlots())
    {
       for (auto &r : fLastResults)
          r.resize(fLoopManager->GetMaxEventsPerBulk());
@@ -117,7 +121,7 @@ public:
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
       RDFInternal::RColumnReadersInfo info{fColumnNames, fColRegister, fIsDefine.data(), *fLoopManager};
-      fValues[slot] = RDFInternal::GetColumnReaders(slot, r, ColumnTypes_t{}, info, fVariation);
+      fValueReaders[slot] = RDFInternal::GetColumnReaders(slot, r, ColumnTypes_t{}, info, fVariation);
       fMask[slot * RDFInternal::CacheLineStep<RDFInternal::RMaskedEntryRange>()].SetFirstEntry(-1ll);
    }
 
@@ -137,8 +141,8 @@ public:
          valueMask.SetFirstEntry(requestedMask.FirstEntry());
       }
 
-      std::for_each(fValues[slot].begin(), fValues[slot].end(),
-                    [&requestedMask, bulkSize](auto *v) { v->Load(requestedMask, bulkSize); });
+      std::transform(fValueReaders[slot].begin(), fValueReaders[slot].end(), fValuePtrs[slot].begin(),
+                     [&requestedMask, &bulkSize](auto *v) { return v->Load(requestedMask, bulkSize); });
 
       auto &results = fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()];
       const auto rdfentry_start = fLoopManager->GetUniqueRDFEntry(slot);
@@ -157,7 +161,7 @@ public:
    /// Clean-up operations to be performed at the end of a task.
    void FinalizeSlot(unsigned int slot) final
    {
-      fValues[slot].fill(nullptr);
+      fValueReaders[slot].fill(nullptr);
 
       for (auto &e : fVariedDefines)
          e.second->FinalizeSlot(slot);

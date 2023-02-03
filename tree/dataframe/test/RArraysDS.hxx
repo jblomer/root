@@ -12,7 +12,7 @@
 
 class R__CLING_PTRCHECK(off) RArraysDSVarReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    std::vector<int> *fPtr = nullptr;
-   void *GetImpl(std::size_t) final { return fPtr; }
+   void *LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &, std::size_t) final { return fPtr; }
 
 public:
    RArraysDSVarReader(std::vector<int> &v) : fPtr(&v) {}
@@ -21,7 +21,7 @@ public:
 class R__CLING_PTRCHECK(off) RArraysDSVarSizeReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    std::vector<int> *fPtr = nullptr;
    std::size_t fSize = 0;
-   void *GetImpl(std::size_t) final
+   void *LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &, std::size_t) final
    {
       fSize = fPtr->size();
       return &fSize;

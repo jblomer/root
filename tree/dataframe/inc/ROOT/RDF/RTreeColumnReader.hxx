@@ -35,7 +35,7 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader final : public ROOT::Detail::RDF:
                                 // (or an iterator over the bulk).
    RMaskedEntryRange fMask;
 
-   void LoadImpl(const Internal::RDF::RMaskedEntryRange &requestedMask, std::size_t bulkSize) final
+   void *LoadImpl(const Internal::RDF::RMaskedEntryRange &requestedMask, std::size_t bulkSize) final
    {
       if (requestedMask.FirstEntry() != fMask.FirstEntry()) { // new bulk
          fMask.SetAll(false);
@@ -52,9 +52,9 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader final : public ROOT::Detail::RDF:
             fMask[i] = true;
          }
       }
-   }
 
-   void *GetImpl(std::size_t offset) final { return &fCachedValues[offset]; }
+      return &fCachedValues[0];
+   }
 
 public:
    /// Construct the RTreeColumnReader. Actual initialization is performed lazily by the Init method.
@@ -98,7 +98,7 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
    /// Whether we already printed a warning about performing a copy of the TTreeReaderArray contents
    bool fCopyWarningPrinted = false;
 
-   void LoadImpl(const Internal::RDF::RMaskedEntryRange &requestedMask, std::size_t bulkSize) final
+   void *LoadImpl(const Internal::RDF::RMaskedEntryRange &requestedMask, std::size_t bulkSize) final
    {
       if (requestedMask.FirstEntry() != fMask.FirstEntry()) { // new bulk
          fMask.SetAll(false);
@@ -115,9 +115,9 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
             fMask[i] = true;
          }
       }
-   }
 
-   void *GetImpl(std::size_t offset) final { return &fCachedValues[offset]; }
+      return &fCachedValues[0];
+   }
 
 public:
    RTreeColumnReader(TTreeReader &r, const std::string &colName, std::size_t maxEventsPerBulk)

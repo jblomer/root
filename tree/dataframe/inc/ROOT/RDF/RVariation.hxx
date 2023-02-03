@@ -158,13 +158,16 @@ class R__CLING_PTRCHECK(off) RVariation final : public RVariationBase {
    std::vector<Result_t> fLastResults;
 
    /// Column readers per slot and per input column
-   std::vector<std::array<RColumnReaderBase *, ColumnTypes_t::list_size>> fValues;
+   std::vector<std::array<RColumnReaderBase *, ColumnTypes_t::list_size>> fValueReaders;
+
+   /// Arrays of type-erased raw pointers to the beginning of bulks of column values, one per slot.
+   std::vector<std::array<void *, ColumnTypes_t::list_size>> fValuePtrs;
 
    template <typename... ColTypes, std::size_t... S>
    void UpdateHelper(unsigned int slot, std::size_t idx, TypeList<ColTypes...>, std::index_sequence<S...>)
    {
       // fExpression must return an RVec<T>
-      auto &&results = fExpression(fValues[slot][S]->template Get<ColTypes>(idx)...);
+      auto &&results = fExpression(*(static_cast<ColTypes *>(fValuePtrs[slot][S]) + idx)...);
 
       if (!ResultsSizeEq(results, fVariationNames.size(), fColNames.size(),
                          std::integral_constant<bool, IsSingleColumn>{})) {
@@ -184,7 +187,7 @@ public:
               RLoopManager &lm, const ColumnNames_t &inputColNames)
       : RVariationBase(colNames, variationName, variationTags, type, defines, lm, inputColNames),
         fExpression(std::move(expression)), fLastResults(lm.GetNSlots() * RDFInternal::CacheLineStep<Result_t>()),
-        fValues(lm.GetNSlots())
+        fValueReaders(lm.GetNSlots()), fValuePtrs(lm.GetNSlots())
    {
       fLoopManager->Register(this);
 
@@ -199,7 +202,7 @@ public:
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
       RColumnReadersInfo info{fInputColumns, fColumnRegister, fIsDefine.data(), *fLoopManager};
-      fValues[slot] = GetColumnReaders(slot, r, ColumnTypes_t{}, info);
+      fValueReaders[slot] = GetColumnReaders(slot, r, ColumnTypes_t{}, info);
       fMask[slot].SetFirstEntry(-1ll);
    }
 
@@ -226,9 +229,10 @@ public:
          valueMask.SetAll(false);
          valueMask.SetFirstEntry(requestedMask.FirstEntry());
       }
-      // evaluate this filter, cache the result
-      std::for_each(fValues[slot].begin(), fValues[slot].end(),
-                    [&requestedMask, bulkSize](auto *v) { v->Load(requestedMask, bulkSize); });
+
+      std::transform(fValueReaders[slot].begin(), fValueReaders[slot].end(), fValuePtrs[slot].begin(),
+                     [&requestedMask, &bulkSize](auto *v) { return v->Load(requestedMask, bulkSize); });
+
       for (std::size_t i = 0ul; i < bulkSize; ++i) {
          if (requestedMask[i] && !valueMask[i]) { // we don't have a value for this entry yet
             UpdateHelper(slot, i, ColumnTypes_t{}, TypeInd_t{});
@@ -240,7 +244,7 @@ public:
    const std::type_info &GetTypeId() const final { return typeid(VariedCol_t); }
 
    /// Clean-up operations to be performed at the end of a task.
-   void FinalizeSlot(unsigned int slot) final { fValues[slot].fill(nullptr); }
+   void FinalizeSlot(unsigned int slot) final { fValueReaders[slot].fill(nullptr); }
 };
 
 } // namespace RDF

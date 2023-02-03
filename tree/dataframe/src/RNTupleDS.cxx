@@ -144,9 +144,7 @@ public:
          f.ConnectPageSource(source);
    }
 
-   void *GetImpl(std::size_t /*idx*/) final { return fValue.GetRawPtr(); }
-
-   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask, std::size_t /*bulkSize*/) final
+   void *LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask, std::size_t /*bulkSize*/) final
    {
       // TODO remove assumption that bulk has size 1
       const auto firstEntry = mask.FirstEntry();
@@ -154,6 +152,8 @@ public:
          fField->Read(mask.FirstEntry(), &fValue);
          fLastEntry = firstEntry;
       }
+
+      return fValue.GetRawPtr();
    }
 };
 

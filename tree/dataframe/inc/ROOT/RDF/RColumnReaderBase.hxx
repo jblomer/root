@@ -33,26 +33,18 @@ class R__CLING_PTRCHECK(off) RColumnReaderBase {
 public:
    virtual ~RColumnReaderBase() = default;
 
-   /// Load the column value for the given entry.
+   /// Load the column values for the given bulk of entries.
    /// \param entry The entry number to load.
    /// \param mask The entry mask. Values will be loaded only for entries for which the mask equals true.
-   void Load(const RDFInternal::RMaskedEntryRange &mask, std::size_t bulkSize) { this->LoadImpl(mask, bulkSize); }
-
-   /// Return the column value for the given entry.
-   /// \tparam T The column type
-   /// \param idx The index of the value to load with respect to the beginning of the last entry mask passed to Load().
-   template <typename T>
-   T &Get(std::size_t idx)
+   /// \return A pointer to the beginning of a contiguous array of column values for the bulk.
+   void *Load(const RDFInternal::RMaskedEntryRange &mask, std::size_t bulkSize)
    {
-      return *static_cast<T *>(GetImpl(idx));
+      return this->LoadImpl(mask, bulkSize);
    }
 
 private:
-   /// Return the type-erased column value for the given entry.
-   /// \param idx Index of the element to retrieve w.r.t. the first element in the bulk.
-   virtual void *GetImpl(std::size_t idx) = 0;
-   // TODO remove the default implementation when all readers will be required to do something non-trivial at load time
-   virtual void LoadImpl(const Internal::RDF::RMaskedEntryRange &, std::size_t /*bulkSize*/) {}
+   /// A type-erased version of Load(). To be implemented by concrete column readers.
+   virtual void *LoadImpl(const Internal::RDF::RMaskedEntryRange &mask, std::size_t bulkSize) = 0;
 };
 
 } // namespace RDF

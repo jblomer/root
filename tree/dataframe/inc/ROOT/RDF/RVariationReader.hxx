@@ -33,11 +33,10 @@ class R__CLING_PTRCHECK(off) RVariationReader final : public ROOT::Detail::RDF::
    /// The slot this value belongs to.
    unsigned int fSlot = std::numeric_limits<unsigned int>::max();
 
-   void *GetImpl(std::size_t /*idx*/) final { return fValuePtr; }
-
-   void LoadImpl(const RDFInternal::RMaskedEntryRange &m, std::size_t bulkSize) final
+   void *LoadImpl(const RDFInternal::RMaskedEntryRange &m, std::size_t bulkSize) final
    {
       fVariation->Update(fSlot, m, bulkSize);
+      return fValuePtr;
    }
 
 public:

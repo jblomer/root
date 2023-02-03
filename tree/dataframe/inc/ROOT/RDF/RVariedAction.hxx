@@ -47,7 +47,10 @@ class R__CLING_PTRCHECK(off) RVariedAction final : public RActionBase {
    std::vector<std::shared_ptr<PrevNodeType>> fPrevNodes;
 
    /// Column readers per slot (outer dimension), per variation and per input column (inner dimension, std::array).
-   std::vector<std::vector<std::array<RColumnReaderBase *, ColumnTypes_t::list_size>>> fInputValues;
+   std::vector<std::vector<std::array<RColumnReaderBase *, ColumnTypes_t::list_size>>> fValueReaders;
+
+   /// Arrays of type-erased raw pointers to the beginning of bulks of column values, per slot and per variation.
+   std::vector<std::vector<std::array<void *, ColumnTypes_t::list_size>>> fValuePtrs;
 
    /// The nth flag signals whether the nth input column is a custom column or not.
    std::array<bool, ColumnTypes_t::list_size> fIsDefine;
@@ -79,7 +82,8 @@ public:
    RVariedAction(std::vector<Helper> &&helpers, const ColumnNames_t &columns, std::shared_ptr<PrevNode> prevNode,
                  const RColumnRegister &colRegister)
       : RActionBase(prevNode->GetLoopManagerUnchecked(), columns, colRegister, prevNode->GetVariations()),
-        fHelpers(std::move(helpers)), fPrevNodes(MakePrevFilters(prevNode)), fInputValues(GetNSlots())
+        fHelpers(std::move(helpers)), fPrevNodes(MakePrevFilters(prevNode)), fValueReaders(GetNSlots()),
+        fValuePtrs(GetNSlots(), std::vector<std::array<void *, ColumnTypes_t::list_size>>(GetVariations().size()))
    {
       fLoopManager->Register(this);
 
@@ -107,7 +111,7 @@ public:
 
       // get readers for each systematic variation
       for (const auto &variation : GetVariations())
-         fInputValues[slot].emplace_back(GetColumnReaders(slot, r, ColumnTypes_t{}, info, variation));
+         fValueReaders[slot].emplace_back(GetColumnReaders(slot, r, ColumnTypes_t{}, info, variation));
 
       std::for_each(fHelpers.begin(), fHelpers.end(), [=](Helper &h) { h.InitTask(r, slot); });
    }
@@ -116,7 +120,7 @@ public:
    void
    CallExec(unsigned int slot, unsigned int varIdx, std::size_t idx, TypeList<ColTypes...>, std::index_sequence<S...>)
    {
-      fHelpers[varIdx].Exec(slot, fInputValues[slot][varIdx][S]->template Get<ColTypes>(idx)...);
+      fHelpers[varIdx].Exec(slot, *(static_cast<ColTypes *>(fValuePtrs[slot][varIdx][S]) + idx)...);
       (void)idx;
    }
 
@@ -124,8 +128,10 @@ public:
    {
       for (auto varIdx = 0u; varIdx < GetVariations().size(); ++varIdx) {
          const auto &mask = fPrevNodes[varIdx]->CheckFilters(slot, entry, bulkSize);
-         std::for_each(fInputValues[slot][varIdx].begin(), fInputValues[slot][varIdx].end(),
-                       [&mask, bulkSize](auto *v) { v->Load(mask, bulkSize); });
+
+         std::transform(fValueReaders[slot][varIdx].begin(), fValueReaders[slot][varIdx].end(),
+                        fValuePtrs[slot][varIdx].begin(),
+                        [&mask, &bulkSize](auto *v) { return v->Load(mask, bulkSize); });
 
          for (std::size_t i = 0ul; i < bulkSize; ++i) {
             if (mask[i])
@@ -142,7 +148,7 @@ public:
    /// Clean-up operations to be performed at the end of a task.
    void FinalizeSlot(unsigned int slot) final
    {
-      fInputValues[slot].clear();
+      fValueReaders[slot].clear();
       std::for_each(fHelpers.begin(), fHelpers.end(), [=](Helper &h) { h.CallFinalizeTask(slot); });
    }
 

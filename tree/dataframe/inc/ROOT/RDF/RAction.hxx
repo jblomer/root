@@ -57,8 +57,11 @@ class R__CLING_PTRCHECK(off) RAction : public RActionBase {
    Helper fHelper;
    const std::shared_ptr<PrevNode> fPrevNodePtr;
    PrevNode &fPrevNode;
-   /// Column readers per slot and per input column
-   std::vector<std::array<RColumnReaderBase *, ColumnTypes_t::list_size>> fValues;
+   /// Column readers per slot and per input column.
+   std::vector<std::array<RColumnReaderBase *, ColumnTypes_t::list_size>> fValueReaders;
+
+   /// Arrays of type-erased raw pointers to the beginning of bulks of column values, one per slot.
+   std::vector<std::array<void *, ColumnTypes_t::list_size>> fValuePtrs;
 
    /// The nth flag signals whether the nth input column is a custom column or not.
    std::array<bool, ColumnTypes_t::list_size> fIsDefine;
@@ -66,7 +69,8 @@ class R__CLING_PTRCHECK(off) RAction : public RActionBase {
 public:
    RAction(Helper &&h, const ColumnNames_t &columns, std::shared_ptr<PrevNode> pd, const RColumnRegister &colRegister)
       : RActionBase(pd->GetLoopManagerUnchecked(), columns, colRegister, pd->GetVariations()),
-        fHelper(std::forward<Helper>(h)), fPrevNodePtr(std::move(pd)), fPrevNode(*fPrevNodePtr), fValues(GetNSlots())
+        fHelper(std::forward<Helper>(h)), fPrevNodePtr(std::move(pd)), fPrevNode(*fPrevNodePtr),
+        fValueReaders(GetNSlots()), fValuePtrs(GetNSlots())
    {
       fLoopManager->Register(this);
 
@@ -95,22 +99,23 @@ public:
    {
       RDFInternal::RColumnReadersInfo info{RActionBase::GetColumnNames(), RActionBase::GetColRegister(),
                                            fIsDefine.data(), *fLoopManager};
-      fValues[slot] = RDFInternal::GetColumnReaders(slot, r, ColumnTypes_t{}, info);
+      fValueReaders[slot] = RDFInternal::GetColumnReaders(slot, r, ColumnTypes_t{}, info);
       fHelper.InitTask(r, slot);
    }
 
    template <typename... ColTypes, std::size_t... S>
    void CallExec(unsigned int slot, std::size_t idx, TypeList<ColTypes...>, std::index_sequence<S...>)
    {
-      fHelper.Exec(slot, fValues[slot][S]->template Get<ColTypes>(idx)...);
+      fHelper.Exec(slot, *(static_cast<ColTypes *>(fValuePtrs[slot][S]) + idx)...);
       (void)idx; // avoid unused parameter warning (gcc 12.1)
    }
 
    void Run(unsigned int slot, Long64_t entry, std::size_t bulkSize) final
    {
       const auto &mask = fPrevNode.CheckFilters(slot, entry, bulkSize);
-      std::for_each(fValues[slot].begin(), fValues[slot].end(),
-                    [&mask, bulkSize](auto *v) { v->Load(mask, bulkSize); });
+
+      std::transform(fValueReaders[slot].begin(), fValueReaders[slot].end(), fValuePtrs[slot].begin(),
+                     [&mask, &bulkSize](auto *v) { return v->Load(mask, bulkSize); });
 
       for (std::size_t i = 0ul; i < bulkSize; ++i) {
          if (mask[i])
@@ -123,7 +128,7 @@ public:
    /// Clean-up operations to be performed at the end of a task.
    void FinalizeSlot(unsigned int slot) final
    {
-      fValues[slot].fill(nullptr);
+      fValueReaders[slot].fill(nullptr);
       fHelper.CallFinalizeTask(slot);
    }
 

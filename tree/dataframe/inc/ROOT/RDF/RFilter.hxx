@@ -66,7 +66,9 @@ class R__CLING_PTRCHECK(off) RFilter final : public RFilterBase {
 
    FilterF fFilter;
    /// Column readers per slot and per input column
-   std::vector<std::array<RColumnReaderBase *, ColumnTypes_t::list_size>> fValues;
+   std::vector<std::array<RColumnReaderBase *, ColumnTypes_t::list_size>> fValueReaders;
+   /// Arrays of type-erased raw pointers to the beginning of bulks of column values, one per slot.
+   std::vector<std::array<void *, ColumnTypes_t::list_size>> fValuePtrs;
    const std::shared_ptr<PrevNode_t> fPrevNodePtr;
    PrevNode_t &fPrevNode;
 
@@ -76,8 +78,8 @@ public:
            const std::string &variationName = "nominal")
       : RFilterBase(pd->GetLoopManagerUnchecked(), name, pd->GetLoopManagerUnchecked()->GetNSlots(), colRegister,
                     columns, pd->GetVariations(), variationName),
-        fFilter(std::move(f)), fValues(pd->GetLoopManagerUnchecked()->GetNSlots()), fPrevNodePtr(std::move(pd)),
-        fPrevNode(*fPrevNodePtr)
+        fFilter(std::move(f)), fValueReaders(fLoopManager->GetNSlots()), fValuePtrs(fLoopManager->GetNSlots()),
+        fPrevNodePtr(std::move(pd)), fPrevNode(*fPrevNodePtr)
    {
       fLoopManager->Register(this);
    }
@@ -96,8 +98,10 @@ public:
 
       if (entry != mask.FirstEntry()) {
          mask = fPrevNode.CheckFilters(slot, entry, bulkSize);
-         std::for_each(fValues[slot].begin(), fValues[slot].end(),
-                       [&mask, bulkSize](auto *v) { v->Load(mask, bulkSize); });
+
+         std::transform(fValueReaders[slot].begin(), fValueReaders[slot].end(), fValuePtrs[slot].begin(),
+                        [&mask, &bulkSize](auto *v) { return v->Load(mask, bulkSize); });
+
          const std::size_t processed = mask.Count(bulkSize);
          std::size_t accepted = 0u;
          for (std::size_t i = 0ul; i < bulkSize; ++i) {
@@ -116,7 +120,7 @@ public:
    template <typename... ColTypes, std::size_t... S>
    bool EvalFilter(unsigned int slot, std::size_t idx, TypeList<ColTypes...>, std::index_sequence<S...>)
    {
-      return fFilter(fValues[slot][S]->template Get<ColTypes>(idx)...);
+      return fFilter(*(static_cast<ColTypes *>(fValuePtrs[slot][S]) + idx)...);
       // avoid unused parameter warnings (gcc 12.1)
       (void)slot;
       (void)idx;
@@ -125,7 +129,7 @@ public:
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
       RDFInternal::RColumnReadersInfo info{fColumnNames, fColRegister, fIsDefine.data(), *fLoopManager};
-      fValues[slot] = RDFInternal::GetColumnReaders(slot, r, ColumnTypes_t{}, info, fVariation);
+      fValueReaders[slot] = RDFInternal::GetColumnReaders(slot, r, ColumnTypes_t{}, info, fVariation);
       fMask[slot].SetFirstEntry(-1ll);
    }
 
@@ -167,7 +171,7 @@ public:
    }
 
    /// Clean-up operations to be performed at the end of a task.
-   void FinalizeSlot(unsigned int slot) final { fValues[slot].fill(nullptr); }
+   void FinalizeSlot(unsigned int slot) final { fValueReaders[slot].fill(nullptr); }
 
    std::shared_ptr<RDFGraphDrawing::GraphNode>
    GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap) final

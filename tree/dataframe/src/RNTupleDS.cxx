@@ -397,6 +397,23 @@ bool RNTupleDS::SetEntry(unsigned int, ULong64_t)
    return true;
 }
 
+std::size_t RNTupleDS::GetBulkSize(unsigned int slot, ULong64_t rangeStart, std::size_t maxSize)
+{
+   auto descGuard = fSources[slot]->GetSharedDescriptorGuard();
+   for (const auto &c : descGuard->GetClusterIterable()) {
+      // TODO: consider cluster sharding
+      if (c.GetFirstEntryIndex() > rangeStart)
+         continue;
+      if ((c.GetFirstEntryIndex() + c.GetNEntries()) <= rangeStart)
+         continue;
+
+      auto remainingEntries = c.GetFirstEntryIndex() + c.GetNEntries() - rangeStart;
+      return maxSize < remainingEntries ? maxSize : remainingEntries;
+   }
+   // Never here?
+   return 1;
+}
+
 std::vector<std::pair<ULong64_t, ULong64_t>> RNTupleDS::GetEntryRanges()
 {
    // TODO(jblomer): use cluster boundaries for the entry ranges

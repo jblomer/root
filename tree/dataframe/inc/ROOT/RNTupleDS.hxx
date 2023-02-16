@@ -83,7 +83,7 @@ public:
 
    bool SetEntry(unsigned int slot, ULong64_t entry) final;
 
-   //std::size_t GetBulkSize(unsigned int slot, ULong64_t rangeStart, std::size_t maxSize) { return 1; }
+   std::size_t GetBulkSize(unsigned int slot, ULong64_t rangeStart, std::size_t maxSize) final;
 
    void Initialize() final;
    void Finalize() final;

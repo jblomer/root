@@ -652,14 +652,18 @@ void RLoopManager::RunDataSource()
       RCallCleanUpTask cleanup(*this);
       try {
          for (const auto &range : ranges) {
-            const auto start = range.first;
+            auto entry = range.first;
             const auto end = range.second;
-            R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({fDataSource->GetLabel(), start, end, 0u});
-            for (auto entry = start; entry < end && fNStopsReceived < fNChildren; ++entry) {
+            R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({fDataSource->GetLabel(), entry, end, 0u});
+            while (entry < end && fNStopsReceived < fNChildren) {
+               const auto remaining = end - entry;
+               const auto maxBulkSize = std::min(ULong64_t(fMaxEventsPerBulk), remaining);
+               std::size_t bulkSize = fDataSource->GetBulkSize(/*slot*/0u, entry, maxBulkSize);
                if (fDataSource->SetEntry(0u, entry)) {
                   fUniqueRDFEntry[0] = entry;
-                  RunAndCheckFilters(0u, entry, /*bulkSize*/1u);
+                  RunAndCheckFilters(/*slot*/0u, entry, bulkSize);
                }
+               entry += bulkSize;
             }
          }
       } catch (...) {
@@ -687,15 +691,19 @@ void RLoopManager::RunDataSourceMT()
       InitNodeSlots(nullptr, slot);
       RCallCleanUpTask cleanup(*this, slot);
       fDataSource->InitSlot(slot, range.first);
-      const auto start = range.first;
+      auto entry = range.first;
       const auto end = range.second;
-      R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({fDataSource->GetLabel(), start, end, slot});
+      R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({fDataSource->GetLabel(), entry, end, slot});
       try {
-         for (auto entry = start; entry < end; ++entry) {
+         while (entry < end) {
+            const auto remaining = end - entry;
+            const auto maxBulkSize = std::min(ULong64_t(fMaxEventsPerBulk), remaining);
+            std::size_t bulkSize = fDataSource->GetBulkSize(/*slot*/ 0u, entry, maxBulkSize);
             if (fDataSource->SetEntry(slot, entry)) {
                fUniqueRDFEntry[slot] = entry;
-               RunAndCheckFilters(slot, entry, /*bulkSize*/1u);
+               RunAndCheckFilters(slot, entry, bulkSize);
             }
+            entry += bulkSize;
          }
       } catch (...) {
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";

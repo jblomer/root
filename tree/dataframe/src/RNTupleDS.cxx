@@ -158,6 +158,7 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
          fFirstEntry = firstEntry;
          fNEntries = nEntries;
 
+         fMask.clear();
          fMask.resize(nEntries, false);
          fNSetValues = 0;
       }
@@ -175,6 +176,12 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
       std::size_t GetNEntries() const { return fNEntries; }
       const std::vector<bool> &GetMask() const { return fMask; }
       bool GetHasAllValuesSet() const { return fNSetValues == fNEntries; }
+      void SetAllValues()
+      {
+         fMask.clear();
+         fMask.resize(fNEntries, true);
+         fNSetValues = fNEntries;
+      }
    };
 
    std::unique_ptr<RFieldBase> fField; ///< The field backing the RDF column
@@ -214,6 +221,13 @@ public:
 
       if (fBulk.GetHasAllValuesSet())
          return fBulk.GetValuePtrAt(entryOffset);
+
+      if (fField->fIsSimple) {
+         auto val = fField->CaptureValue(fBulk.GetValuePtrAt(entryOffset));
+         fField->fPrincipalColumn->ReadV(mask.FirstEntry(), bulkSize, &val.fMappedElement);
+         fBulk.SetAllValues();
+         return val.GetRawPtr();
+      }
 
       for (std::size_t i = 0; i < bulkSize; ++i) {
          // Value not needed

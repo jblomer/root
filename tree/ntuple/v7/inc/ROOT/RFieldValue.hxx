@@ -23,6 +23,10 @@
 namespace ROOT {
 namespace Experimental {
 
+namespace Internal {
+class RNTupleColumnReader; // TODO: remove me
+}
+
 namespace Detail {
 
 class RFieldBase;
@@ -40,6 +44,7 @@ wrapper around the memory location, it does not own it.  Memory ownership is man
 // clang-format on
 class RFieldValue {
    friend class RFieldBase;
+   friend class ROOT::Experimental::Internal::RNTupleColumnReader; // TODO remove me
 
 protected:
    /// Every value is connected to a field of the corresponding type that has created the value.

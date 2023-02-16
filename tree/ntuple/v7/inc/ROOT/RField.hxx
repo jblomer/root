@@ -58,6 +58,7 @@ class RNTupleModel;
 
 namespace Internal {
 struct RFieldCallbackInjector;
+class RNTupleColumnReader; // TODO remove me
 } // namespace Internal
 
 namespace Detail {
@@ -80,6 +81,7 @@ The field knows based on its type and the field name the type(s) and name(s) of 
 class RFieldBase {
    friend class ROOT::Experimental::RCollectionField; // to move the fields from the collection model
    friend struct ROOT::Experimental::Internal::RFieldCallbackInjector; // used for unit tests
+   friend class ROOT::Experimental::Internal::RNTupleColumnReader; // TODO: Remove me
    using ReadCallback_t = std::function<void(RFieldValue &)>;
 
 public:

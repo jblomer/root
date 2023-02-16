@@ -178,6 +178,23 @@ public:
    // clang-format on
    virtual std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() = 0;
 
+   /// \brief Return the next bulk size for this slot.
+   /// \param[in] slot The data processing slot that needs to be considered.
+   /// \param[in] firstEntry The first entry of the bulk.
+   /// \param[in] maxSize The maximum bulk size that RDataFrame can handle. The returned value should not exceed it.
+   /// Right before processing one of the ranges returned by GetEntryRanges(), RDataFrame will ask the RDataSource
+   /// how many events its column readers can load in memory at the same time efficiently (aka the bulk size).
+   /// By default, the bulk size is 1, so each column reader will only be required to load the current entry for
+   /// a given slot. As a performance optimization bulk size can instead be 1 << bulkSize < maxSize, meaning that
+   /// column readers will then be asked to load column values [firstEntry, firstEntry+bulkSize) in a contiguous array.
+   virtual std::size_t GetBulkSize(unsigned int slot, ULong64_t firstEntry, std::size_t maxSize)
+   {
+      return 1ull;
+      (void)slot;
+      (void)firstEntry;
+      (void)maxSize;
+   }
+
    // clang-format off
    /// \brief Advance the "cursors" returned by GetColumnReaders to the selected entry for a particular slot.
    /// \param[in] slot The data processing slot that needs to be considered

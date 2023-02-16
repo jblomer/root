@@ -123,6 +123,7 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
    class RBulk {
       RFieldBase *fField = nullptr;
       unsigned char *fValues = nullptr;
+      std::size_t fCapacity = 0;
       std::uint64_t fFirstEntry = 0;
       std::size_t fNEntries = 0;
       std::vector<bool> fMask;
@@ -131,29 +132,33 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
    private:
       void ReleaseValues()
       {
-         if (!(fField->GetTraits() & RFieldBase::kTraitTriviallyDestructible)) {
-            const auto valSize = fField->GetValueSize();
-            for (std::size_t i = 0; i < fNEntries; ++i) {
-               if (!fMask[i])
-                  continue;
-               auto val = fField->CaptureValue(&fValues[i * valSize]);
-               fField->DestroyValue(val, true /* dtorOnly */);
-            }
+         if (fField->GetTraits() & RFieldBase::kTraitTriviallyDestructible)
+            return;
+
+         const auto valSize = fField->GetValueSize();
+         for (std::size_t i = 0; i < fNEntries; ++i) {
+            if (!fMask[i])
+               continue;
+            auto val = fField->CaptureValue(&fValues[i * valSize]);
+            fField->DestroyValue(val, true /* dtorOnly */);
          }
-         free(fValues);
       }
 
    public:
       explicit RBulk(RFieldBase *field) : fField(field) {}
-      ~RBulk() { ReleaseValues(); }
+      ~RBulk() { ReleaseValues(); free(fValues); }
       RBulk(const RBulk &) = delete;
       RBulk& operator =(const RBulk &) = delete;
 
       void Reset(std::uint64_t firstEntry, std::size_t nEntries)
       {
          ReleaseValues();
-         fValues = reinterpret_cast<unsigned char *>(
-            aligned_alloc(fField->GetAlignment(), nEntries * fField->GetValueSize()));
+         if (fCapacity < nEntries) {
+            free(fValues);
+            fValues = reinterpret_cast<unsigned char *>(
+               aligned_alloc(fField->GetAlignment(), nEntries * fField->GetValueSize()));
+            fCapacity = nEntries;
+         }
 
          fFirstEntry = firstEntry;
          fNEntries = nEntries;

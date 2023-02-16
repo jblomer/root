@@ -26,6 +26,7 @@
 
 #include <TError.h>
 
+#include <cstdlib>
 #include <string>
 #include <vector>
 #include <typeinfo>
@@ -123,16 +124,72 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
    using RFieldValue = ROOT::Experimental::Detail::RFieldValue;
    using RPageSource = ROOT::Experimental::Detail::RPageSource;
 
+   class RBulk {
+      RFieldBase *fField = nullptr;
+      unsigned char *fValues = nullptr;
+      std::uint64_t fFirstEntry = 0;
+      std::size_t fNEntries = 0;
+      std::vector<bool> fMask;
+      std::size_t fNSetValues = 0;
+
+   private:
+      void ReleaseValues()
+      {
+         if (!(fField->GetTraits() & RFieldBase::kTraitTriviallyDestructible)) {
+            const auto valSize = fField->GetValueSize();
+            for (std::size_t i = 0; i < fNEntries; ++i) {
+               if (!fMask[i])
+                  continue;
+               auto val = fField->CaptureValue(&fValues[i * valSize]);
+               fField->DestroyValue(val, true /* dtorOnly */);
+            }
+         }
+         free(fValues);
+      }
+
+   public:
+      explicit RBulk(RFieldBase *field) : fField(field) {}
+      ~RBulk() { ReleaseValues(); }
+      RBulk(const RBulk &) = delete;
+      RBulk& operator =(const RBulk &) = delete;
+
+      void Reset(std::uint64_t firstEntry, std::size_t nEntries)
+      {
+         ReleaseValues();
+         fValues = reinterpret_cast<unsigned char *>(
+            aligned_alloc(fField->GetAlignment(), nEntries * fField->GetValueSize()));
+
+         fFirstEntry = firstEntry;
+         fNEntries = nEntries;
+
+         fMask.resize(nEntries, false);
+         fNSetValues = 0;
+      }
+
+      void SetValueAt(std::size_t idx) { fMask[idx] = true; fNSetValues++; }
+
+      bool ContainsRange(std::uint64_t firstEntry, std::size_t nEntries) const
+      {
+         return (firstEntry >= fFirstEntry) && ((firstEntry + nEntries) <= (fFirstEntry + fNEntries));
+      }
+
+      void *GetValuePtrAt(std::size_t idx) const { return &fValues[idx * fField->GetValueSize()]; }
+
+      std::uint64_t GetFirstEntry() const { return fFirstEntry; }
+      std::size_t GetNEntries() const { return fNEntries; }
+      const std::vector<bool> &GetMask() const { return fMask; }
+      bool GetHasAllValuesSet() const { return fNSetValues == fNEntries; }
+   };
+
    std::unique_ptr<RFieldBase> fField; ///< The field backing the RDF column
-   RFieldValue fValue;                 ///< The memory location used to read from fField
-   Long64_t fLastEntry;                ///< Last entry number that was read
+   RBulk fBulk;
 
 public:
    RNTupleColumnReader(std::unique_ptr<RFieldBase> f)
-      : fField(std::move(f)), fValue(fField->GenerateValue()), fLastEntry(-1)
+      : fField(std::move(f)), fBulk(fField.get())
    {
    }
-   ~RNTupleColumnReader() { fField->DestroyValue(fValue); }
+   ~RNTupleColumnReader() = default;
 
    /// Column readers are created as prototype and then cloned for every slot
    std::unique_ptr<RNTupleColumnReader> Clone()
@@ -148,16 +205,35 @@ public:
          f.ConnectPageSource(source);
    }
 
-   void *LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask, std::size_t /*bulkSize*/) final
+   void *LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask, std::size_t bulkSize) final
    {
-      // TODO remove assumption that bulk has size 1
-      const auto firstEntry = mask.FirstEntry();
-      if (firstEntry != fLastEntry && mask[0]) {
-         fField->Read(mask.FirstEntry(), &fValue);
-         fLastEntry = firstEntry;
+      // Can be called multiple times with different masks
+      // first entry and bulk size move in non-overlapping blocks
+      // Return a pointer to the value array (T[]), I own that; needs to stay valid until next LoadImpl or destruction
+
+      if (!fBulk.ContainsRange(mask.FirstEntry(), bulkSize)) {
+         fBulk.Reset(mask.FirstEntry(), bulkSize);
+      }
+      std::uint64_t entryOffset = mask.FirstEntry() - fBulk.GetFirstEntry();
+
+      if (fBulk.GetHasAllValuesSet())
+         return fBulk.GetValuePtrAt(entryOffset);
+
+      for (std::size_t i = 0; i < bulkSize; ++i) {
+         // Value not needed
+         if (!mask[i])
+            continue;
+
+         // Value already present
+         if (fBulk.GetMask()[i + entryOffset])
+            continue;
+
+         auto val = fField->GenerateValue(fBulk.GetValuePtrAt(i + entryOffset));
+         fField->Read(mask.FirstEntry() + i, &val);
+         fBulk.SetValueAt(i + entryOffset);
       }
 
-      return fValue.GetRawPtr();
+      return fBulk.GetValuePtrAt(entryOffset);
    }
 };
 

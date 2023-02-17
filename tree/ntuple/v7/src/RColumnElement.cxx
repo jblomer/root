@@ -28,6 +28,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RColumnElementBase>
 ROOT::Experimental::Detail::RColumnElementBase::Generate<void>(EColumnType type)
 {
    switch (type) {
+   case EColumnType::kIndex64: return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kIndex64>>(nullptr);
    case EColumnType::kIndex32: return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kIndex32>>(nullptr);
    case EColumnType::kSwitch: return std::make_unique<RColumnElement<RColumnSwitch, EColumnType::kSwitch>>(nullptr);
    case EColumnType::kByte: return std::make_unique<RColumnElement<std::uint8_t, EColumnType::kByte>>(nullptr);
@@ -55,6 +56,7 @@ ROOT::Experimental::Detail::RColumnElementBase::Generate<void>(EColumnType type)
 
 std::size_t ROOT::Experimental::Detail::RColumnElementBase::GetBitsOnStorage(EColumnType type) {
    switch (type) {
+   case EColumnType::kIndex64: return 64;
    case EColumnType::kIndex32: return 32;
    case EColumnType::kSwitch: return 64;
    case EColumnType::kByte: return 8;
@@ -79,7 +81,8 @@ std::size_t ROOT::Experimental::Detail::RColumnElementBase::GetBitsOnStorage(ECo
 
 std::string ROOT::Experimental::Detail::RColumnElementBase::GetTypeName(EColumnType type) {
    switch (type) {
-   case EColumnType::kIndex32: return "Index";
+   case EColumnType::kIndex64: return "Index64";
+   case EColumnType::kIndex32: return "Index32";
    case EColumnType::kSwitch: return "Switch";
    case EColumnType::kByte: return "Byte";
    case EColumnType::kChar: return "Char";

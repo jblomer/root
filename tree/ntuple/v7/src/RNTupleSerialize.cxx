@@ -508,6 +508,7 @@ std::uint16_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnTy
 {
    using EColumnType = ROOT::Experimental::EColumnType;
    switch (type) {
+   case EColumnType::kIndex64: return SerializeUInt16(0x01, buffer);
    case EColumnType::kIndex32: return SerializeUInt16(0x02, buffer);
    case EColumnType::kSwitch: return SerializeUInt16(0x03, buffer);
    case EColumnType::kByte: return SerializeUInt16(0x04, buffer);
@@ -537,6 +538,7 @@ RResult<std::uint16_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
    std::uint16_t onDiskType;
    auto result = DeserializeUInt16(buffer, onDiskType);
    switch (onDiskType) {
+   case 0x01: type = EColumnType::kIndex64; break;
    case 0x02: type = EColumnType::kIndex32; break;
    case 0x03: type = EColumnType::kSwitch; break;
    case 0x04: type = EColumnType::kByte; break;

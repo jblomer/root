@@ -203,6 +203,7 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
 
    std::unique_ptr<RFieldBase> fField; ///< The field backing the RDF column
    RBulk fBulk;
+   std::vector<unsigned char> fRVecData;
 
 public:
    RNTupleColumnReader(std::unique_ptr<RFieldBase> f)
@@ -225,6 +226,38 @@ public:
          f.ConnectPageSource(source);
    }
 
+   void *LoadRVec(const ROOT::Internal::RDF::RMaskedEntryRange &mask, std::size_t bulkSize)
+   {
+      auto rvecField = dynamic_cast<RRVecField *>(fField.get());
+      auto itemField = rvecField->GetSubFields()[0];
+
+      RClusterIndex collectionStart;
+      ClusterSize_t collectionSize;
+      RClusterIndex itemFirstIndex;
+      ClusterSize_t nItems;
+      rvecField->GetCollectionInfo(mask.FirstEntry(), &itemFirstIndex, &collectionSize);
+      rvecField->GetCollectionInfo(mask.FirstEntry() + bulkSize - 1, &collectionStart, &collectionSize);
+      nItems = collectionStart.GetIndex() + collectionSize - itemFirstIndex.GetIndex();
+
+      fRVecData.resize(nItems * itemField->GetValueSize());
+      auto val = itemField->CaptureValue(fRVecData.data());
+      fField->fPrincipalColumn->ReadV(mask.FirstEntry(), bulkSize, &val.fMappedElement);
+
+      unsigned offset = 0;
+      for (unsigned i = 0; i < bulkSize; ++i) {
+         rvecField->GetCollectionInfo(mask.FirstEntry() + i, &collectionStart, &collectionSize);
+         auto beginPtr = reinterpret_cast<void **>(fBulk.GetValuePtrAt(i));
+         *beginPtr = fRVecData.data() + offset;
+         offset += collectionSize;
+         std::int32_t *sizePtr = new (reinterpret_cast<void *>(beginPtr + 1)) std::int32_t(collectionSize);
+         new (sizePtr + 1) std::int32_t(-1);
+      }
+
+      std::uint64_t entryOffset = mask.FirstEntry() - fBulk.GetFirstEntry();
+      fBulk.SetAllValues();
+      return fBulk.GetValuePtrAt(entryOffset);
+   }
+
    void *LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask, std::size_t bulkSize) final
    {
       // Can be called multiple times with different masks
@@ -244,6 +277,12 @@ public:
          fField->fPrincipalColumn->ReadV(mask.FirstEntry(), bulkSize, &val.fMappedElement);
          fBulk.SetAllValues();
          return val.GetRawPtr();
+      }
+
+      // Special handling of RVec of simple type
+      auto rvecField = dynamic_cast<RRVecField *>(fField.get());
+      if (rvecField && rvecField->GetSubFields()[0]->IsSimple()) {
+         return LoadRVec(mask, bulkSize);
       }
 
       for (std::size_t i = 0; i < bulkSize; ++i) {

@@ -136,40 +136,32 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
    private:
       void ReleaseValues()
       {
-         if (fField->GetTraits() & RFieldBase::kTraitTriviallyDestructible) {
-            free(fValues);
+         if (fField->GetTraits() & RFieldBase::kTraitTriviallyDestructible)
             return;
-         }
 
          const auto valSize = fField->GetValueSize();
-         for (std::size_t i = 0; i < fCapacity; ++i) {
+         for (std::size_t i = 0; i < fNEntries; ++i) {
+            if (!fMask[i])
+               continue;
             auto val = fField->CaptureValue(&fValues[i * valSize]);
             fField->DestroyValue(val, true /* dtorOnly */);
          }
-         free(fValues);
       }
 
    public:
       explicit RBulk(RFieldBase *field) : fField(field) {}
-      ~RBulk() { ReleaseValues(); }
+      ~RBulk() { ReleaseValues(); free(fValues); }
       RBulk(const RBulk &) = delete;
       RBulk& operator =(const RBulk &) = delete;
 
       void Reset(std::uint64_t firstEntry, std::size_t nEntries)
       {
+         ReleaseValues();
          if (fCapacity < nEntries) {
-            ReleaseValues();
-
+            free(fValues);
             fValues = reinterpret_cast<unsigned char *>(
                aligned_alloc(fField->GetAlignment(), nEntries * fField->GetValueSize()));
             fCapacity = nEntries;
-
-            const auto valSize = fField->GetValueSize();
-            if (!(fField->GetTraits() & RFieldBase::kTraitTriviallyConstructible)) {
-               for (unsigned i = 0; i < fCapacity; ++i) {
-                  fField->GenerateValue(&fValues[i * valSize]);
-               }
-            }
          }
 
          fFirstEntry = firstEntry;
@@ -255,8 +247,7 @@ public:
          if (fBulk.GetMask()[i + entryOffset])
             continue;
 
-         //auto val = fField->GenerateValue(fBulk.GetValuePtrAt(i + entryOffset));
-         auto val = fField->CaptureValue(fBulk.GetValuePtrAt(i + entryOffset));
+         auto val = fField->GenerateValue(fBulk.GetValuePtrAt(i + entryOffset));
          fField->Read(mask.FirstEntry() + i, &val);
          fBulk.SetValueAt(i + entryOffset);
       }

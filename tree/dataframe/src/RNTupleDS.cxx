@@ -226,29 +226,30 @@ public:
          f.ConnectPageSource(source);
    }
 
-   void *LoadRVec(const ROOT::Internal::RDF::RMaskedEntryRange &mask, std::size_t bulkSize)
+   void *LoadRVec(const ROOT::Internal::RDF::RMaskedEntryRange &mask)
    {
       auto rvecField = dynamic_cast<RRVecField *>(fField.get());
       auto itemField = rvecField->GetSubFields()[0];
+      const auto itemSize = itemField->GetValueSize();
 
       RClusterIndex collectionStart;
       ClusterSize_t collectionSize;
       RClusterIndex itemFirstIndex;
       ClusterSize_t nItems;
-      rvecField->GetCollectionInfo(mask.FirstEntry(), &itemFirstIndex, &collectionSize);
-      rvecField->GetCollectionInfo(mask.FirstEntry() + bulkSize - 1, &collectionStart, &collectionSize);
+      rvecField->GetCollectionInfo(fBulk.GetFirstEntry(), &itemFirstIndex, &collectionSize);
+      rvecField->GetCollectionInfo(fBulk.GetFirstEntry() + fBulk.GetNEntries() - 1, &collectionStart, &collectionSize);
       nItems = collectionStart.GetIndex() + collectionSize - itemFirstIndex.GetIndex();
 
-      fRVecData.resize(nItems * itemField->GetValueSize());
+      fRVecData.resize(nItems * itemSize);
       auto val = itemField->CaptureValue(fRVecData.data());
-      fField->fPrincipalColumn->ReadV(mask.FirstEntry(), bulkSize, &val.fMappedElement);
+      itemField->fPrincipalColumn->ReadV(itemFirstIndex, nItems, &val.fMappedElement);
 
       unsigned offset = 0;
-      for (unsigned i = 0; i < bulkSize; ++i) {
-         rvecField->GetCollectionInfo(mask.FirstEntry() + i, &collectionStart, &collectionSize);
+      for (unsigned i = 0; i < fBulk.GetNEntries(); ++i) {
+         rvecField->GetCollectionInfo(fBulk.GetFirstEntry() + i, &collectionStart, &collectionSize);
          auto beginPtr = reinterpret_cast<void **>(fBulk.GetValuePtrAt(i));
          *beginPtr = fRVecData.data() + offset;
-         offset += collectionSize;
+         offset += collectionSize * itemSize;
          std::int32_t *sizePtr = new (reinterpret_cast<void *>(beginPtr + 1)) std::int32_t(collectionSize);
          new (sizePtr + 1) std::int32_t(-1);
       }
@@ -282,7 +283,7 @@ public:
       // Special handling of RVec of simple type
       auto rvecField = dynamic_cast<RRVecField *>(fField.get());
       if (rvecField && rvecField->GetSubFields()[0]->IsSimple()) {
-         return LoadRVec(mask, bulkSize);
+         return LoadRVec(mask);
       }
 
       for (std::size_t i = 0; i < bulkSize; ++i) {

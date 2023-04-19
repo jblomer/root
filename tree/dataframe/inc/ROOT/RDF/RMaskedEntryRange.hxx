@@ -37,7 +37,7 @@ public:
       for (std::size_t i = 0u; i < fMask.size(); ++i)
          fMask[i] |= other[i];
    }
-   std::size_t Count(std::size_t until) { return std::accumulate(fMask.begin(), fMask.begin() + until, 0ul); }
+   std::size_t Count(std::size_t until) const { return std::accumulate(fMask.begin(), fMask.begin() + until, 0ul); }
 };
 
 } // namespace RDF

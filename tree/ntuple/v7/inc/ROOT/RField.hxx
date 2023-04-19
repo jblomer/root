@@ -1075,6 +1075,7 @@ public:
    explicit RField(std::string_view name)
       : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, false /* isSimple */)
    {
+      fTraits |= kTraitTrivialType;
    }
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;

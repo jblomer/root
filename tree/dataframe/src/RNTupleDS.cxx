@@ -209,6 +209,7 @@ public:
    RNTupleColumnReader(std::unique_ptr<RFieldBase> f)
       : fField(std::move(f)), fBulk(fField.get())
    {
+      fRVecData.resize(10);
    }
    ~RNTupleColumnReader() = default;
 
@@ -226,33 +227,86 @@ public:
          f.ConnectPageSource(source);
    }
 
+   template <typename SizeT>
+   void LoadCollectionSizes(Detail::RColumn &offsetColumn, const NTupleSize_t startIndex, std::size_t count,
+                            SizeT *dest)
+   {
+      RClusterIndex collectionStart;
+      ClusterSize_t collectionSize;
+      offsetColumn.GetCollectionInfo(startIndex, &collectionStart, &collectionSize);
+      dest[0] = collectionSize;
+
+      auto lastOffset = collectionStart.GetIndex() + collectionSize;
+      ClusterSize_t::ValueType nRemainingEntries = count - 1;
+      std::size_t nEntries = 1;
+      while (nRemainingEntries > 0) {
+         NTupleSize_t nItemsUntilPageEnd;
+         auto offsets = offsetColumn.MapV<ClusterSize_t>(startIndex + nEntries, nItemsUntilPageEnd);
+         std::size_t nBatch = std::min(nRemainingEntries, nItemsUntilPageEnd);
+         for (std::size_t i = 0; i < nBatch; ++i) {
+            dest[nEntries + i] = offsets[i] - lastOffset;
+            lastOffset = offsets[i];
+         }
+         nRemainingEntries -= nBatch;
+         nEntries += nBatch;
+      }
+   }
+
    void *LoadRVec(const ROOT::Internal::RDF::RMaskedEntryRange &mask)
    {
-      auto rvecField = dynamic_cast<RRVecField *>(fField.get());
+      auto rvecField = static_cast<RRVecField *>(fField.get());
       auto itemField = rvecField->GetSubFields()[0];
       const auto itemSize = itemField->GetValueSize();
 
+      // Get size of the first RVec of the bulk
+      RClusterIndex itemFirstIndex;
       RClusterIndex collectionStart;
       ClusterSize_t collectionSize;
-      RClusterIndex itemFirstIndex;
-      ClusterSize_t nItems;
       rvecField->GetCollectionInfo(fBulk.GetFirstEntry(), &itemFirstIndex, &collectionSize);
-      rvecField->GetCollectionInfo(fBulk.GetFirstEntry() + fBulk.GetNEntries() - 1, &collectionStart, &collectionSize);
-      nItems = collectionStart.GetIndex() + collectionSize - itemFirstIndex.GetIndex();
+      {
+         auto beginPtr = reinterpret_cast<void **>(fBulk.GetValuePtrAt(0));
+         *beginPtr = fRVecData.data();
+         new (reinterpret_cast<void *>(beginPtr + 1)) std::int32_t(collectionSize);
+      }
+
+      // Set the size of the remaining RVecs of the bulk, going page by page through the RNTuple offset column.
+      // We optimistically assume that fRVecData is already large enough to hold all the values of that column.
+      // If not, we'll fix up the pointers afterwards.
+      auto lastOffset = itemFirstIndex.GetIndex() + collectionSize;
+      ClusterSize_t::ValueType nRemainingEntries = fBulk.GetNEntries() - 1;
+      std::size_t nEntries = 1;
+      std::size_t nItems = collectionSize;
+      while (nRemainingEntries > 0) {
+         NTupleSize_t nItemsUntilPageEnd;
+         auto offsets = rvecField->fPrincipalColumn->MapV<ClusterSize_t>(fBulk.GetFirstEntry() + nEntries, nItemsUntilPageEnd);
+         std::size_t nBatch = std::min(nRemainingEntries, nItemsUntilPageEnd);
+         for (std::size_t i = 0; i < nBatch; ++i) {
+            const auto iEntry = nEntries + i;
+            const auto size = offsets[i] - lastOffset;
+
+            auto beginPtr = reinterpret_cast<void **>(fBulk.GetValuePtrAt(iEntry));
+            *beginPtr = fRVecData.data() + nItems * itemSize;
+            new (reinterpret_cast<void *>(beginPtr + 1)) std::int32_t(size);
+
+            nItems += size;
+            lastOffset = offsets[i];
+         }
+         nRemainingEntries -= nBatch;
+         nEntries += nBatch;
+      }
 
       fRVecData.resize(nItems * itemSize);
+      // If the vector got reallocated, we need to fix-up the RVecs begin pointers.
+      auto delta = *reinterpret_cast<unsigned char **>(fBulk.GetValuePtrAt(0)) - fRVecData.data();
+      if (delta != 0) {
+         for (unsigned i = 0; i < fBulk.GetNEntries(); ++i) {
+            auto beginPtr = reinterpret_cast<unsigned char **>(fBulk.GetValuePtrAt(i));
+            *beginPtr -= delta;
+         }
+      }
+
       auto val = itemField->CaptureValue(fRVecData.data());
       itemField->fPrincipalColumn->ReadV(itemFirstIndex, nItems, &val.fMappedElement);
-
-      unsigned offset = 0;
-      for (unsigned i = 0; i < fBulk.GetNEntries(); ++i) {
-         rvecField->GetCollectionInfo(fBulk.GetFirstEntry() + i, &collectionStart, &collectionSize);
-         auto beginPtr = reinterpret_cast<void **>(fBulk.GetValuePtrAt(i));
-         *beginPtr = fRVecData.data() + offset;
-         offset += collectionSize * itemSize;
-         std::int32_t *sizePtr = new (reinterpret_cast<void *>(beginPtr + 1)) std::int32_t(collectionSize);
-         new (sizePtr + 1) std::int32_t(-1);
-      }
 
       std::uint64_t entryOffset = mask.FirstEntry() - fBulk.GetFirstEntry();
       fBulk.SetAllValues();
@@ -284,6 +338,14 @@ public:
       auto rvecField = dynamic_cast<RRVecField *>(fField.get());
       if (rvecField && rvecField->GetSubFields()[0]->IsSimple()) {
          return LoadRVec(mask);
+      }
+
+      auto cardField = dynamic_cast<RField<RNTupleCardinality>*>(fField.get());
+      if (cardField) {
+         LoadCollectionSizes<std::size_t>(*cardField->fPrincipalColumn, mask.FirstEntry(), bulkSize,
+                                          reinterpret_cast<std::size_t *>(fBulk.GetValuePtrAt(entryOffset)));
+         fBulk.SetAllValues();
+         return fBulk.GetValuePtrAt(entryOffset);
       }
 
       for (std::size_t i = 0; i < bulkSize; ++i) {

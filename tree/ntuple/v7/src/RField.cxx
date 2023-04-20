@@ -1779,7 +1779,7 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RRVecField::Generate
    // currently the inline buffer is left uninitialized
    void **beginPtr = new (where)(void *)(nullptr);
    std::int32_t *sizePtr = new (reinterpret_cast<void *>(beginPtr + 1)) std::int32_t(0);
-   new (sizePtr + 1) std::int32_t(0);
+   new (sizePtr + 1) std::int32_t(-1);
 
    return Detail::RFieldValue(/*captureTag*/ true, this, where);
 }

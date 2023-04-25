@@ -258,7 +258,7 @@ void ROOT::Experimental::RPrintValueVisitor::VisitCardinalityField(const RField<
 {
    PrintIndent();
    PrintName(field);
-   fOutput << static_cast<std::size_t>(*fValue.Get<RNTupleCardinality>());
+   fOutput << static_cast<unsigned int>(*fValue.Get<RNTupleCardinality>());
 }
 
 void ROOT::Experimental::RPrintValueVisitor::VisitBitsetField(const RBitsetField &field)

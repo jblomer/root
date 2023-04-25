@@ -65,7 +65,7 @@ constexpr ClusterSize_t kInvalidClusterIndex(std::uint64_t(-1));
 
 /// Helper type to present an offset column as array of collection sizes. See RField<RNTupleCardinality> for details.
 struct RNTupleCardinality {
-   using ValueType = std::size_t;
+   using ValueType = unsigned int;
 
    RNTupleCardinality() : fValue(0) {}
    explicit constexpr RNTupleCardinality(ValueType value) : fValue(value) {}

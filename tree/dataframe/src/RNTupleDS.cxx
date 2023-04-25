@@ -342,8 +342,8 @@ public:
 
       auto cardField = dynamic_cast<RField<RNTupleCardinality>*>(fField.get());
       if (cardField) {
-         LoadCollectionSizes<std::size_t>(*cardField->fPrincipalColumn, mask.FirstEntry(), bulkSize,
-                                          reinterpret_cast<std::size_t *>(fBulk.GetValuePtrAt(entryOffset)));
+         LoadCollectionSizes<std::uint32_t>(*cardField->fPrincipalColumn, mask.FirstEntry(), bulkSize,
+                                            reinterpret_cast<std::uint32_t *>(fBulk.GetValuePtrAt(entryOffset)));
          fBulk.SetAllValues();
          return fBulk.GetValuePtrAt(entryOffset);
       }

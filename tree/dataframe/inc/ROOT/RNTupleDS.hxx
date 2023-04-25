@@ -19,6 +19,7 @@
 
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDataSource.hxx>
+#include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RStringView.hxx>
 
@@ -58,6 +59,8 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    unsigned fNSlots = 0;
    bool fHasSeenAllRanges = false;
 
+   ROOT::Experimental::Detail::RNTupleMetrics fMetrics;
+
    /// Provides the RDF column "colName" given the field identified by fieldID. For records and collections,
    /// AddField recurses into the sub fields. The skeinIDs is the list of field IDs of the outer collections
    /// of fieldId. For instance, if fieldId refers to an `std::vector<Jet>`, with
@@ -88,6 +91,8 @@ public:
 
    std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
    GetColumnReaders(unsigned int /*slot*/, std::string_view /*name*/, const std::type_info &) final;
+
+   void EnableMetrics() { fMetrics.Enable(); }
 
 protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;

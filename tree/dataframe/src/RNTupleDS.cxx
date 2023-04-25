@@ -482,11 +482,12 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
    fColumnReaderPrototypes.emplace_back(std::move(valColReader));
 }
 
-RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pageSource)
+RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pageSource) : fMetrics("RNTupleDS")
 {
    pageSource->Attach();
    auto descriptorGuard = pageSource->GetSharedDescriptorGuard();
    fSources.emplace_back(std::move(pageSource));
+   fMetrics.ObserveMetrics(fSources.back()->GetMetrics());
 
    AddField(descriptorGuard.GetRef(), "", descriptorGuard->GetFieldZeroId(), std::vector<DescriptorId_t>());
 }
@@ -569,7 +570,11 @@ void RNTupleDS::Initialize()
    fHasSeenAllRanges = false;
 }
 
-void RNTupleDS::Finalize() {}
+void RNTupleDS::Finalize()
+{
+   if (fMetrics.IsEnabled())
+      fMetrics.Print(std::cout);
+}
 
 void RNTupleDS::SetNSlots(unsigned int nSlots)
 {

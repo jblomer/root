@@ -79,6 +79,18 @@ public:
       std::size_t fOutBytes = 0;
    };
 
+   struct RIOVecLimits {
+      std::size_t fMaxReqs = static_cast<std::size_t>(-1);
+      std::size_t fMaxSingleSize = static_cast<std::size_t>(-1);
+      std::uint64_t fMaxTotalSize = static_cast<std::uint64_t>(-1);
+
+      bool HasReqsLimit() const { return fMaxReqs != static_cast<std::size_t>(-1); }
+      bool HasSizeLimit() const
+      {
+         return fMaxSingleSize != static_cast<std::size_t>(-1) || fMaxTotalSize != static_cast<std::uint64_t>(-1);
+      }
+   };
+
 private:
    /// Don't change without adapting ReadAt()
    static constexpr unsigned int kNumBlockBuffers = 2;
@@ -172,6 +184,7 @@ public:
 
    /// Opens the file if necessary and calls ReadVImpl
    void ReadV(RIOVec *ioVec, unsigned int nReq);
+   virtual RIOVecLimits GetReadVLimits() { return RIOVecLimits(); }
 
    /// Memory mapping according to POSIX standard; in particular, new mappings of the same range replace older ones.
    /// Mappings need to be aligned at page boundaries, therefore the real offset can be smaller than the desired value.

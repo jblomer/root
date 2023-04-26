@@ -561,12 +561,18 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadClusters(std::span<RCluster::RK
    }
 
    auto nReqs = readRequests.size();
-   {
-      RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
-      fFile->ReadV(&readRequests[0], nReqs);
+   int pos = 0;
+   while (nReqs > 0) {
+      auto nBatch = std::min(static_cast<decltype(nReqs)>(1024), nReqs);
+      {
+         RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
+         fFile->ReadV(&readRequests[pos], nBatch);
+      }
+      fCounters->fNReadV.Inc();
+      fCounters->fNRead.Add(nBatch);
+      pos += nBatch;
+      nReqs -= nBatch;
    }
-   fCounters->fNReadV.Inc();
-   fCounters->fNRead.Add(nReqs);
 
    return clusters;
 }

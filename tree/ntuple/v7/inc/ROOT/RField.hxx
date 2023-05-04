@@ -333,6 +333,7 @@ public:
    std::size_t GetNRepetitions() const { return fNRepetitions; }
    NTupleSize_t GetNElements() const { return fPrincipalColumn->GetNElements(); }
    RFieldBase *GetParent() const { return fParent; }
+   RFieldBase *GetFirstSubField() const { return fSubFields[0].get(); }
    std::vector<RFieldBase *> GetSubFields() const;
    bool IsSimple() const { return fIsSimple; }
    /// Get the field's description

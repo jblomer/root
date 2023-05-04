@@ -130,7 +130,7 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
       std::size_t fCapacity = 0;
       std::uint64_t fFirstEntry = 0;
       std::size_t fNEntries = 0;
-      std::vector<bool> fMask;
+      std::vector<std::uint8_t> fMask;
       std::size_t fNSetValues = 0;
 
    private:
@@ -175,12 +175,12 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
          fFirstEntry = firstEntry;
          fNEntries = nEntries;
 
-         fMask.clear();
-         fMask.resize(nEntries, false);
+         fMask.resize(nEntries);
+         memset(fMask.data(), 0, nEntries);
          fNSetValues = 0;
       }
 
-      void SetValueAt(std::size_t idx) { fMask[idx] = true; fNSetValues++; }
+      void SetValueAt(std::size_t idx) { fMask[idx] = 1; fNSetValues++; }
 
       bool ContainsRange(std::uint64_t firstEntry, std::size_t nEntries) const
       {
@@ -191,12 +191,12 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
 
       std::uint64_t GetFirstEntry() const { return fFirstEntry; }
       std::size_t GetNEntries() const { return fNEntries; }
-      const std::vector<bool> &GetMask() const { return fMask; }
+      const std::vector<std::uint8_t> &GetMask() const { return fMask; }
       bool GetHasAllValuesSet() const { return fNSetValues == fNEntries; }
       void SetAllValues()
       {
-         fMask.clear();
-         fMask.resize(fNEntries, true);
+         fMask.resize(fNEntries);
+         memset(fMask.data(), 1, fNEntries);
          fNSetValues = fNEntries;
       }
    };
@@ -255,7 +255,7 @@ public:
    void *LoadRVec(const ROOT::Internal::RDF::RMaskedEntryRange &mask)
    {
       auto rvecField = static_cast<RRVecField *>(fField.get());
-      auto itemField = rvecField->GetSubFields()[0];
+      auto itemField = rvecField->GetFirstSubField();
       const auto itemSize = itemField->GetValueSize();
 
       // Get size of the first RVec of the bulk
@@ -336,7 +336,7 @@ public:
 
       // Special handling of RVec of simple type
       auto rvecField = dynamic_cast<RRVecField *>(fField.get());
-      if (rvecField && rvecField->GetSubFields()[0]->IsSimple()) {
+      if (rvecField && rvecField->GetFirstSubField()->IsSimple()) {
          return LoadRVec(mask);
       }
 
@@ -516,6 +516,9 @@ bool RNTupleDS::SetEntry(unsigned int, ULong64_t)
 
 std::size_t RNTupleDS::GetBulkSize(unsigned int slot, ULong64_t rangeStart, std::size_t maxSize)
 {
+   if (maxSize == 1)
+      return 1;
+
    auto descGuard = fSources[slot]->GetSharedDescriptorGuard();
    for (const auto &c : descGuard->GetClusterIterable()) {
       // TODO: consider cluster sharding

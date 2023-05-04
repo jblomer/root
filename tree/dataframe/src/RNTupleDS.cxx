@@ -488,6 +488,7 @@ RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pageSource) : fMetrics
    auto descriptorGuard = pageSource->GetSharedDescriptorGuard();
    fSources.emplace_back(std::move(pageSource));
    fMetrics.ObserveMetrics(fSources.back()->GetMetrics());
+   fNextClusterBoundary.emplace_back(0);
 
    AddField(descriptorGuard.GetRef(), "", descriptorGuard->GetFieldZeroId(), std::vector<DescriptorId_t>());
 }
@@ -516,8 +517,10 @@ bool RNTupleDS::SetEntry(unsigned int, ULong64_t)
 
 std::size_t RNTupleDS::GetBulkSize(unsigned int slot, ULong64_t rangeStart, std::size_t maxSize)
 {
-   if (maxSize == 1)
-      return 1;
+   if (rangeStart < fNextClusterBoundary[slot]) {
+      auto remainingEntries = fNextClusterBoundary[slot] - rangeStart;
+      return maxSize < remainingEntries ? maxSize : remainingEntries;
+   }
 
    auto descGuard = fSources[slot]->GetSharedDescriptorGuard();
    for (const auto &c : descGuard->GetClusterIterable()) {
@@ -527,7 +530,8 @@ std::size_t RNTupleDS::GetBulkSize(unsigned int slot, ULong64_t rangeStart, std:
       if ((c.GetFirstEntryIndex() + c.GetNEntries()) <= rangeStart)
          continue;
 
-      auto remainingEntries = c.GetFirstEntryIndex() + c.GetNEntries() - rangeStart;
+      fNextClusterBoundary[slot] = c.GetFirstEntryIndex() + c.GetNEntries();
+      auto remainingEntries = fNextClusterBoundary[slot] - rangeStart;
       return maxSize < remainingEntries ? maxSize : remainingEntries;
    }
    // Never here?
@@ -571,6 +575,8 @@ bool RNTupleDS::HasColumn(std::string_view colName) const
 void RNTupleDS::Initialize()
 {
    fHasSeenAllRanges = false;
+   for (unsigned int i = 0; i < fNSlots; ++i)
+      fNextClusterBoundary[i] = 0;
 }
 
 void RNTupleDS::Finalize()
@@ -586,6 +592,7 @@ void RNTupleDS::SetNSlots(unsigned int nSlots)
    fNSlots = nSlots;
 
    for (unsigned int i = 1; i < fNSlots; ++i) {
+      fNextClusterBoundary.emplace_back(0);
       fSources.emplace_back(fSources[0]->Clone());
       assert(i == (fSources.size() - 1));
       fSources[i]->Attach();

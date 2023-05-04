@@ -58,6 +58,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
 
    unsigned fNSlots = 0;
    bool fHasSeenAllRanges = false;
+   std::vector<std::size_t> fNextClusterBoundary;
 
    ROOT::Experimental::Detail::RNTupleMetrics fMetrics;
 

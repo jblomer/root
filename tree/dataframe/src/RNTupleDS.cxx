@@ -126,6 +126,7 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
 
    class RBulk {
       RFieldBase *fField = nullptr;
+      std::size_t fFieldValueSize = 0;
       unsigned char *fValues = nullptr;
       std::size_t fCapacity = 0;
       std::uint64_t fFirstEntry = 0;
@@ -141,7 +142,7 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
             return;
          }
 
-         const auto valSize = fField->GetValueSize();
+         const auto valSize = fFieldValueSize;
          for (std::size_t i = 0; i < fCapacity; ++i) {
             auto val = fField->CaptureValue(&fValues[i * valSize]);
             fField->DestroyValue(val, true /* dtorOnly */);
@@ -150,7 +151,7 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
       }
 
    public:
-      explicit RBulk(RFieldBase *field) : fField(field) {}
+      explicit RBulk(RFieldBase *field) : fField(field), fFieldValueSize(field->GetValueSize()) {}
       ~RBulk() { ReleaseValues(); }
       RBulk(const RBulk &) = delete;
       RBulk& operator =(const RBulk &) = delete;
@@ -161,10 +162,10 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
             ReleaseValues();
 
             fValues = reinterpret_cast<unsigned char *>(
-               aligned_alloc(fField->GetAlignment(), nEntries * fField->GetValueSize()));
+               aligned_alloc(fField->GetAlignment(), nEntries * fFieldValueSize));
             fCapacity = nEntries;
 
-            const auto valSize = fField->GetValueSize();
+            const auto valSize = fFieldValueSize;
             if (!(fField->GetTraits() & RFieldBase::kTraitTriviallyConstructible)) {
                for (unsigned i = 0; i < fCapacity; ++i) {
                   fField->GenerateValue(&fValues[i * valSize]);
@@ -187,7 +188,7 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
          return (firstEntry >= fFirstEntry) && ((firstEntry + nEntries) <= (fFirstEntry + fNEntries));
       }
 
-      void *GetValuePtrAt(std::size_t idx) const { return &fValues[idx * fField->GetValueSize()]; }
+      void *GetValuePtrAt(std::size_t idx) const { return &fValues[idx * fFieldValueSize]; }
 
       std::uint64_t GetFirstEntry() const { return fFirstEntry; }
       std::size_t GetNEntries() const { return fNEntries; }
@@ -204,12 +205,22 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
    std::unique_ptr<RFieldBase> fField; ///< The field backing the RDF column
    RBulk fBulk;
    std::vector<unsigned char> fRVecData;
+   bool fIsSimpleRVecField = false;
+   bool fIsCardinalityField = false;
+   std::size_t fItemValueSize = 0;
 
 public:
    RNTupleColumnReader(std::unique_ptr<RFieldBase> f)
       : fField(std::move(f)), fBulk(fField.get())
    {
       fRVecData.resize(10);
+      auto rvecField = dynamic_cast<RRVecField *>(fField.get());
+      if (rvecField && rvecField->GetFirstSubField()->IsSimple()) {
+         fIsSimpleRVecField = true;
+         fItemValueSize = fField->GetFirstSubField()->GetValueSize();
+      }
+      if (dynamic_cast<RField<RNTupleCardinality>*>(fField.get()))
+         fIsCardinalityField = true;
    }
    ~RNTupleColumnReader() = default;
 
@@ -256,7 +267,6 @@ public:
    {
       auto rvecField = static_cast<RRVecField *>(fField.get());
       auto itemField = rvecField->GetFirstSubField();
-      const auto itemSize = itemField->GetValueSize();
 
       // Get size of the first RVec of the bulk
       RClusterIndex itemFirstIndex;
@@ -285,7 +295,7 @@ public:
             const auto size = offsets[i] - lastOffset;
 
             auto beginPtr = reinterpret_cast<void **>(fBulk.GetValuePtrAt(iEntry));
-            *beginPtr = fRVecData.data() + nItems * itemSize;
+            *beginPtr = fRVecData.data() + nItems * fItemValueSize;
             new (reinterpret_cast<void *>(beginPtr + 1)) std::int32_t(size);
 
             nItems += size;
@@ -295,7 +305,7 @@ public:
          nEntries += nBatch;
       }
 
-      fRVecData.resize(nItems * itemSize);
+      fRVecData.resize(nItems * fItemValueSize);
       // If the vector got reallocated, we need to fix-up the RVecs begin pointers.
       auto delta = *reinterpret_cast<unsigned char **>(fBulk.GetValuePtrAt(0)) - fRVecData.data();
       if (delta != 0) {
@@ -335,14 +345,12 @@ public:
       }
 
       // Special handling of RVec of simple type
-      auto rvecField = dynamic_cast<RRVecField *>(fField.get());
-      if (rvecField && rvecField->GetFirstSubField()->IsSimple()) {
+      if (fIsSimpleRVecField) {
          return LoadRVec(mask);
       }
 
-      auto cardField = dynamic_cast<RField<RNTupleCardinality>*>(fField.get());
-      if (cardField) {
-         LoadCollectionSizes<std::uint32_t>(*cardField->fPrincipalColumn, mask.FirstEntry(), bulkSize,
+      if (fIsCardinalityField) {
+         LoadCollectionSizes<std::uint32_t>(*fField->fPrincipalColumn, mask.FirstEntry(), bulkSize,
                                             reinterpret_cast<std::uint32_t *>(fBulk.GetValuePtrAt(entryOffset)));
          fBulk.SetAllValues();
          return fBulk.GetValuePtrAt(entryOffset);

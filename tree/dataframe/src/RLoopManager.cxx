@@ -698,7 +698,7 @@ void RLoopManager::RunDataSourceMT()
          while (entry < end) {
             const auto remaining = end - entry;
             const auto maxBulkSize = std::min(ULong64_t(fMaxEventsPerBulk), remaining);
-            std::size_t bulkSize = fDataSource->GetBulkSize(/*slot*/ 0u, entry, maxBulkSize);
+            std::size_t bulkSize = fDataSource->GetBulkSize(slot, entry, maxBulkSize);
             if (fDataSource->SetEntry(slot, entry)) {
                fUniqueRDFEntry[slot] = entry;
                RunAndCheckFilters(slot, entry, bulkSize);

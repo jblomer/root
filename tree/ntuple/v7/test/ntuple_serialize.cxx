@@ -108,44 +108,42 @@ TEST(RNTuple, SerializeEnvelope)
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
 
-   struct {
-      std::uint16_t writerVersion = static_cast<std::uint16_t>(1);
-      std::uint16_t minVersion = static_cast<std::uint16_t>(1);
-      std::uint32_t crc32 = 0;
-   } testEnvelope;
+   unsigned char testEnvelope[8];
+   RNTupleSerializer::SerializeUInt16(1, &testEnvelope[0]); // writer version
+   RNTupleSerializer::SerializeUInt16(1, &testEnvelope[2]); // min version
+   RNTupleSerializer::SerializeUInt32(0, &testEnvelope[4]); // CRC32
 
    try {
-      RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope)).Unwrap();
+      RNTupleSerializer::DeserializeEnvelope(testEnvelope, sizeof(testEnvelope)).Unwrap();
       FAIL() << "CRC32 mismatch should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("CRC32"));
    }
 
-   testEnvelope.writerVersion = testEnvelope.minVersion = 0;
+   RNTupleSerializer::SerializeUInt16(0, &testEnvelope[0]); // writer version
+   RNTupleSerializer::SerializeUInt16(0, &testEnvelope[2]); // min version
 
-   EXPECT_EQ(4u, RNTupleSerializer::SerializeEnvelopePostscript(
-      reinterpret_cast<const unsigned char *>(&testEnvelope), 4, &testEnvelope.crc32));
+   EXPECT_EQ(4u, RNTupleSerializer::SerializeEnvelopePostscript(testEnvelope, 4, &testEnvelope[4]));
    try {
-      RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope)).Unwrap();
+      RNTupleSerializer::DeserializeEnvelope(testEnvelope, sizeof(testEnvelope)).Unwrap();
       FAIL() << "unsupported version should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too old"));
    }
 
-   testEnvelope.writerVersion = RNTupleSerializer::kEnvelopeCurrentVersion;
+   RNTupleSerializer::SerializeUInt16(RNTupleSerializer::kEnvelopeCurrentVersion, &testEnvelope[0]); // writer version
    std::uint32_t crc32_write;
-   RNTupleSerializer::SerializeEnvelopePostscript(
-      reinterpret_cast<const unsigned char *>(&testEnvelope), 4, crc32_write, &testEnvelope.crc32);
+   RNTupleSerializer::SerializeEnvelopePostscript(testEnvelope, 4, crc32_write, &testEnvelope[4]);
    std::uint32_t crc32_read;
-   EXPECT_EQ(4u, RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope), crc32_read).Unwrap());
+   EXPECT_EQ(4u, RNTupleSerializer::DeserializeEnvelope(testEnvelope, sizeof(testEnvelope), crc32_read).Unwrap());
    EXPECT_EQ(crc32_write, crc32_read);
 
-   testEnvelope.writerVersion = RNTupleSerializer::kEnvelopeCurrentVersion + 1;
-   testEnvelope.minVersion = RNTupleSerializer::kEnvelopeCurrentVersion + 1;
-   EXPECT_EQ(4u, RNTupleSerializer::SerializeEnvelopePostscript(
-      reinterpret_cast<const unsigned char *>(&testEnvelope), 4, &testEnvelope.crc32));
+   const auto nextVersion = RNTupleSerializer::kEnvelopeCurrentVersion + 1;
+   RNTupleSerializer::SerializeUInt16(nextVersion, &testEnvelope[0]); // writer version
+   RNTupleSerializer::SerializeUInt16(nextVersion, &testEnvelope[2]); // min version
+   EXPECT_EQ(4u, RNTupleSerializer::SerializeEnvelopePostscript(testEnvelope, 4, &testEnvelope[4]));
    try {
-      RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope)).Unwrap();
+      RNTupleSerializer::DeserializeEnvelope(testEnvelope, sizeof(testEnvelope)).Unwrap();
       FAIL() << "unsupported version should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too new"));
@@ -334,8 +332,10 @@ TEST(RNTuple, SerializeLocator)
    EXPECT_EQ(locator.fReserved, 0x5a);
    EXPECT_EQ(1337U, locator.GetPosition<RNTupleLocatorObject64>().fLocation);
 
-   std::int32_t *head = reinterpret_cast<std::int32_t *>(buffer);
-   *head = (0x3 << 24) | *head;
+   std::int32_t head;
+   RNTupleSerializer::DeserializeInt32(buffer, head);
+   head = (0x3 << 24) | head;
+   RNTupleSerializer::SerializeInt32(head, buffer);
    try {
       RNTupleSerializer::DeserializeLocator(buffer, 16, locator).Unwrap();
       FAIL() << "unsupported locator type should throw";

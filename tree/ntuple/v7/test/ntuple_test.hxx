@@ -2,6 +2,7 @@
 #define ROOT7_RNTuple_Test
 
 #include <ROOT/RColumnModel.hxx>
+#include <ROOT/RConfig.hxx>
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>

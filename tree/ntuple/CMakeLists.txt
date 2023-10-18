@@ -26,6 +26,7 @@ HEADERS
   ROOT/RMiniFile.hxx
   ROOT/RNTuple.hxx
   ROOT/RNTupleDescriptor.hxx
+  ROOT/RNTupleIterator.hxx
   ROOT/RNTupleMerger.hxx
   ROOT/RNTupleMetrics.hxx
   ROOT/RNTupleModel.hxx
@@ -53,6 +54,7 @@ SOURCES
   v7/src/RNTuple.cxx
   v7/src/RNTupleDescriptor.cxx
   v7/src/RNTupleDescriptorFmt.cxx
+  v7/src/RNTupleIterator.cxx
   v7/src/RNTupleMerger.cxx
   v7/src/RNTupleMetrics.cxx
   v7/src/RNTupleModel.cxx

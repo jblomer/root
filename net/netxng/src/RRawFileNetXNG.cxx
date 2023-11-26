@@ -50,9 +50,12 @@ ROOT::Internal::RRawFileNetXNG::~RRawFileNetXNG()
 {
 }
 
-std::unique_ptr<ROOT::Internal::RRawFile> ROOT::Internal::RRawFileNetXNG::Clone() const
+std::unique_ptr<ROOT::Internal::RRawFile> ROOT::Internal::RRawFileNetXNG::CloneImpl() const
 {
-   return std::make_unique<RRawFileNetXNG>( fUrl, fOptions );
+   auto clone = std::make_unique<RRawFileNetXNG>(fUrl, fOptions);
+   if (IsOpen())
+      clone->OpenImpl();
+   return clone;
 }
 
 std::uint64_t ROOT::Internal::RRawFileNetXNG::GetSizeImpl()

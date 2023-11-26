@@ -37,9 +37,12 @@ ROOT::Internal::RRawFileWin::~RRawFileWin()
       fclose(fFilePtr);
 }
 
-std::unique_ptr<ROOT::Internal::RRawFile> ROOT::Internal::RRawFileWin::Clone() const
+std::unique_ptr<ROOT::Internal::RRawFile> ROOT::Internal::RRawFileWin::CloneImpl() const
 {
-   return std::make_unique<RRawFileWin>(fUrl, fOptions);
+   auto clone = std::make_unique<RRawFileWin>(fUrl, fOptions);
+   if (IsOpen())
+      clone->OpenImpl();
+   return clone;
 }
 
 std::uint64_t ROOT::Internal::RRawFileWin::GetSizeImpl()

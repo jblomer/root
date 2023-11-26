@@ -53,9 +53,12 @@ ROOT::Internal::RRawFileDavix::~RRawFileDavix()
       fFileDes->pos.close(fFileDes->fd, nullptr);
 }
 
-std::unique_ptr<ROOT::Internal::RRawFile> ROOT::Internal::RRawFileDavix::Clone() const
+std::unique_ptr<ROOT::Internal::RRawFile> ROOT::Internal::RRawFileDavix::CloneImpl() const
 {
-   return std::make_unique<RRawFileDavix>(fUrl, fOptions);
+   auto clone = std::make_unique<RRawFileDavix>(fUrl, fOptions);
+   if (IsOpen())
+      clone->OpenImpl();
+   return clone;
 }
 
 std::uint64_t ROOT::Internal::RRawFileDavix::GetSizeImpl()

@@ -35,6 +35,7 @@ private:
    void Seek(long offset, int whence);
 
 protected:
+   std::unique_ptr<RRawFile> CloneImpl() const final;
    void OpenImpl() final;
    size_t ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset) final;
    std::uint64_t GetSizeImpl() final;
@@ -42,7 +43,6 @@ protected:
 public:
    RRawFileWin(std::string_view url, RRawFile::ROptions options);
    ~RRawFileWin() override;
-   std::unique_ptr<RRawFile> Clone() const final;
    int GetFeatures() const final { return kFeatureHasSize; }
 };
 

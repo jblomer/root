@@ -46,9 +46,17 @@ ROOT::Internal::RRawFileUnix::~RRawFileUnix()
       close(fFileDes);
 }
 
-std::unique_ptr<ROOT::Internal::RRawFile> ROOT::Internal::RRawFileUnix::Clone() const
+std::unique_ptr<ROOT::Internal::RRawFile> ROOT::Internal::RRawFileUnix::CloneImpl() const
 {
-   return std::make_unique<RRawFileUnix>(fUrl, fOptions);
+   auto clone = std::make_unique<RRawFileUnix>(fUrl, fOptions);
+   if (!IsOpen())
+      return clone;
+
+   clone->fFileDes = dup(fFileDes);
+   if (clone->fFileDes < 0) {
+      throw std::runtime_error("Cannot clone '" + fUrl + "', error: " + std::string(strerror(errno)));
+   }
+   return clone;
 }
 
 int ROOT::Internal::RRawFileUnix::GetFeatures() const {

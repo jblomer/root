@@ -33,6 +33,7 @@ private:
    int fFileDes;
 
 protected:
+   std::unique_ptr<RRawFile> CloneImpl() const final;
    void OpenImpl() final;
    size_t ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset) final;
    void ReadVImpl(RIOVec *ioVec, unsigned int nReq) final;
@@ -43,7 +44,6 @@ protected:
 public:
    RRawFileUnix(std::string_view url, RRawFile::ROptions options);
    ~RRawFileUnix() override;
-   std::unique_ptr<RRawFile> Clone() const final;
    int GetFeatures() const final;
    int GetFd() const { return fFileDes; }
 };

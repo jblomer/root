@@ -116,6 +116,10 @@ protected:
    std::uint64_t fFilePos;
 
    /**
+    * CloneImpl should return a copy of the file including its open state. The file pointer is reset to zero though.
+    */
+   virtual std::unique_ptr<RRawFile> CloneImpl() const = 0;
+   /**
     * OpenImpl() is called at most once and before any call to either DoReadAt or DoGetSize. If fOptions.fBlocksize
     * is negative, derived classes are responsible to set a sensible value. After a call to OpenImpl(),
     * fOptions.fBlocksize must be larger or equal to zero.
@@ -145,7 +149,7 @@ public:
    virtual ~RRawFile();
 
    /// Create a new RawFile that accesses the same resource.  The file pointer is reset to zero.
-   virtual std::unique_ptr<RRawFile> Clone() const = 0;
+   std::unique_ptr<RRawFile> Clone() const;
 
    /// Factory method that returns a suitable concrete implementation according to the transport in the url
    static std::unique_ptr<RRawFile> Create(std::string_view url, ROptions options = ROptions());
@@ -186,6 +190,8 @@ public:
 
    /// Read the next line starting from the current value of fFilePos. Returns false if the end of the file is reached.
    bool Readln(std::string &line);
+
+   bool IsOpen() const { return fIsOpen; }
 }; // class RRawFile
 
 } // namespace Internal

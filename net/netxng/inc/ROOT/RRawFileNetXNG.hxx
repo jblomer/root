@@ -34,6 +34,7 @@ private:
    std::unique_ptr<RRawFileNetXNGImpl> pImpl; //< pointer to implementation
 
 protected:
+   std::unique_ptr<RRawFile> CloneImpl() const final;
    void OpenImpl() final;
    size_t ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset) final;
    void ReadVImpl(RIOVec *ioVec, unsigned int nReq) final;
@@ -42,7 +43,6 @@ protected:
 public:
    RRawFileNetXNG(std::string_view url, RRawFile::ROptions options);
    ~RRawFileNetXNG();
-   std::unique_ptr<RRawFile> Clone() const final;
    int GetFeatures() const final { return kFeatureHasSize | kFeatureHasAsyncIo; }
 };
 

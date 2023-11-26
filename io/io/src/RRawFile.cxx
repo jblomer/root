@@ -69,6 +69,14 @@ ROOT::Internal::RRawFile::~RRawFile()
    delete[] fBufferSpace;
 }
 
+std::unique_ptr<ROOT::Internal::RRawFile> ROOT::Internal::RRawFile::Clone() const
+{
+   auto clone = CloneImpl();
+   clone->fFileSize = fFileSize;
+   clone->fIsOpen = fIsOpen;
+   return clone;
+}
+
 std::unique_ptr<ROOT::Internal::RRawFile>
 ROOT::Internal::RRawFile::Create(std::string_view url, ROptions options)
 {

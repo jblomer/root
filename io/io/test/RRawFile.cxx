@@ -14,7 +14,7 @@ public:
    RRawFileMock(const std::string &content, RRawFile::ROptions options)
      : RRawFile("", options), fContent(content), fNumReadAt(0) { }
 
-   std::unique_ptr<RRawFile> Clone() const final {
+   std::unique_ptr<RRawFile> CloneImpl() const final {
       return std::make_unique<RRawFileMock>(fContent, fOptions);
    }
 

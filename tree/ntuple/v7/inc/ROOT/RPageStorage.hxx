@@ -51,7 +51,6 @@ namespace Detail {
 class RColumn;
 class RColumnElementBase;
 struct RNTupleModelChangeset;
-class RPagePool;
 class RFieldBase;
 
 enum class EPageStorageType {

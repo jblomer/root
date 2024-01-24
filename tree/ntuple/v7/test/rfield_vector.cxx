@@ -359,7 +359,7 @@ TEST(RNTuple, ComplexVector)
    ComplexStruct::SetNCallDestructor(0);
    {
       auto ntuple = RNTupleReader::Open("T", fileGuard.GetPath());
-      auto rdV = ntuple->GetModel()->GetDefaultEntry()->Get<std::vector<ComplexStruct>>("v");
+      auto rdV = ntuple->GetModel()->GetDefaultEntry()->GetPtr<std::vector<ComplexStruct>>("v");
 
       ntuple->LoadEntry(0);
       EXPECT_EQ(0, ComplexStruct::GetNCallConstructor());
@@ -402,7 +402,7 @@ TEST(RNTuple, ComplexRVec)
    ComplexStruct::SetNCallDestructor(0);
    {
       auto ntuple = RNTupleReader::Open("T", fileGuard.GetPath());
-      auto rdV = ntuple->GetModel()->GetDefaultEntry()->Get<ROOT::RVec<ComplexStruct>>("v");
+      auto rdV = ntuple->GetModel()->GetDefaultEntry()->GetPtr<ROOT::RVec<ComplexStruct>>("v");
 
       ntuple->LoadEntry(0);
       EXPECT_EQ(0, ComplexStruct::GetNCallConstructor());

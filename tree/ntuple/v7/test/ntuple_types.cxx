@@ -1188,7 +1188,7 @@ TEST(RNTuple, Casting)
    fldI1->SetColumnRepresentative({EColumnType::kInt32});
    auto fldI2 = RFieldBase::Create("i2", "std::int32_t").Unwrap();
    fldI2->SetColumnRepresentative({EColumnType::kSplitInt32});
-   auto fldF = ROOT::Experimental::Detail::RFieldBase::Create("F", "float").Unwrap();
+   auto fldF = ROOT::Experimental::RFieldBase::Create("F", "float").Unwrap();
    fldF->SetColumnRepresentative({EColumnType::kReal32});
    try {
       fldF->SetColumnRepresentative({EColumnType::kBit});
@@ -1209,7 +1209,7 @@ TEST(RNTuple, Casting)
 
    try {
       auto model = RNTupleModel::Create();
-      auto f = ROOT::Experimental::Detail::RFieldBase::Create("i1", "std::int32_t").Unwrap();
+      auto f = ROOT::Experimental::RFieldBase::Create("i1", "std::int32_t").Unwrap();
       f->SetColumnRepresentative({EColumnType::kInt32});
       model->AddField(std::move(f));
       auto reader = RNTupleReader::Open(std::move(model), "ntuple", fileGuard.GetPath());
@@ -1804,7 +1804,7 @@ TEST(RNTuple, TClassReadRules)
 
 TEST(RNTuple, RColumnRepresentations)
 {
-   using RColumnRepresentations = ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations;
+   using RColumnRepresentations = ROOT::Experimental::RFieldBase::RColumnRepresentations;
    RColumnRepresentations colReps1;
    EXPECT_EQ(RFieldBase::ColumnRepresentation_t(), colReps1.GetSerializationDefault());
    EXPECT_EQ(RColumnRepresentations::TypesList_t{RFieldBase::ColumnRepresentation_t()},

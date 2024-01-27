@@ -18,7 +18,7 @@
 
 #include <algorithm>
 
-void ROOT::Experimental::REntry::AddValue(Detail::RFieldBase::RValue &&value)
+void ROOT::Experimental::REntry::AddValue(RFieldBase::RValue &&value)
 {
    fValues.emplace_back(std::move(value));
 }

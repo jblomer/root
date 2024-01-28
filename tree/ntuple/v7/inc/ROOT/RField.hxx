@@ -59,13 +59,13 @@ namespace Experimental {
 class RCollectionField;
 class RCollectionNTupleWriter;
 class REntry;
+class RFieldVisitor;
 
 namespace Internal {
 struct RFieldCallbackInjector;
 } // namespace Internal
 
 namespace Detail {
-class RFieldVisitor;
 class RPageStorage;
 } // namespace Detail
 
@@ -655,7 +655,7 @@ public:
    }
    RConstSchemaIterator cend() const { return RConstSchemaIterator(this, -1); }
 
-   virtual void AcceptVisitor(Detail::RFieldVisitor &visitor) const;
+   virtual void AcceptVisitor(RFieldVisitor &visitor) const;
 };
 
 /// The container field for an ntuple model, which itself has no physical representation.
@@ -675,7 +675,7 @@ public:
    size_t GetValueSize() const final { return 0; }
    size_t GetAlignment() const final { return 0; }
 
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 };
 
 /// The field for a class with dictionary
@@ -737,7 +737,7 @@ public:
    size_t GetValueSize() const override;
    size_t GetAlignment() const final { return fMaxAlignment; }
    std::uint32_t GetTypeVersion() const final;
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const override;
+   void AcceptVisitor(RFieldVisitor &visitor) const override;
 };
 
 /// The field for an unscoped or scoped enum with dictionary
@@ -767,7 +767,7 @@ public:
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final { return fSubFields[0]->GetValueSize(); }
    size_t GetAlignment() const final { return fSubFields[0]->GetAlignment(); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 };
 
 /// The field for a class representing a collection of elements via `TVirtualCollectionProxy`.
@@ -910,7 +910,7 @@ public:
    std::vector<RValue> SplitValue(const RValue &value) const override;
    size_t GetValueSize() const override { return fProxy->Sizeof(); }
    size_t GetAlignment() const override { return alignof(std::max_align_t); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const override;
+   void AcceptVisitor(RFieldVisitor &visitor) const override;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
    {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
@@ -987,7 +987,7 @@ public:
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final { return fSize; }
    size_t GetAlignment() const final { return fMaxAlignment; }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 };
 
 /// The generic field for a (nested) std::vector<Type> except for std::vector<bool>
@@ -1036,7 +1036,7 @@ public:
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override { return sizeof(std::vector<char>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
    }
@@ -1098,7 +1098,7 @@ public:
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override;
    size_t GetAlignment() const override;
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
    {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
@@ -1153,7 +1153,7 @@ public:
    size_t GetLength() const { return fArrayLength; }
    size_t GetValueSize() const final { return fItemSize * fArrayLength; }
    size_t GetAlignment() const final { return fSubFields[0]->GetAlignment(); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 };
 
 /**
@@ -1202,7 +1202,7 @@ public:
    std::size_t GetAlignment() const final;
 
    std::vector<RFieldBase::RValue> SplitValue(const RFieldBase::RValue &value) const final;
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 };
 
 /// The generic field an std::bitset<N>. All compilers we care about store the bits in an array of unsigned long.
@@ -1237,7 +1237,7 @@ public:
    using RFieldBase::GenerateValue;
    size_t GetValueSize() const final { return kWordSize * ((fN + kBitsPerWord - 1) / kBitsPerWord); }
    size_t GetAlignment() const final { return alignof(Word_t); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 
    /// Get the number of bits in the bitset, i.e. the N in std::bitset<N>
    std::size_t GetN() const { return fN; }
@@ -1372,7 +1372,7 @@ public:
    void SetDense() { SetColumnRepresentative({EColumnType::kBit}); }
    void SetSparse() { SetColumnRepresentative({EColumnType::kSplitIndex32}); }
 
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 };
 
 class RUniquePtrField : public RNullableField {
@@ -1433,7 +1433,7 @@ public:
    size_t GetValueSize() const final { return fSubFields[0]->GetValueSize(); }
    size_t GetAlignment() const final { return fSubFields[0]->GetAlignment(); }
 
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 };
 
 /// Classes with dictionaries that can be inspected by TClass
@@ -1670,7 +1670,7 @@ public:
    RCardinalityField &operator=(RCardinalityField &&other) = default;
    ~RCardinalityField() override = default;
 
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 
    const RField<RNTupleCardinality<std::uint32_t>> *As32Bit() const;
    const RField<RNTupleCardinality<std::uint64_t>> *As64Bit() const;
@@ -1727,7 +1727,7 @@ public:
    {
       fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
    }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 };
 
 template <typename SizeT>
@@ -1833,7 +1833,7 @@ public:
    using RFieldBase::GenerateValue;
    size_t GetValueSize() const final { return sizeof(bool); }
    size_t GetAlignment() const final { return alignof(bool); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 };
 
 template <>
@@ -1874,7 +1874,7 @@ public:
    using RFieldBase::GenerateValue;
    size_t GetValueSize() const final { return sizeof(float); }
    size_t GetAlignment() const final { return alignof(float); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 
    void SetHalfPrecision();
 };
@@ -1917,7 +1917,7 @@ public:
    using RFieldBase::GenerateValue;
    size_t GetValueSize() const final { return sizeof(double); }
    size_t GetAlignment() const final { return alignof(double); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 
    // Set the column representation to 32 bit floating point and the type alias to Double32_t
    void SetDouble32();
@@ -1960,7 +1960,7 @@ public:
    using RFieldBase::GenerateValue;
    size_t GetValueSize() const final { return sizeof(std::byte); }
    size_t GetAlignment() const final { return alignof(std::byte); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 };
 
 template <>
@@ -2001,7 +2001,7 @@ public:
    using RFieldBase::GenerateValue;
    size_t GetValueSize() const final { return sizeof(char); }
    size_t GetAlignment() const final { return alignof(char); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 };
 
 template <>
@@ -2042,7 +2042,7 @@ public:
    using RFieldBase::GenerateValue;
    size_t GetValueSize() const final { return sizeof(std::int8_t); }
    size_t GetAlignment() const final { return alignof(std::int8_t); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 };
 
 template <>
@@ -2083,7 +2083,7 @@ public:
    using RFieldBase::GenerateValue;
    size_t GetValueSize() const final { return sizeof(std::uint8_t); }
    size_t GetAlignment() const final { return alignof(std::uint8_t); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 };
 
 template <>
@@ -2124,7 +2124,7 @@ public:
    using RFieldBase::GenerateValue;
    size_t GetValueSize() const final { return sizeof(std::int16_t); }
    size_t GetAlignment() const final { return alignof(std::int16_t); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 };
 
 template <>
@@ -2165,7 +2165,7 @@ public:
    using RFieldBase::GenerateValue;
    size_t GetValueSize() const final { return sizeof(std::uint16_t); }
    size_t GetAlignment() const final { return alignof(std::uint16_t); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 };
 
 template <>
@@ -2206,7 +2206,7 @@ public:
    using RFieldBase::GenerateValue;
    size_t GetValueSize() const final { return sizeof(std::int32_t); }
    size_t GetAlignment() const final { return alignof(std::int32_t); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 };
 
 template <>
@@ -2249,7 +2249,7 @@ public:
    using RFieldBase::GenerateValue;
    size_t GetValueSize() const final { return sizeof(std::uint32_t); }
    size_t GetAlignment() const final { return alignof(std::uint32_t); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 };
 
 template <>
@@ -2290,7 +2290,7 @@ public:
    using RFieldBase::GenerateValue;
    size_t GetValueSize() const final { return sizeof(std::uint64_t); }
    size_t GetAlignment() const final { return alignof(std::uint64_t); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 };
 
 template <>
@@ -2331,7 +2331,7 @@ public:
    using RFieldBase::GenerateValue;
    size_t GetValueSize() const final { return sizeof(std::int64_t); }
    size_t GetAlignment() const final { return alignof(std::int64_t); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 };
 
 template <>
@@ -2369,7 +2369,7 @@ public:
    using RFieldBase::GenerateValue;
    size_t GetValueSize() const final { return sizeof(std::string); }
    size_t GetAlignment() const final { return std::alignment_of<std::string>(); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
 };
 
 template <typename ItemT, std::size_t N>
@@ -2591,7 +2591,7 @@ public:
 
    size_t GetValueSize() const final { return sizeof(std::vector<bool>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<bool>>(); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(RFieldVisitor &visitor) const final;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
    }

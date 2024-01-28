@@ -27,12 +27,10 @@
 
 namespace ROOT {
 namespace Experimental {
-namespace Detail {
-
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RFieldVisitor
+\class ROOT::Experimental::RFieldVisitor
 \ingroup NTuple
 \brief Abstract base class for classes implementing the visitor design pattern.
 
@@ -74,9 +72,6 @@ public:
    virtual void VisitRVecField(const RRVecField &field) { VisitField(field); }
 }; // class RFieldVisitor
 
-} // namespace Detail
-
-
 // clang-format off
 /**
 \class ROOT::Experimental::RPrepareVisitor
@@ -86,7 +81,7 @@ public:
  Currently used for RPrintSchemaVisitor in RNTupleReader::Print() to collect information about levels, max depth etc.
 */
 // clang-format on
-class RPrepareVisitor : public Detail::RFieldVisitor {
+class RPrepareVisitor : public RFieldVisitor {
 private:
    unsigned int fDeepestLevel = 1;
    unsigned int fNumFields = 1;
@@ -110,7 +105,7 @@ public:
 This visitor is used by RNTupleReader::Print()
 */
 // clang-format on
-class RPrintSchemaVisitor : public Detail::RFieldVisitor {
+class RPrintSchemaVisitor : public RFieldVisitor {
 private:
    /// Where to write the printout to
    std::ostream &fOutput;
@@ -170,7 +165,7 @@ public:
 \brief Renders a JSON value corresponding to the field.
 */
 // clang-format on
-class RPrintValueVisitor : public Detail::RFieldVisitor {
+class RPrintValueVisitor : public RFieldVisitor {
 public:
    struct RPrintOptions {
       bool fPrintSingleLine;

@@ -42,7 +42,7 @@ using RField = ROOT::Experimental::RField<T>;
 */
 
 class RFieldProvider : public RProvider {
-   class RDrawVisitor : public ROOT::Experimental::Detail::RFieldVisitor {
+   class RDrawVisitor : public ROOT::Experimental::RFieldVisitor {
    private:
       std::shared_ptr<ROOT::Experimental::Detail::RPageSource> fNtplSource;
       std::unique_ptr<TH1> fHist;

@@ -898,7 +898,7 @@ void ROOT::Experimental::RFieldBase::ConnectPageSource(Detail::RPageSource &page
    fState = EState::kConnectedToSource;
 }
 
-void ROOT::Experimental::RFieldBase::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RFieldBase::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitField(*this);
 }
@@ -915,7 +915,7 @@ ROOT::Experimental::RFieldZero::CloneImpl(std::string_view /*newName*/) const
 }
 
 
-void ROOT::Experimental::RFieldZero::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RFieldZero::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitFieldZero(*this);
 }
@@ -943,7 +943,7 @@ void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::GenerateColu
    fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitClusterSizeField(*this);
 }
@@ -965,7 +965,7 @@ void ROOT::Experimental::RCardinalityField::GenerateColumnsImpl(const RNTupleDes
    fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RCardinalityField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RCardinalityField::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitCardinalityField(*this);
 }
@@ -1002,7 +1002,7 @@ void ROOT::Experimental::RField<char>::GenerateColumnsImpl(const RNTupleDescript
    fColumns.emplace_back(Detail::RColumn::Create<char>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RField<char>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RField<char>::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitCharField(*this);
 }
@@ -1027,7 +1027,7 @@ void ROOT::Experimental::RField<std::byte>::GenerateColumnsImpl(const RNTupleDes
    fColumns.emplace_back(Detail::RColumn::Create<char>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RField<std::byte>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RField<std::byte>::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitByteField(*this);
 }
@@ -1052,7 +1052,7 @@ void ROOT::Experimental::RField<std::int8_t>::GenerateColumnsImpl(const RNTupleD
    fColumns.emplace_back(Detail::RColumn::Create<std::int8_t>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RField<std::int8_t>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RField<std::int8_t>::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitInt8Field(*this);
 }
@@ -1077,7 +1077,7 @@ void ROOT::Experimental::RField<std::uint8_t>::GenerateColumnsImpl(const RNTuple
    fColumns.emplace_back(Detail::RColumn::Create<std::uint8_t>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RField<std::uint8_t>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RField<std::uint8_t>::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitUInt8Field(*this);
 }
@@ -1102,7 +1102,7 @@ void ROOT::Experimental::RField<bool>::GenerateColumnsImpl(const RNTupleDescript
    fColumns.emplace_back(Detail::RColumn::Create<bool>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RField<bool>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RField<bool>::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitBoolField(*this);
 }
@@ -1128,7 +1128,7 @@ void ROOT::Experimental::RField<float>::GenerateColumnsImpl(const RNTupleDescrip
    fColumns.emplace_back(Detail::RColumn::Create<float>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RField<float>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RField<float>::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitFloatField(*this);
 }
@@ -1159,7 +1159,7 @@ void ROOT::Experimental::RField<double>::GenerateColumnsImpl(const RNTupleDescri
    fColumns.emplace_back(Detail::RColumn::Create<double>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RField<double>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RField<double>::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitDoubleField(*this);
 }
@@ -1190,7 +1190,7 @@ void ROOT::Experimental::RField<std::int16_t>::GenerateColumnsImpl(const RNTuple
    fColumns.emplace_back(Detail::RColumn::Create<std::int16_t>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RField<std::int16_t>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RField<std::int16_t>::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitInt16Field(*this);
 }
@@ -1216,7 +1216,7 @@ void ROOT::Experimental::RField<std::uint16_t>::GenerateColumnsImpl(const RNTupl
    fColumns.emplace_back(Detail::RColumn::Create<std::uint16_t>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RField<std::uint16_t>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RField<std::uint16_t>::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitUInt16Field(*this);
 }
@@ -1242,7 +1242,7 @@ void ROOT::Experimental::RField<std::int32_t>::GenerateColumnsImpl(const RNTuple
    fColumns.emplace_back(Detail::RColumn::Create<std::int32_t>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RField<std::int32_t>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RField<std::int32_t>::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitIntField(*this);
 }
@@ -1268,7 +1268,7 @@ void ROOT::Experimental::RField<std::uint32_t>::GenerateColumnsImpl(const RNTupl
    fColumns.emplace_back(Detail::RColumn::Create<std::uint32_t>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RField<std::uint32_t>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RField<std::uint32_t>::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitUInt32Field(*this);
 }
@@ -1294,7 +1294,7 @@ void ROOT::Experimental::RField<std::uint64_t>::GenerateColumnsImpl(const RNTupl
    fColumns.emplace_back(Detail::RColumn::Create<std::uint64_t>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RField<std::uint64_t>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RField<std::uint64_t>::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitUInt64Field(*this);
 }
@@ -1325,7 +1325,7 @@ void ROOT::Experimental::RField<std::int64_t>::GenerateColumnsImpl(const RNTuple
    fColumns.emplace_back(Detail::RColumn::Create<std::int64_t>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RField<std::int64_t>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RField<std::int64_t>::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitInt64Field(*this);
 }
@@ -1380,7 +1380,7 @@ void ROOT::Experimental::RField<std::string>::ReadGlobalImpl(ROOT::Experimental:
    }
 }
 
-void ROOT::Experimental::RField<std::string>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RField<std::string>::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitStringField(*this);
 }
@@ -1566,7 +1566,7 @@ std::uint32_t ROOT::Experimental::RClassField::GetTypeVersion() const
    return fClass->GetClassVersion();
 }
 
-void ROOT::Experimental::RClassField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RClassField::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitClassField(*this);
 }
@@ -1629,7 +1629,7 @@ ROOT::Experimental::REnumField::SplitValue(const RValue &value) const
    return result;
 }
 
-void ROOT::Experimental::REnumField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::REnumField::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitEnumField(*this);
 }
@@ -1825,7 +1825,7 @@ ROOT::Experimental::RProxiedCollectionField::SplitValue(const RValue &value) con
    return result;
 }
 
-void ROOT::Experimental::RProxiedCollectionField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RProxiedCollectionField::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitProxiedCollectionField(*this);
 }
@@ -1951,7 +1951,7 @@ ROOT::Experimental::RRecordField::SplitValue(const RValue &value) const
 }
 
 
-void ROOT::Experimental::RRecordField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RRecordField::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitRecordField(*this);
 }
@@ -2089,7 +2089,7 @@ ROOT::Experimental::RVectorField::SplitValue(const RValue &value) const
    return result;
 }
 
-void ROOT::Experimental::RVectorField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RVectorField::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitVectorField(*this);
 }
@@ -2348,7 +2348,7 @@ size_t ROOT::Experimental::RRVecField::GetAlignment() const
    return EvalRVecAlignment(fSubFields[0]->GetAlignment());
 }
 
-void ROOT::Experimental::RRVecField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RRVecField::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitRVecField(*this);
 }
@@ -2425,7 +2425,7 @@ ROOT::Experimental::RField<std::vector<bool>>::SplitValue(const RValue &value) c
    return result;
 }
 
-void ROOT::Experimental::RField<std::vector<bool>>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RField<std::vector<bool>>::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitVectorBoolField(*this);
 }
@@ -2519,7 +2519,7 @@ ROOT::Experimental::RArrayField::SplitValue(const RValue &value) const
    return result;
 }
 
-void ROOT::Experimental::RArrayField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RArrayField::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitArrayField(*this);
 }
@@ -2663,7 +2663,7 @@ ROOT::Experimental::RArrayAsRVecField::SplitValue(const ROOT::Experimental::RFie
    return result;
 }
 
-void ROOT::Experimental::RArrayAsRVecField::AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RArrayAsRVecField::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitArrayAsRVecField(*this);
 }
@@ -2725,7 +2725,7 @@ void ROOT::Experimental::RBitsetField::ReadGlobalImpl(NTupleSize_t globalIndex, 
    }
 }
 
-void ROOT::Experimental::RBitsetField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RBitsetField::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitBitsetField(*this);
 }
@@ -3034,7 +3034,7 @@ ROOT::Experimental::RClusterIndex ROOT::Experimental::RNullableField::GetItemInd
    }
 }
 
-void ROOT::Experimental::RNullableField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RNullableField::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitNullableField(*this);
 }
@@ -3327,7 +3327,7 @@ ROOT::Experimental::RAtomicField::SplitValue(const RValue &value) const
    return result;
 }
 
-void ROOT::Experimental::RAtomicField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RAtomicField::AcceptVisitor(RFieldVisitor &visitor) const
 {
    visitor.VisitAtomicField(*this);
 }

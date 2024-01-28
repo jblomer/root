@@ -59,6 +59,7 @@ namespace Experimental {
 class RCollectionField;
 class RCollectionNTupleWriter;
 class REntry;
+class RNTupleFillContext;
 
 namespace Internal {
 struct RFieldCallbackInjector;
@@ -67,6 +68,8 @@ struct RFieldCallbackInjector;
 namespace Detail {
 
 class RFieldVisitor;
+class RPagePersistentSink;
+class RPageSinkBuf;
 class RPageStorage;
 
 // clang-format off
@@ -298,6 +301,28 @@ public:
       }
    }; // class RBulk
 
+   class RCommitClusterProxy {
+      friend class ROOT::Experimental::RNTupleFillContext;
+
+      RFieldBase &fFieldRef;
+
+      RCommitClusterProxy(RFieldBase &field) : fFieldRef(field) {}
+      void CommitCluster() { fFieldRef.CommitCluster(); }
+   }; // class RCommitClusterProxy
+
+   class RConnectPageSinkProxy {
+      friend class ROOT::Experimental::Detail::RPagePersistentSink;
+      friend class ROOT::Experimental::Detail::RPageSinkBuf;
+
+      RFieldBase &fFieldRef;
+
+      RConnectPageSinkProxy(RFieldBase &field) : fFieldRef(field) {}
+      void ConnectPageSink(RPageSink &pageSink, NTupleSize_t firstEntry = 0)
+      {
+         fFieldRef.ConnectPageSink(pageSink, firstEntry);
+      }
+   }; // class RConnectPageSinkProxy
+
 private:
    /// The field name relative to its parent field
    std::string fName;
@@ -333,6 +358,10 @@ private:
    /// The column element index also depends on the number of repetitions of each field in the hierarchy, e.g., given a
    /// field with type `std::array<std::array<float, 4>, 2>`, this function returns 8 for the inner-most field.
    NTupleSize_t EntryToColumnElementIndex(NTupleSize_t globalIndex) const;
+
+   /// Flushes data from active columns to disk and calls CommitClusterImpl
+   void CommitCluster();
+   void ConnectPageSink(RPageSink &pageSink, NTupleSize_t firstEntry = 0);
 
 protected:
    /// Input parameter to ReadBulk() and ReadBulkImpl(). See RBulk class for more information
@@ -599,9 +628,6 @@ public:
    int GetTraits() const { return fTraits; }
    bool HasReadCallbacks() const { return !fReadCallbacks.empty(); }
 
-   /// Flushes data from active columns to disk and calls CommitClusterImpl
-   void CommitCluster();
-
    std::string GetName() const { return fName; }
    /// Returns the field name and parent field names separated by dots ("grandparent.parent.child")
    std::string GetQualifiedFieldName() const;
@@ -634,7 +660,6 @@ public:
    /// Fields and their columns live in the void until connected to a physical page storage.  Only once connected, data
    /// can be read or written.  In order to find the field in the page storage, the field's on-disk ID has to be set.
    /// \param firstEntry The global index of the first entry with on-disk data for the connected field
-   void ConnectPageSink(RPageSink &pageSink, NTupleSize_t firstEntry = 0);
    void ConnectPageSource(RPageSource &pageSource);
 
    /// Indicates an evolution of the mapping scheme from C++ type to columns

@@ -68,7 +68,7 @@ void ROOT::Experimental::Detail::RPageSinkBuf::ConnectFields(const std::vector<R
       // Field Zero would have id 0.
       ++fNFields;
       f.SetOnDiskId(fNFields);
-      f.ConnectPageSink(*this, firstEntry); // issues in turn one or several calls to `AddColumn()`
+      RFieldBase::RConnectPageSinkProxy(f).ConnectPageSink(*this, firstEntry); // issues in turn calls to `AddColumn()`
    };
    for (auto *f : fields) {
       connectField(*f);

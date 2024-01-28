@@ -69,13 +69,13 @@ void ROOT::Experimental::RPrintSchemaVisitor::VisitField(const RFieldBase &field
 
    std::string key = fTreePrefix;
    key += "Field " + fFieldNoPrefix + std::to_string(fFieldNo);
-   fOutput << RNTupleFormatter::FitString(key, fAvailableSpaceKeyString);
+   fOutput << Internal::RNTupleFormatter::FitString(key, fAvailableSpaceKeyString);
    fOutput << " : ";
 
    std::string value = field.GetName();
    if (!field.GetType().empty())
       value += " (" + field.GetType() + ")";
-   fOutput << RNTupleFormatter::FitString(value, fAvailableSpaceValueString);
+   fOutput << Internal::RNTupleFormatter::FitString(value, fAvailableSpaceValueString);
    fOutput << fFrameSymbol << std::endl;
 
    auto subFields = field.GetSubFields();
@@ -420,17 +420,4 @@ void ROOT::Experimental::RPrintValueVisitor::VisitVectorBoolField(const RField<s
 void ROOT::Experimental::RPrintValueVisitor::VisitRVecField(const RRVecField &field)
 {
    PrintCollection(field);
-}
-
-//---------------------------- RNTupleFormatter --------------------------------
-
-
-std::string ROOT::Experimental::RNTupleFormatter::FitString(const std::string &str, int availableSpace)
-{
-   int strSize{static_cast<int>(str.size())};
-   if (strSize <= availableSpace)
-      return str + std::string(availableSpace - strSize, ' ');
-   else if (availableSpace < 3)
-      return std::string(availableSpace, '.');
-   return std::string(str, 0, availableSpace - 3) + "...";
 }

@@ -25,3 +25,13 @@ ROOT::Experimental::RLogChannel &ROOT::Experimental::NTupleLog() {
    static RLogChannel sLog("ROOT.NTuple");
    return sLog;
 }
+
+std::string ROOT::Experimental::Internal::RNTupleFormatter::FitString(const std::string &str, int availableSpace)
+{
+   int strSize{static_cast<int>(str.size())};
+   if (strSize <= availableSpace)
+      return str + std::string(availableSpace - strSize, ' ');
+   else if (availableSpace < 3)
+      return std::string(availableSpace, '.');
+   return std::string(str, 0, availableSpace - 3) + "...";
+}

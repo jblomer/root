@@ -224,22 +224,6 @@ public:
    void VisitAtomicField(const RAtomicField &field) final;
 };
 
-
-// clang-format off
-/**
-\class ROOT::Experimental::RNTupleFormatter
-\ingroup NTuple
-\brief Contains helper functions for RNTupleReader::PrintInfo() and RPrintSchemaVisitor::VisitField()
-
-The functions in this class format strings which are displayed by RNTupleReader::PrintInfo() and RNTupleReader::Show().
-*/
-// clang-format on
-class RNTupleFormatter {
-public:
-   // Can abbreviate long strings, e.g. ("ExampleString" , space= 8) => "Examp..."
-   static std::string FitString(const std::string &str, int availableSpace);
-};
-
 } // namespace Experimental
 } // namespace ROOT
 

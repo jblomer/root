@@ -27,6 +27,7 @@ HEADERS
   ROOT/RNTuple.hxx
   ROOT/RNTupleAnchor.hxx
   ROOT/RNTupleDescriptor.hxx
+  ROOT/RNTupleInput.hxx
   ROOT/RNTupleMerger.hxx
   ROOT/RNTupleMetrics.hxx
   ROOT/RNTupleModel.hxx
@@ -54,6 +55,7 @@ SOURCES
   v7/src/RNTupleAnchor.cxx
   v7/src/RNTupleDescriptor.cxx
   v7/src/RNTupleDescriptorFmt.cxx
+  v7/src/RNTupleInput.cxx
   v7/src/RNTupleMerger.cxx
   v7/src/RNTupleMetrics.cxx
   v7/src/RNTupleModel.cxx

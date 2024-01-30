@@ -17,24 +17,48 @@
 #include <ROOT/RNTupleInput.hxx>
 #include <ROOT/RPageStorage.hxx>
 
+#include <mutex>
+
 ROOT::Experimental::RNTupleInput::RNTupleInput(std::unique_ptr<Detail::RPageSource> pageSource)
    : fPageSource(std::move(pageSource))
 {
    fPageSource->Attach();
-   fDescriptor = fPageSource->GetSharedDescriptorGuard()->Clone();
 }
 
-ROOT::Experimental::RNTupleInput::RNTupleInput(std::string_view ntupleName, std::string_view location,
-                                               const RNTupleReadOptions &options)
-   : RNTupleInput(Detail::RPageSource::Create(ntupleName, location, options))
-{}
-
-ROOT::Experimental::RNTupleInput ROOT::Experimental::RNTupleInput::Clone() const
+std::unique_ptr<ROOT::Experimental::RNTupleInput> ROOT::Experimental::RNTupleInput::Create(
+   std::string_view ntupleName, std::string_view location, const RNTupleReadOptions &options)
 {
-   return RNTupleInput(fPageSource->Clone());
+   return std::unique_ptr<RNTupleInput>(new RNTupleInput(Detail::RPageSource::Create(ntupleName, location, options)));
+}
+
+std::unique_ptr<ROOT::Experimental::RNTupleInput> ROOT::Experimental::RNTupleInput::Clone() const
+{
+   return std::unique_ptr<RNTupleInput>(new RNTupleInput(fPageSource->Clone()));
 }
 
 const ROOT::Experimental::RNTupleReadOptions &ROOT::Experimental::RNTupleInput::GetReadOptions() const
 {
    return fPageSource->GetReadOptions();
+}
+
+const ROOT::Experimental::RNTupleDescriptor &ROOT::Experimental::RNTupleInput::GetDescriptor() const
+{
+   static std::mutex gMutex;
+   const std::lock_guard<std::mutex> lock(gMutex);
+
+   auto descriptorGuard = fPageSource->GetSharedDescriptorGuard();
+   if (!fCachedDescriptor || fCachedDescriptor->GetGeneration() != descriptorGuard->GetGeneration())
+      fCachedDescriptor = descriptorGuard->Clone();
+   return *fCachedDescriptor;
+}
+
+void ROOT::Experimental::RNTupleInput::SetEntryRange(const REntryRange &range)
+{
+   fPageSource->SetEntryRange({range.fFirstEntry, range.fNEntries});
+}
+
+ROOT::Experimental::RNTupleInput::REntryRange ROOT::Experimental::RNTupleInput::GetEntryRange() const
+{
+   auto range = fPageSource->GetEntryRange();
+   return REntryRange{range.fFirstEntry, range.fNEntries};
 }

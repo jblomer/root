@@ -15,6 +15,7 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleAnchor.hxx>
+#include <ROOT/RNTupleInput.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 
@@ -68,6 +69,7 @@ void ROOT::Experimental::RNTuple::Streamer(TBuffer &buf)
    }
 }
 
+
 std::unique_ptr<ROOT::Experimental::Detail::RPageSource>
 ROOT::Experimental::RNTuple::MakePageSource(const RNTupleReadOptions &options)
 {
@@ -79,4 +81,18 @@ ROOT::Experimental::RNTuple::MakePageSource(const RNTupleReadOptions &options)
    // that are unsupported by raw file.
    auto path = fFile->GetEndpointUrl()->GetFile();
    return Detail::RPageSourceFile::CreateFromAnchor(*this, path, options);
+}
+
+std::unique_ptr<ROOT::Experimental::RNTupleInput>
+ROOT::Experimental::RNTuple::CreateInput(const RNTupleReadOptions &options) const
+{
+   if (!fFile)
+      throw RException(R__FAIL("This RNTuple object was not streamed from a ROOT file (TFile or descendant)"));
+
+   // TODO(jblomer): Add RRawFile factory that create a raw file from a TFile. This may then duplicate the file
+   // descriptor (to avoid re-open).  There could also be a raw file that uses a TFile as a "backend" for TFile cases
+   // that are unsupported by raw file.
+   auto path = fFile->GetEndpointUrl()->GetFile();
+   return std::unique_ptr<RNTupleInput>(
+      new RNTupleInput(Detail::RPageSourceFile::CreateFromAnchor(*this, path, options)));
 }

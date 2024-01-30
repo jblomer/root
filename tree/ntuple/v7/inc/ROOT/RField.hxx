@@ -59,6 +59,7 @@ namespace Experimental {
 class RCollectionField;
 class RCollectionNTupleWriter;
 class REntry;
+class RNTupleInput;
 
 namespace Internal {
 struct RFieldCallbackInjector;
@@ -640,6 +641,7 @@ public:
    /// calling this function. For sub fields, a field ID may or may not be set. If the field ID is unset, it will be
    /// determined using the page source descriptor, based on the parent field ID and the sub field name.
    void ConnectPageSource(Detail::RPageSource &pageSource);
+   void ConnectInput(RNTupleInput &input);
 
    /// Indicates an evolution of the mapping scheme from C++ type to columns
    virtual std::uint32_t GetFieldVersion() const { return 0; }

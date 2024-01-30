@@ -30,6 +30,7 @@ class TFileMergeInfo;
 namespace ROOT {
 namespace Experimental {
 
+class RNTupleInput;
 class RNTupleReadOptions;
 namespace Detail {
 class RPageSource;
@@ -106,9 +107,10 @@ public:
    RNTuple() = default;
    ~RNTuple() = default;
 
-   /// Create a page source from the RNTuple object. Requires the RNTuple object to be streamed from a file.
+   /// Create an open RNTuple handle from the RNTuple object. Requires the RNTuple object to be streamed from a file.
    /// If fFile is not set, an exception is thrown.
    std::unique_ptr<Detail::RPageSource> MakePageSource(const RNTupleReadOptions &options = RNTupleReadOptions());
+   std::unique_ptr<RNTupleInput> CreateInput(const RNTupleReadOptions &options = RNTupleReadOptions()) const;
 
    /// RNTuple implements the hadd MergeFile interface
    /// Merge this NTuple with the input list entries

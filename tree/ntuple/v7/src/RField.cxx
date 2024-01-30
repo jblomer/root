@@ -21,6 +21,7 @@
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleInput.hxx>
 #include <ROOT/RNTupleModel.hxx>
 
 #include <TBaseClass.h>
@@ -903,6 +904,11 @@ void ROOT::Experimental::RFieldBase::ConnectPageSource(Detail::RPageSource &page
    OnConnectPageSource();
 
    fState = EState::kConnectedToSource;
+}
+
+void ROOT::Experimental::RFieldBase::ConnectInput(RNTupleInput &input)
+{
+   ConnectPageSource(*input.fPageSource);
 }
 
 void ROOT::Experimental::RFieldBase::AcceptVisitor(Detail::RFieldVisitor &visitor) const

@@ -18,6 +18,7 @@
 
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RNTupleUtil.hxx>
 
 #include <memory>
 #include <string_view>
@@ -41,19 +42,37 @@ The class provides the public front of a page source.
 */
 // clang-format on
 class RNTupleInput {
+   friend class RNTuple;
+   friend class RFieldBase;
+
 private:
    std::unique_ptr<Detail::RPageSource> fPageSource;
-   std::unique_ptr<RNTupleDescriptor> fDescriptor;
+   /// The ntuple descriptor in the page source is protected by a read-write lock. We don't expose that to the
+   /// users of RNTupleReader::GetDescriptor().  Instead, if descriptor information is needed, we clone the
+   /// descriptor.  Using the descriptor's generation number, we know if the cached descriptor is stale.
+   mutable std::unique_ptr<RNTupleDescriptor> fCachedDescriptor;
 
    explicit RNTupleInput(std::unique_ptr<Detail::RPageSource> pageSource);
 
 public:
-   RNTupleInput(std::string_view ntupleName, std::string_view location,
-                const RNTupleReadOptions &options = RNTupleReadOptions());
-   RNTupleInput Clone() const;
+   /// Used in SetEntryRange / GetEntryRange
+   struct REntryRange {
+      NTupleSize_t fFirstEntry = kInvalidNTupleIndex;
+      NTupleSize_t fNEntries = 0;
+   };
+
+   static std::unique_ptr<RNTupleInput> Create(std::string_view ntupleName, std::string_view location,
+                                               const RNTupleReadOptions &options = RNTupleReadOptions());
+   std::unique_ptr<RNTupleInput> Clone() const;
+
+   /// Promise to only read from the given entry range. If set, prevents the cluster pool from reading-ahead beyond
+   /// the given range. The range needs to be within [0, GetNEntries()).
+   void SetEntryRange(const REntryRange &range);
+   REntryRange GetEntryRange() const;
 
    const RNTupleReadOptions &GetReadOptions() const;
-   const RNTupleDescriptor &GetDescriptor() const { return *fDescriptor; }
+   /// Returns a cached copy of the page source descriptor.
+   const RNTupleDescriptor &GetDescriptor() const;
 };
 
 } // namespace Experimental

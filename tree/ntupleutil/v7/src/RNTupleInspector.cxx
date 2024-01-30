@@ -28,14 +28,10 @@
 #include <iomanip>
 #include <iostream>
 
-ROOT::Experimental::RNTupleInspector::RNTupleInspector(
-   std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource)
-   : fPageSource(std::move(pageSource))
-{
-   fPageSource->Attach();
-   auto descriptorGuard = fPageSource->GetSharedDescriptorGuard();
-   fDescriptor = descriptorGuard->Clone();
-}
+ROOT::Experimental::RNTupleInspector::RNTupleInspector(std::unique_ptr<RNTupleInput> input)
+   : fInput(std::move(input))
+   , fDescriptor(fInput->GetDescriptor().Clone())
+{}
 
 void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
 {
@@ -137,9 +133,9 @@ ROOT::Experimental::RNTupleInspector::GetColumnsByFieldId(DescriptorId_t fieldId
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleInspector>
-ROOT::Experimental::RNTupleInspector::Create(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource)
+ROOT::Experimental::RNTupleInspector::Create(std::unique_ptr<RNTupleInput> input)
 {
-   auto inspector = std::unique_ptr<RNTupleInspector>(new RNTupleInspector(std::move(pageSource)));
+   auto inspector = std::unique_ptr<RNTupleInspector>(new RNTupleInspector(std::move(input)));
 
    inspector->CollectColumnInfo();
    inspector->CollectFieldTreeInfo(inspector->GetDescriptor()->GetFieldZeroId());
@@ -154,16 +150,14 @@ ROOT::Experimental::RNTupleInspector::Create(ROOT::Experimental::RNTuple *source
       throw RException(R__FAIL("provided RNTuple is null"));
    }
 
-   std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource = sourceNTuple->MakePageSource();
-
-   return ROOT::Experimental::RNTupleInspector::Create(std::move(pageSource));
+   return ROOT::Experimental::RNTupleInspector::Create(sourceNTuple->CreateInput());
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleInspector>
 ROOT::Experimental::RNTupleInspector::Create(std::string_view ntupleName, std::string_view sourceFileName)
 {
-   auto pageSource = ROOT::Experimental::Detail::RPageSource::Create(ntupleName, sourceFileName);
-   auto inspector = std::unique_ptr<RNTupleInspector>(new RNTupleInspector(std::move(pageSource)));
+   auto input = ROOT::Experimental::RNTupleInput::Create(ntupleName, sourceFileName);
+   auto inspector = std::unique_ptr<RNTupleInspector>(new RNTupleInspector(std::move(input)));
 
    inspector->CollectColumnInfo();
    inspector->CollectFieldTreeInfo(inspector->GetDescriptor()->GetFieldZeroId());

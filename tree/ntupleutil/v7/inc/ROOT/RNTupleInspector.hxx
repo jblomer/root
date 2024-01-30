@@ -19,6 +19,7 @@
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
+#include <ROOT/RNTupleInput.hxx>
 
 #include <TFile.h>
 #include <TH1D.h>
@@ -125,7 +126,7 @@ public:
    };
 
 private:
-   std::unique_ptr<Detail::RPageSource> fPageSource;
+   std::unique_ptr<RNTupleInput> fInput;
    std::unique_ptr<RNTupleDescriptor> fDescriptor;
    int fCompressionSettings = -1;
    std::uint64_t fCompressedSize = 0;
@@ -134,7 +135,7 @@ private:
    std::map<int, RColumnInspector> fColumnInfo;
    std::map<int, RFieldTreeInspector> fFieldTreeInfo;
 
-   RNTupleInspector(std::unique_ptr<Detail::RPageSource> pageSource);
+   RNTupleInspector(std::unique_ptr<RNTupleInput> input);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Gather column-level and RNTuple-level information.
@@ -194,10 +195,10 @@ public:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create a new RNTupleInspector.
    ///
-   /// \param[in] pageSource The RPageSource object belonging to the RNTuple to be inspected.
+   /// \param[in] input The RNTupleInput object belonging to the RNTuple to be inspected.
    ///
    /// \see Create(RNTuple *sourceNTuple)
-   static std::unique_ptr<RNTupleInspector> Create(std::unique_ptr<Detail::RPageSource> pageSource);
+   static std::unique_ptr<RNTupleInspector> Create(std::unique_ptr<RNTupleInput> input);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the descriptor for the RNTuple being inspected.

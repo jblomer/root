@@ -17,9 +17,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTNTupleUtil
 HEADERS
   ROOT/RNTupleImporter.hxx
   ROOT/RNTupleInspector.hxx
+  ROOT/RNTupleMakeClass.hxx
 SOURCES
   v7/src/RNTupleImporter.cxx
   v7/src/RNTupleInspector.cxx
+  v7/src/RNTupleMakeClass.cxx
 LINKDEF
   LinkDef.h
 DEPENDENCIES

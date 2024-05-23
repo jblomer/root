@@ -1370,8 +1370,9 @@ private:
 
    static std::string GetTypeList(const std::vector<RFieldBase *> &itemFields);
    /// Extracts the index from an std::variant and transforms it into the 1-based index used for the switch column
-   /// The implementation assumes an std::variant memory layout with a trailing unsigned byte, zero-indexed,
-   /// having the exception caused empty state encoded by the value 255
+   /// The implementation supports two memory layouts that are in use: a trailing unsigned byte, zero-indexed,
+   /// having the exception caused empty state encoded by the max tag value,
+   /// or a trailing unsigned int instead of a char.
    static std::uint8_t GetTag(const void *variantPtr, std::size_t tagOffset);
    static void SetTag(void *variantPtr, std::size_t tagOffset, std::uint8_t tag);
 
@@ -1398,7 +1399,7 @@ public:
    ~RVariantField() override = default;
 
    size_t GetValueSize() const final;
-   size_t GetAlignment() const final { return fMaxAlignment; }
+   size_t GetAlignment() const final;
 };
 
 /// The generic field for a std::set<Type> and std::unordered_set<Type>

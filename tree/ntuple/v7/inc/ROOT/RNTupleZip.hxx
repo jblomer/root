@@ -50,7 +50,6 @@ public:
    {
       return [=](const void *b, size_t n, size_t o) { memcpy(dest + o, b, n); };
    }
-   static constexpr size_t kMaxSingleBlock = kMAXZIPBUF;
 
    RNTupleCompressor() : fZipBuffer(std::make_unique<Buffer_t>()) {}
    RNTupleCompressor(const RNTupleCompressor &other) = delete;

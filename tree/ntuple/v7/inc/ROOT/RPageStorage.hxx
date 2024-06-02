@@ -96,8 +96,8 @@ public:
            fHasChecksum(hasChecksum) {}
       RSealedPage(void *buffer, std::uint32_t bufferSize, std::uint32_t nElements, bool hasChecksum = false)
          : fBuffer(buffer), fBufferSize(bufferSize), fNElements(nElements), fHasChecksum(hasChecksum) {}
-      RSealedPage(const RSealedPage &other) = delete;
-      RSealedPage& operator =(const RSealedPage &other) = delete;
+      RSealedPage(const RSealedPage &other) = default;
+      RSealedPage& operator =(const RSealedPage &other) = default;
       RSealedPage(RSealedPage &&other) = default;
       RSealedPage& operator =(RSealedPage &&other) = default;
 

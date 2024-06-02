@@ -387,11 +387,13 @@ ROOT::Experimental::Internal::RPageSourceFile::PopulatePageFromCluster(ColumnHan
    }
 
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
-      directReadBuffer = std::unique_ptr<unsigned char[]>(new unsigned char[bytesOnStorage]);
-      fReader.ReadBuffer(directReadBuffer.get(), bytesOnStorage, pageInfo.fLocator.GetPosition<std::uint64_t>());
+      std::uint32_t bufferSize = bytesOnStorage + pageInfo.fHasChecksum * sizeof(std::uint64_t);
+      directReadBuffer = std::unique_ptr<unsigned char[]>(new unsigned char[bufferSize]);
+      fReader.ReadBuffer(directReadBuffer.get(), bufferSize, pageInfo.fLocator.GetPosition<std::uint64_t>());
       fCounters->fNPageLoaded.Inc();
       fCounters->fNRead.Inc();
-      fCounters->fSzReadPayload.Add(bytesOnStorage);
+      fCounters->fSzReadPayload.Add(bufferSize);
+      RSealedPage{directReadBuffer.get(), bufferSize, 0, pageInfo.fHasChecksum}.VerifyChecksumIfEnabled();
       sealedPageBuffer = directReadBuffer.get();
    } else {
       if (!fCurrentCluster || (fCurrentCluster->GetId() != clusterId) || !fCurrentCluster->ContainsColumn(columnId))
@@ -674,12 +676,12 @@ void ROOT::Experimental::Internal::RPageSourceFile::UnzipClusterImpl(RCluster *c
          ROnDiskPage::Key key(columnId, pageNo);
          auto onDiskPage = cluster->GetOnDiskPage(key);
          R__ASSERT(onDiskPage && (onDiskPage->GetSize() == pi.fLocator.fBytesOnStorage));
+         RSealedPage sealedPage{onDiskPage->GetAddress(), pi.fLocator.fBytesOnStorage, pi.fNElements};
 
-         auto taskFunc = [this, columnId, clusterId, firstInPage, onDiskPage, element = allElements.back().get(),
-                          nElements = pi.fNElements,
+         auto taskFunc = [this, columnId, clusterId, firstInPage, sealedPage, element = allElements.back().get(),
                           indexOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex]() {
-            auto newPage = UnsealPage({onDiskPage->GetAddress(), onDiskPage->GetSize(), nElements}, *element, columnId);
-            fCounters->fSzUnzip.Add(element->GetSize() * nElements);
+            auto newPage = UnsealPage(sealedPage, *element, columnId);
+            fCounters->fSzUnzip.Add(element->GetSize() * sealedPage.GetNElements());
 
             newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
             fPagePool->PreloadPage(

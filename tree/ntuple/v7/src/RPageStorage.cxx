@@ -353,7 +353,7 @@ ROOT::Experimental::Internal::RPageSink::SealPage(const RSealPageConfig &sealPag
    unsigned char *pageBuf = reinterpret_cast<unsigned char *>(sealPageConfig.fPage.GetBuffer());
    bool isAdoptedBuffer = true;
    auto nBytesPacked = sealPageConfig.fPage.GetNBytes();
-   auto nBytesChecksum = sealPageConfig.fWriteChecksum ? sizeof(std::uint64_t) : 0;
+   auto nBytesChecksum = sealPageConfig.fWriteChecksum ? kNBytesPageChecksum : 0;
 
    if (!sealPageConfig.fElement.IsMappable()) {
       nBytesPacked = sealPageConfig.fElement.GetPackedSize(sealPageConfig.fPage.GetNElements());

@@ -344,7 +344,7 @@ void ROOT::Experimental::Internal::RPageSourceFile::LoadSealedPage(DescriptorId_
 
    auto bytesOnStorage = pageInfo.fLocator.fBytesOnStorage;
    if (pageInfo.fHasChecksum) {
-      bytesOnStorage += sizeof(std::uint64_t);
+      bytesOnStorage += kNBytesPageChecksum;
       sealedPage.SetHasChecksum(true);
    }
    sealedPage.SetBufferSize(bytesOnStorage);
@@ -387,7 +387,7 @@ ROOT::Experimental::Internal::RPageSourceFile::PopulatePageFromCluster(ColumnHan
    }
 
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
-      std::uint32_t bufferSize = bytesOnStorage + pageInfo.fHasChecksum * sizeof(std::uint64_t);
+      std::uint32_t bufferSize = bytesOnStorage + pageInfo.fHasChecksum * kNBytesPageChecksum;
       directReadBuffer = std::unique_ptr<unsigned char[]>(new unsigned char[bufferSize]);
       fReader.ReadBuffer(directReadBuffer.get(), bufferSize, pageInfo.fLocator.GetPosition<std::uint64_t>());
       fCounters->fNPageLoaded.Inc();
@@ -406,7 +406,7 @@ ROOT::Experimental::Internal::RPageSourceFile::PopulatePageFromCluster(ColumnHan
       ROnDiskPage::Key key(columnId, pageInfo.fPageNo);
       auto onDiskPage = fCurrentCluster->GetOnDiskPage(key);
       R__ASSERT(onDiskPage && ((bytesOnStorage == onDiskPage->GetSize()) ||
-                (bytesOnStorage + sizeof(std::uint64_t) == onDiskPage->GetSize())));
+                (bytesOnStorage + kNBytesPageChecksum == onDiskPage->GetSize())));
       sealedPage = RSealedPage{onDiskPage->GetAddress(), onDiskPage->GetSize(), pageInfo.fNElements,
                                pageInfo.fHasChecksum};
    }
@@ -510,7 +510,7 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
                       [&](DescriptorId_t physicalColumnId, NTupleSize_t pageNo,
                           const RClusterDescriptor::RPageRange::RPageInfo &pageInfo) {
                          const auto &pageLocator = pageInfo.fLocator;
-                         auto bufferSize = pageLocator.fBytesOnStorage + pageInfo.fHasChecksum * sizeof(std::uint64_t);
+                         auto bufferSize = pageLocator.fBytesOnStorage + pageInfo.fHasChecksum * kNBytesPageChecksum;
                          activeSize += bufferSize;
                          onDiskPages.push_back({physicalColumnId, pageNo, pageLocator.GetPosition<std::uint64_t>(),
                                                 bufferSize, 0});
@@ -678,7 +678,7 @@ void ROOT::Experimental::Internal::RPageSourceFile::UnzipClusterImpl(RCluster *c
          ROnDiskPage::Key key(columnId, pageNo);
          auto onDiskPage = cluster->GetOnDiskPage(key);
          R__ASSERT(onDiskPage && ((onDiskPage->GetSize() == pi.fLocator.fBytesOnStorage) ||
-                   (onDiskPage->GetSize() == pi.fLocator.fBytesOnStorage + sizeof(std::uint64_t))));
+                   (onDiskPage->GetSize() == pi.fLocator.fBytesOnStorage + kNBytesPageChecksum)));
          RSealedPage sealedPage{onDiskPage->GetAddress(), onDiskPage->GetSize(), pi.fNElements, pi.fHasChecksum};
 
          auto taskFunc = [this, columnId, clusterId, firstInPage, sealedPage, element = allElements.back().get(),

@@ -102,6 +102,8 @@ class RPageSourceFile : public RPageSource {
    friend class ROOT::Experimental::RNTuple;
 
 private:
+   static std::atomic<int> nInstances;
+
    /// Summarizes cluster-level information that are necessary to populate a certain page.
    /// Used by PopulatePageFromCluster().
    struct RClusterInfo {

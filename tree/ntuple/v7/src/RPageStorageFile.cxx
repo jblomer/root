@@ -218,6 +218,8 @@ void ROOT::Experimental::Internal::RPageSinkFile::ReleasePage(RPage &page)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+std::atomic<int> ROOT::Experimental::Internal::RPageSourceFile::nInstances = 0;
+
 ROOT::Experimental::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName,
                                                                const RNTupleReadOptions &options)
    : RPageSource(ntupleName, options),
@@ -246,6 +248,8 @@ ROOT::Experimental::Internal::RPageSourceFile::RPageSourceFile(std::string_view 
 
 void ROOT::Experimental::Internal::RPageSourceFile::InitDescriptor(const RNTuple &anchor)
 {
+   printf("INIT PAGE SOURCE %s %d\n", fFile->GetUrl().c_str(), ++nInstances);
+
    // TOOD(jblomer): can the epoch check be factored out across anchors?
    if (anchor.GetVersionEpoch() != RNTuple::kVersionEpoch) {
       throw RException(R__FAIL("unsupported RNTuple epoch version: " + std::to_string(anchor.GetVersionEpoch())));
@@ -300,7 +304,10 @@ ROOT::Experimental::Internal::RPageSourceFile::CreateFromAnchor(const RNTuple &a
    return pageSource;
 }
 
-ROOT::Experimental::Internal::RPageSourceFile::~RPageSourceFile() = default;
+ROOT::Experimental::Internal::RPageSourceFile::~RPageSourceFile()
+{
+   printf("DESTRUCTING PAGE SOURCE %s %d\n", fFile->GetUrl().c_str(), --nInstances);
+}
 
 ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceFile::AttachImpl()
 {

@@ -22,10 +22,13 @@
 #include <ROOT/RNTupleUtil.hxx>
 #include <string_view>
 
+#include <condition_variable>
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
+#include <thread>
 #include <unordered_map>
 
 namespace ROOT {
@@ -89,6 +92,19 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// onto slots.  In the InitSlot method, the column readers use this map to find the correct range to connect to.
    std::unordered_map<ULong64_t, std::size_t> fFirstEntry2RangeIdx;
 
+   /// The background thread that runs PrepareNextRanges()
+   std::thread fThreadIo;
+   /// Protects the shared state between the main thread and the I/O thread
+   std::mutex fMutexPrefetch;
+   /// Signal around the state information of fIsReadyForPrefetch and fHasNextRanges
+   std::condition_variable fCvPrefetch;
+   /// Is true when the prefetch thread should start working
+   bool fIsReadyForPrefetch = false;
+   /// Is true when the prefetch thread has populated fNextRanges
+   bool fHasNextRanges = false;
+   /// Is true when the I/O thread should quit
+   bool fShouldTerminate = false;
+
    /// \brief Holds useful information about fields added to the RNTupleDS
    struct RFieldInfo {
       DescriptorId_t fFieldId;
@@ -114,6 +130,8 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// Upon return, the fNextRanges list is ordered.  It has usually fNSlots elements; fewer if there
    /// is not enough work to give at least one cluster to every slot.
    void PrepareNextRanges();
+   /// The main function of the fThreadIo background thread
+   void ExecPrefetch();
 
    explicit RNTupleDS(std::unique_ptr<ROOT::Experimental::Internal::RPageSource> pageSource);
 

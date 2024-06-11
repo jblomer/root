@@ -454,6 +454,24 @@ RNTupleDS::GetColumnReaders(unsigned int slot, std::string_view name, const std:
    return reader;
 }
 
+void RNTupleDS::ExecPrefetch()
+{
+   while (true) {
+      std::unique_lock lock(fMutexPrefetch);
+      fCvPrefetch.wait(lock, [this]{ return fIsReadyForPrefetch || fShouldTerminate; });
+      if (fShouldTerminate)
+         return;
+
+      assert(!fHasNextRanges);
+      PrepareNextRanges();
+      fHasNextRanges = true;
+      fIsReadyForPrefetch = false;
+
+      lock.unlock();
+      fCvPrefetch.notify_one();
+   }
+}
+
 void RNTupleDS::PrepareNextRanges()
 {
    assert(fNextRanges.empty());
@@ -555,6 +573,12 @@ void RNTupleDS::PrepareNextRanges()
 std::vector<std::pair<ULong64_t, ULong64_t>> RNTupleDS::GetEntryRanges()
 {
    std::vector<std::pair<ULong64_t, ULong64_t>> ranges;
+
+   {
+      std::unique_lock lock(fMutexPrefetch);
+      fCvPrefetch.wait(lock, [this]{ return fHasNextRanges; });
+   }
+
    if (fNextRanges.empty())
       return ranges;
    assert(fNextRanges.size() <= fNSlots);
@@ -573,7 +597,12 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RNTupleDS::GetEntryRanges()
 
    fCurrentRanges.clear();
    std::swap(fCurrentRanges, fNextRanges);
-   PrepareNextRanges();
+   {
+      std::lock_guard _(fMutexPrefetch);
+      fIsReadyForPrefetch = true;
+      fHasNextRanges = false;
+   }
+   fCvPrefetch.notify_one();
 
    // Create ranges for the RDF loop manager from the list of REntryRangeDS records.
    // The entry ranges that are relative to the page source in REntryRangeDS are translated into absolute
@@ -644,12 +673,19 @@ void RNTupleDS::Initialize()
 {
    fSeenEntries = 0;
    fNextFileIndex = 0;
+   fIsReadyForPrefetch = fHasNextRanges = fShouldTerminate = false;
+   fThreadIo = std::thread(&RNTupleDS::ExecPrefetch, this);
    if (!fCurrentRanges.empty() && (fFileNames.size() <= fNSlots)) {
       assert(fNextRanges.empty());
       std::swap(fCurrentRanges, fNextRanges);
       fNextFileIndex = std::max(fFileNames.size(), std::size_t(1));
+      fHasNextRanges = true;
    } else {
-      PrepareNextRanges();
+      {
+         std::lock_guard _(fMutexPrefetch);
+         fIsReadyForPrefetch = true;
+      }
+      fCvPrefetch.notify_one();
    }
 }
 
@@ -660,6 +696,12 @@ void RNTupleDS::Finalize()
          r->Disconnect(false /* keepValue */);
       }
    }
+   {
+      std::lock_guard _(fMutexPrefetch);
+      fShouldTerminate = true;
+   }
+   fCvPrefetch.notify_one();
+   fThreadIo.join();
    // If we have a chain with more files than the number of slots, the files opened at the end of the
    // event loop won't be reused when the event loop restarts, so we can close them.
    if (fFileNames.size() > fNSlots) {

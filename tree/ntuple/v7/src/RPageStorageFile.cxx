@@ -482,6 +482,11 @@ std::unique_ptr<ROOT::Experimental::Internal::RPageSource> ROOT::Experimental::I
    return std::unique_ptr<RPageSourceFile>(clone);
 }
 
+void ROOT::Experimental::Internal::RPageSourceFile::PreloadCluster(DescriptorId_t clusterId)
+{
+   fCurrentCluster = fClusterPool->GetCluster(clusterId, fActivePhysicalColumns.ToColumnSet());
+}
+
 std::unique_ptr<ROOT::Experimental::Internal::RCluster>
 ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
    const RCluster::RKey &clusterKey, std::vector<ROOT::Internal::RRawFile::RIOVec> &readRequests)

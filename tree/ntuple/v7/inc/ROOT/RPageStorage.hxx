@@ -602,6 +602,12 @@ public:
    /// `RPageAllocatorHeap`; use `RPageAllocatorHeap::DeletePage()` to deallocate returned pages.
    RPage UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element, DescriptorId_t physicalColumnId);
 
+   /// Page sources that are opened in the background (e.g., in the RNTuple RDF datasource), can benefit from
+   /// prefetching the first cluster before the first access (first call to PopulatePage()).
+   /// TODO(jblomer): The management of the cluster pool and the preloading should be done centrally in the base class,
+   /// instead of in the concrete derived classes.
+   virtual void PreloadCluster(DescriptorId_t /* clusterId */) {}
+
    /// Populates all the pages of the given cluster ids and columns; it is possible that some columns do not
    /// contain any pages.  The page source may load more columns than the minimal necessary set from `columns`.
    /// To indicate which columns have been loaded, LoadClusters() must mark them with SetColumnAvailable().

@@ -167,6 +167,8 @@ public:
    RPage PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex) final;
    void ReleasePage(RPage &page) final;
 
+   void PreloadCluster(DescriptorId_t clusterId) final;
+
    void LoadSealedPage(DescriptorId_t physicalColumnId, RClusterIndex clusterIndex, RSealedPage &sealedPage) final;
 
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final;

@@ -76,7 +76,7 @@ private:
       const RPageStorage::ColumnHandle_t &GetHandle() const { return fCol; }
       bool IsEmpty() const { return fBufferedPages.empty(); }
       bool HasSealedPagesOnly() const { return fBufferedPages.size() == fSealedPages.size(); }
-      const RPageStorage::SealedPageSequence_t &GetSealedPages() const { return fSealedPages; }
+      RPageStorage::SealedPageSequence_t &GetSealedPages() { return fSealedPages; }
 
       using BufferedPages_t = std::tuple<std::deque<RPageZipItem>, RPageStorage::SealedPageSequence_t>;
       /// When the return value of DrainBufferedPages() is destroyed, all references

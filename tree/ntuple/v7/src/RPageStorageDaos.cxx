@@ -395,6 +395,8 @@ ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPa
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
 
          const RPageStorage::RSealedPage &s = *sealedPageIt;
+         if (!s.GetBuffer())
+            continue;
 
          if (positionOffset + s.GetBufferSize() > maxCageSz) {
             positionOffset = 0;

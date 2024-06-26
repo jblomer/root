@@ -205,8 +205,8 @@ std::uint64_t ROOT::Experimental::Internal::RPageSinkBuf::CommitCluster(ROOT::Ex
    toCommit.reserve(fBufferedColumns.size());
    for (auto &bufColumn : fBufferedColumns) {
       R__ASSERT(bufColumn.HasSealedPagesOnly());
-      const auto &sealedPages = bufColumn.GetSealedPages();
-      toCommit.emplace_back(bufColumn.GetHandle().fPhysicalId, sealedPages.cbegin(), sealedPages.cend());
+      auto &sealedPages = bufColumn.GetSealedPages();
+      toCommit.emplace_back(bufColumn.GetHandle().fPhysicalId, sealedPages.begin(), sealedPages.end());
    }
 
    std::uint64_t nbytes;

@@ -132,6 +132,8 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPa
       const auto bitsOnStorage = RColumnElementBase::GetBitsOnStorage(
          fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(range.fPhysicalColumnId).GetModel().GetType());
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
+         if (!sealedPageIt->GetBuffer())
+            continue;
          size += sealedPageIt->GetBufferSize();
          bytesPacked += (bitsOnStorage * sealedPageIt->GetNElements() + 7) / 8;
       }
@@ -150,6 +152,8 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPa
    std::vector<ROOT::Experimental::RNTupleLocator> locators;
    for (auto &range : ranges) {
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
+         if (!sealedPageIt->GetBuffer())
+            continue;
          fWriter->WriteIntoReservedBlob(sealedPageIt->GetBuffer(), sealedPageIt->GetBufferSize(), offset);
          RNTupleLocator locator;
          locator.fPosition = offset;
@@ -544,7 +548,10 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
    if (onDiskPages.size())
       gaps.reserve(onDiskPages.size() - 1);
    for (unsigned i = 1; i < onDiskPages.size(); ++i) {
-      gaps.emplace_back(onDiskPages[i].fOffset - (onDiskPages[i - 1].fSize + onDiskPages[i - 1].fOffset));
+      if (onDiskPages[i].fOffset <= onDiskPages[i - 1].fSize + onDiskPages[i - 1].fOffset)
+         gaps.emplace_back(0);
+      else
+         gaps.emplace_back(onDiskPages[i].fOffset - (onDiskPages[i - 1].fSize + onDiskPages[i - 1].fOffset));
    }
    std::sort(gaps.begin(), gaps.end());
    std::size_t gapCut = 0;
@@ -572,7 +579,11 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
    for (auto &s : onDiskPages) {
       R__ASSERT(s.fSize > 0);
       auto readUpTo = req.fOffset + req.fSize;
-      R__ASSERT(s.fOffset >= readUpTo);
+      //R__ASSERT(s.fOffset >= readUpTo);
+      if (s.fOffset < readUpTo) {
+         s.fBufPos = reinterpret_cast<intptr_t>(req.fBuffer) + req.fSize - s.fSize;
+         continue;
+      }
       auto overhead = s.fOffset - readUpTo;
       szPayload += s.fSize;
       if (overhead <= gapCut) {

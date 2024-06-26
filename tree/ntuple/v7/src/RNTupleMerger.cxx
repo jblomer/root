@@ -251,8 +251,8 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
             } // end of loop over pages
 
             sealedPagesV.push_back(std::move(sealedPages));
-            sealedPageGroups.emplace_back(column.fColumnOutputId, sealedPagesV.back().cbegin(),
-                                          sealedPagesV.back().cend());
+            sealedPageGroups.emplace_back(column.fColumnOutputId, sealedPagesV.back().begin(),
+                                          sealedPagesV.back().end());
 
          } // end of loop over columns
 

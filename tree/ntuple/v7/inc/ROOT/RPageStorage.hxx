@@ -125,16 +125,17 @@ public:
 
       void ChecksumIfEnabled();
       RResult<void> VerifyChecksumIfEnabled() const;
+      RResult<std::uint64_t> GetChecksum() const;
    };
 
    using SealedPageSequence_t = std::deque<RSealedPage>;
    /// A range of sealed pages referring to the same column that can be used for vector commit
    struct RSealedPageGroup {
       DescriptorId_t fPhysicalColumnId;
-      SealedPageSequence_t::const_iterator fFirst;
-      SealedPageSequence_t::const_iterator fLast;
+      SealedPageSequence_t::iterator fFirst;
+      SealedPageSequence_t::iterator fLast;
 
-      RSealedPageGroup(DescriptorId_t d, SealedPageSequence_t::const_iterator b, SealedPageSequence_t::const_iterator e)
+      RSealedPageGroup(DescriptorId_t d, SealedPageSequence_t::iterator b, SealedPageSequence_t::iterator e)
          : fPhysicalColumnId(d), fFirst(b), fLast(e)
       {
       }

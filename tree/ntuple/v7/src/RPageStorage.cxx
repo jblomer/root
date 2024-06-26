@@ -63,6 +63,19 @@ ROOT::Experimental::Internal::RPageStorage::RSealedPage::VerifyChecksumIfEnabled
    return RResult<void>::Success();
 }
 
+ROOT::Experimental::RResult<std::uint64_t>
+ROOT::Experimental::Internal::RPageStorage::RSealedPage::GetChecksum() const
+{
+   if (!fHasChecksum)
+      return R__FAIL("invalid attempt to extract page checksum");
+
+   assert(fBufferSize >= kNBytesPageChecksum);
+   std::uint64_t checksum;
+   RNTupleSerializer::DeserializeUInt64(
+      reinterpret_cast<const unsigned char *>(fBuffer) + fBufferSize - kNBytesPageChecksum, checksum);
+   return checksum;
+}
+
 //------------------------------------------------------------------------------
 
 void ROOT::Experimental::Internal::RPageSource::RActivePhysicalColumns::Insert(DescriptorId_t physicalColumnID)
@@ -675,8 +688,11 @@ ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPageVImpl(
 {
    std::vector<ROOT::Experimental::RNTupleLocator> locators;
    for (auto &range : ranges) {
-      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt)
+      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
+         if (!sealedPageIt->GetBuffer())
+            continue;
          locators.push_back(CommitSealedPageImpl(range.fPhysicalColumnId, *sealedPageIt));
+      }
    }
    return locators;
 }
@@ -684,16 +700,54 @@ ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPageVImpl(
 void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPageV(
    std::span<RPageStorage::RSealedPageGroup> ranges)
 {
-   auto locators = CommitSealedPageVImpl(ranges);
-   unsigned i = 0;
+   struct RSealedPageLink {
+      const RSealedPage *fSealedPage = nullptr;
+      std::size_t fLocatorIdx = 0;
+   };
 
+   unsigned i = 0;
+   std::unordered_map<std::uint64_t, RSealedPageLink> pageHashes;
+   for (auto &range : ranges) {
+      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
+         if (!sealedPageIt->GetHasChecksum()) {
+            ++i;
+            continue;
+         }
+
+         auto checksum = sealedPageIt->GetChecksum().Unwrap();
+         auto duplicateIt = pageHashes.find(checksum);
+         if (duplicateIt == pageHashes.end()) {
+            pageHashes.insert({checksum, RSealedPageLink{&(*sealedPageIt), i}});
+            ++i;
+            continue;
+         }
+
+         auto duplicatePage = duplicateIt->second.fSealedPage;
+
+         if ((duplicatePage->GetDataSize() != sealedPageIt->GetDataSize()) ||
+             memcmp(duplicatePage->GetBuffer(), sealedPageIt->GetBuffer(), sealedPageIt->GetDataSize())) {
+            ++i;
+            continue;
+         }
+
+         printf("DEDUPLICATE Page of size %u\n", sealedPageIt->GetBufferSize());
+         sealedPageIt->SetBuffer(nullptr);
+         sealedPageIt->SetBufferSize(duplicateIt->second.fLocatorIdx);
+      }
+   }
+
+   i = 0;
+   auto locators = CommitSealedPageVImpl(ranges);
    for (auto &range : ranges) {
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
          fOpenColumnRanges.at(range.fPhysicalColumnId).fNElements += sealedPageIt->GetNElements();
 
          RClusterDescriptor::RPageRange::RPageInfo pageInfo;
          pageInfo.fNElements = sealedPageIt->GetNElements();
-         pageInfo.fLocator = locators[i++];
+         if (sealedPageIt->GetBuffer())
+            pageInfo.fLocator = locators[i++];
+         else
+            pageInfo.fLocator = locators[sealedPageIt->GetBufferSize()];
          pageInfo.fHasChecksum = sealedPageIt->GetHasChecksum();
          fOpenPageRanges.at(range.fPhysicalColumnId).fPageInfos.emplace_back(pageInfo);
       }

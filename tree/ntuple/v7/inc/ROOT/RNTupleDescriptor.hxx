@@ -145,6 +145,8 @@ private:
    DescriptorId_t fFieldId = kInvalidDescriptorId;
    /// A field can be serialized into several columns, which are numbered from zero to $n$
    std::uint32_t fIndex;
+   /// Specifies to which of the column representations of the attached field the column belongs
+   std::uint16_t fRepresentationId = 0u;
    /// Specifies the index for the first stored element for this column. For deferred columns the value is greater
    /// than 0
    std::uint64_t fFirstElementIndex = 0U;
@@ -165,6 +167,7 @@ public:
    RColumnModel GetModel() const { return fModel; }
    std::uint32_t GetIndex() const { return fIndex; }
    DescriptorId_t GetFieldId() const { return fFieldId; }
+   std::uint16_t GetRepresentationId() const { return fRepresentationId; }
    bool IsAliasColumn() const { return fPhysicalColumnId != fLogicalColumnId; }
    std::uint64_t GetFirstElementIndex() const { return fFirstElementIndex; }
    bool IsDeferredColumn() const { return fFirstElementIndex > 0; }
@@ -973,6 +976,11 @@ public:
       fColumn.fIndex = index;
       return *this;
    }
+   RColumnDescriptorBuilder &RepresentationId(std::uint16_t representationId)
+   {
+      fColumn.fRepresentationId = representationId;
+      return *this;
+   }
    RColumnDescriptorBuilder &FirstElementIndex(std::uint64_t firstElementIdx)
    {
       fColumn.fFirstElementIndex = firstElementIdx;
@@ -1278,7 +1286,8 @@ public:
    // For both AddColumn() methods, the field has to be already available. For fields with multiple columns,
    // the columns need to be added in order of the column index
    RResult<void> AddColumn(DescriptorId_t logicalId, DescriptorId_t physicalId, DescriptorId_t fieldId,
-                           const RColumnModel &model, std::uint32_t index, std::uint64_t firstElementIdx = 0U);
+                           const RColumnModel &model, std::uint32_t index, std::uint16_t representationId,
+                           std::uint64_t firstElementIdx = 0);
    RResult<void> AddColumn(RColumnDescriptor &&columnDesc);
 
    RResult<void> AddClusterGroup(RClusterGroupDescriptor &&clusterGroup);

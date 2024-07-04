@@ -542,7 +542,7 @@ ROOT::Experimental::Internal::RPagePersistentSink::AddColumn(DescriptorId_t fiel
 {
    auto columnId = fDescriptorBuilder.GetDescriptor().GetNPhysicalColumns();
    fDescriptorBuilder.AddColumn(columnId, columnId, fieldId, column.GetModel(), column.GetIndex(),
-                                column.GetFirstElementIndex());
+                                0 /* TODO(jblomer): use actual representation id */, column.GetFirstElementIndex());
    return ColumnHandle_t{columnId, &column};
 }
 
@@ -565,7 +565,8 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
       auto sourceFieldId = changeset.fModel.GetProjectedFields().GetSourceField(&f)->GetOnDiskId();
       for (const auto &source : descriptor.GetColumnIterable(sourceFieldId)) {
          auto targetId = descriptor.GetNLogicalColumns();
-         fDescriptorBuilder.AddColumn(targetId, source.GetLogicalId(), fieldId, source.GetModel(), source.GetIndex());
+         fDescriptorBuilder.AddColumn(targetId, source.GetLogicalId(), fieldId, source.GetModel(), source.GetIndex(),
+                                      0 /* TODO(jblomer): replace by actual column representation id */, 0);
       }
    };
 

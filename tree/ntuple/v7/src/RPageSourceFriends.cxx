@@ -51,7 +51,8 @@ void ROOT::Experimental::Internal::RPageSourceFriends::AddVirtualField(const RNT
 
    for (const auto &c: originDesc.GetColumnIterable(originField)) {
       auto physicalId = c.IsAliasColumn() ? fIdBiMap.GetVirtualId({originIdx, c.GetPhysicalId()}) : fNextId;
-      fBuilder.AddColumn(fNextId, physicalId, virtualFieldId, c.GetModel(), c.GetIndex());
+      fBuilder.AddColumn(fNextId, physicalId, virtualFieldId, c.GetModel(), c.GetIndex(), c.GetRepresentationId(),
+                         c.GetFirstElementIndex());
       fIdBiMap.Insert({originIdx, c.GetLogicalId()}, fNextId);
       fNextId++;
    }

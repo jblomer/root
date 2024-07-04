@@ -105,7 +105,8 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
 bool ROOT::Experimental::RColumnDescriptor::operator==(const RColumnDescriptor &other) const
 {
    return fLogicalColumnId == other.fLogicalColumnId && fPhysicalColumnId == other.fPhysicalColumnId &&
-          fModel == other.fModel && fFieldId == other.fFieldId && fIndex == other.fIndex;
+          fModel == other.fModel && fFieldId == other.fFieldId && fIndex == other.fIndex &&
+          fRepresentationId == other.fRepresentationId;
 }
 
 
@@ -118,6 +119,7 @@ ROOT::Experimental::RColumnDescriptor::Clone() const
    clone.fModel = fModel;
    clone.fFieldId = fFieldId;
    clone.fIndex = fIndex;
+   clone.fRepresentationId = fRepresentationId;
    clone.fFirstElementIndex = fFirstElementIndex;
    return clone;
 }
@@ -840,7 +842,8 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddFieldLink(DescriptorI
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddColumn(DescriptorId_t logicalId, DescriptorId_t physicalId,
                                                                   DescriptorId_t fieldId, const RColumnModel &model,
-                                                                  std::uint32_t index, std::uint64_t firstElementIdx)
+                                                                  std::uint32_t index, std::uint16_t representationId,
+                                                                  std::uint64_t firstElementIdx)
 {
    RColumnDescriptor c;
    c.fLogicalColumnId = logicalId;
@@ -848,6 +851,7 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddColumn(DescriptorId_t
    c.fFieldId = fieldId;
    c.fModel = model;
    c.fIndex = index;
+   c.fRepresentationId = representationId;
    c.fFirstElementIndex = firstElementIdx;
 
    auto res = AttachColumn(fieldId, c);

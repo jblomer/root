@@ -1,4 +1,4 @@
-# RNTuple Reference Specifications 0.2.3.0
+# RNTuple Reference Specifications 0.2.4.0
 
 **Note:** This is work in progress. The RNTuple specification is not yet finalized.
 
@@ -413,13 +413,19 @@ The structural role of the field can have on of the following values
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 +                            Field ID                           +
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                             Flags                             |
+|              Flags            |      Representation ID        |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
 The order of columns matter: every column gets an implicit column ID
 which is equal to the zero-based index of the column in the serialized list.
-Multiple columns attached to the same field should be attached from smaller to larger IDs.
+
+A field can have multiple alternative column representations.
+The representation ID distinguishes the different representations.
+For any given cluster, only one of the representation IDs is the primary representation.
+All the other, secondary representations, are suppressed in the cluster.
+
+Multiple columns attached to the same field should be attached from smaller to larger column IDs.
 
 The column type and bits on storage integers can have one of the following values
 

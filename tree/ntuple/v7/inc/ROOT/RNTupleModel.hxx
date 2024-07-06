@@ -301,7 +301,6 @@ public:
 
    /// Adds a top-level field based on existing fields. The mapping function is called with the qualified field names
    /// of the provided field and the subfields.  It should return the qualified field names used as a mapping source.
-   /// Projected fields can only be used for models used to write data.
    RResult<void>
    AddProjectedField(std::unique_ptr<RFieldBase> field, std::function<std::string(const std::string &)> mapping);
    const RProjectedFields &GetProjectedFields() const { return *fProjectedFields; }

@@ -71,6 +71,9 @@ private:
    std::uint64_t fModelId = 0;
    /// Corresponds to the top-level fields of the linked model
    std::vector<RFieldBase::RValue> fValues;
+   /// For each element of fValues, whether or not it corresponds to a projected field.
+   /// Projected fields are skipped for writing.
+   std::vector<bool> fIsProjected;
    /// For fast lookup of token IDs given a top-level field name
    std::unordered_map<std::string, std::size_t> fFieldName2Token;
 
@@ -79,12 +82,6 @@ private:
    REntry() = default;
    explicit REntry(std::uint64_t modelId) : fModelId(modelId) {}
 
-   void AddValue(RFieldBase::RValue &&value)
-   {
-      fFieldName2Token[value.GetField().GetFieldName()] = fValues.size();
-      fValues.emplace_back(std::move(value));
-   }
-
    /// While building the entry, adds a new value to the list and return the value's shared pointer
    template <typename T, typename... ArgsT>
    std::shared_ptr<T> AddValue(RField<T> &field, ArgsT &&...args)
@@ -92,7 +89,22 @@ private:
       fFieldName2Token[field.GetFieldName()] = fValues.size();
       auto ptr = std::make_shared<T>(std::forward<ArgsT>(args)...);
       fValues.emplace_back(field.BindValue(ptr));
+      fIsProjected.emplace_back(false);
       return ptr;
+   }
+
+   void AddValue(RFieldBase::RValue &&value)
+   {
+      fFieldName2Token[value.GetField().GetFieldName()] = fValues.size();
+      fValues.emplace_back(std::move(value));
+      fIsProjected.emplace_back(false);
+   }
+
+   void AddProjectedValue(RFieldBase::RValue &&value)
+   {
+      fFieldName2Token[value.GetField().GetFieldName()] = fValues.size();
+      fValues.emplace_back(std::move(value));
+      fIsProjected.emplace_back(true);
    }
 
    /// Update the RValue for a field in the entry. To be used when its underlying RFieldBase changes, which typically
@@ -110,8 +122,11 @@ private:
    std::size_t Append()
    {
       std::size_t bytesWritten = 0;
-      for (auto &v : fValues) {
-         bytesWritten += v.Append();
+      const auto N = fValues.size();
+      for (std::size_t i = 0; i < N; ++i) {
+         if (fIsProjected[i])
+            continue;
+         bytesWritten += fValues[i].Append();
       }
       return bytesWritten;
    }

@@ -41,6 +41,14 @@ void ROOT::Experimental::RNTupleReader::ConnectModel(RNTupleModel &model)
       }
       Internal::CallConnectPageSourceOnField(*field, *fSource);
    }
+
+   const auto &projectedFields = model.GetProjectedFields();
+   for (auto &field : *projectedFields.GetFieldZero()) {
+      field.SetOnDiskId(projectedFields.GetSourceField(&field)->GetOnDiskId());
+   }
+   for (auto &field : projectedFields.GetFieldZero()->GetSubFields()) {
+      Internal::CallConnectPageSourceOnField(*field, *fSource);
+   }
 }
 
 void ROOT::Experimental::RNTupleReader::InitPageSource(bool enableMetrics)
@@ -63,10 +71,6 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimen
                                                  const RNTupleReadOptions &options)
    : fSource(std::move(source)), fModel(std::move(model)), fMetrics("RNTupleReader")
 {
-   // TODO(jblomer): properly support projected fields
-   if (!fModel->GetProjectedFields().IsEmpty()) {
-      throw RException(R__FAIL("model has projected fields, which is incompatible with providing a read model"));
-   }
    fModel->Freeze();
    InitPageSource(options.HasMetricsEnabled());
    ConnectModel(*fModel);

@@ -121,26 +121,25 @@ TEST(RNTupleProjection, CatchInvalidMappings)
    }
 }
 
-TEST(RNTupleProjection, CatchReaderWithProjectedFields)
+TEST(RNTupleProjection, Read)
 {
-   FileRaii fileGuard("test_ntuple_projection_catch_reader_with_projected_fields.root");
-
-   auto model = RNTupleModel::Create();
-   model->MakeField<float>("met", 42.0);
-
-   auto f1 = RFieldBase::Create("missingE", "float").Unwrap();
-   model->AddProjectedField(std::move(f1), [](const std::string &) { return "met"; });
-
-   auto modelRead = model->Clone();
+   FileRaii fileGuard("test_ntuple_projection_read.root");
 
    {
-      auto writer = RNTupleWriter::Recreate(std::move(model), "A", fileGuard.GetPath());
+      auto model = RNTupleModel::Create();
+      model->MakeField<float>("pt", 1.0);
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
    }
 
-   try {
-      auto reader = RNTupleReader::Open(std::move(modelRead), "A", fileGuard.GetPath());
-      FAIL() << "creating a reader with a model with projected fields should throw";
-   } catch (const RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("model has projected fields"));
-   }
+   auto model = RNTupleModel::Create();
+   model->MakeField<float>("pt", 1.0);
+   auto aliasField = RFieldBase::Create("ptAlias", "float").Unwrap();
+   model->AddProjectedField(std::move(aliasField), [](const std::string &) { return "pt"; });
+
+   auto reader = RNTupleReader::Open(std::move(model), "ntpl", fileGuard.GetPath());
+   auto ptrPt = reader->GetModel().GetDefaultEntry().GetPtr<float>("ptAlias");
+   EXPECT_EQ(1u, reader->GetNEntries());
+   reader->LoadEntry(0);
+   EXPECT_FLOAT_EQ(1.0, *ptrPt);
 }

@@ -487,8 +487,17 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDes
    auto fieldZero = std::make_unique<RFieldZero>();
    fieldZero->SetOnDiskId(GetFieldZeroId());
    auto model = RNTupleModel::Create(std::move(fieldZero));
-   for (const auto &topDesc : GetTopLevelFields())
-      model->AddField(topDesc.CreateField(*this));
+   for (const auto &topDesc : GetTopLevelFields()) {
+      auto field = topDesc.CreateField(*this);
+      if (topDesc.IsProjectedField()) {
+         model->AddProjectedField(std::move(field), [this](const std::string &targetName) -> std::string
+            {
+               return GetQualifiedFieldName(GetFieldDescriptor(FindFieldId(targetName)).GetProjectionSourceId());
+            });
+      } else {
+         model->AddField(std::move(field));
+      }
+   }
    model->Freeze();
    return model;
 }

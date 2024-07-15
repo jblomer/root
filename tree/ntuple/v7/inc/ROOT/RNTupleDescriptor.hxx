@@ -142,15 +142,17 @@ private:
    DescriptorId_t fLogicalColumnId = kInvalidDescriptorId;
    /// Usually identical to the logical column ID, except for alias columns where it references the shadowed column
    DescriptorId_t fPhysicalColumnId = kInvalidDescriptorId;
-   /// The on-disk column type
-   EColumnType fType;
    /// Every column belongs to one and only one field
    DescriptorId_t fFieldId = kInvalidDescriptorId;
-   /// A field can be serialized into several columns, which are numbered from zero to $n$
-   std::uint32_t fIndex;
    /// Specifies the index for the first stored element for this column. For deferred columns the value is greater
    /// than 0
    std::uint64_t fFirstElementIndex = 0U;
+   /// A field can be serialized into several columns, which are numbered from zero to $n$
+   std::uint32_t fIndex = 0;
+   /// A field may use multiple column representations, separated by different representation IDs
+   std::uint16_t fRepresentationId = 0U;
+   /// The on-disk column type
+   EColumnType fType = EColumnType::kUnknown;
 
 public:
    RColumnDescriptor() = default;
@@ -167,6 +169,7 @@ public:
    DescriptorId_t GetPhysicalId() const { return fPhysicalColumnId; }
    EColumnType GetType() const { return fType; }
    std::uint32_t GetIndex() const { return fIndex; }
+   std::uint16_t GetRepresentationId() const { return fRepresentationId; }
    DescriptorId_t GetFieldId() const { return fFieldId; }
    bool IsAliasColumn() const { return fPhysicalColumnId != fLogicalColumnId; }
    std::uint64_t GetFirstElementIndex() const { return fFirstElementIndex; }
@@ -988,6 +991,11 @@ public:
    RColumnDescriptorBuilder &FirstElementIndex(std::uint64_t firstElementIdx)
    {
       fColumn.fFirstElementIndex = firstElementIdx;
+      return *this;
+   }
+   RColumnDescriptorBuilder &RepresentationId(std::uint16_t representationId)
+   {
+      fColumn.fRepresentationId = representationId;
       return *this;
    }
    DescriptorId_t GetFieldId() const { return fColumn.fFieldId; }

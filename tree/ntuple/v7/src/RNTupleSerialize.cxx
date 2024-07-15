@@ -213,11 +213,12 @@ std::uint32_t SerializeColumnList(const ROOT::Experimental::RNTupleDescriptor &d
          pos += RNTupleSerializer::SerializeColumnType(c.GetType(), *where);
          pos += RNTupleSerializer::SerializeUInt16(RColumnElementBase::GetBitsOnStorage(c.GetType()), *where);
          pos += RNTupleSerializer::SerializeUInt32(context.GetOnDiskFieldId(c.GetFieldId()), *where);
-         std::uint32_t flags = 0;
+         std::uint16_t flags = 0;
          const std::uint64_t firstElementIdx = c.GetFirstElementIndex();
          if (firstElementIdx > 0)
             flags |= RNTupleSerializer::kFlagDeferredColumn;
-         pos += RNTupleSerializer::SerializeUInt32(flags, *where);
+         pos += RNTupleSerializer::SerializeUInt16(flags, *where);
+         pos += RNTupleSerializer::SerializeUInt16(c.GetRepresentationId(), *where);
          if (flags & RNTupleSerializer::kFlagDeferredColumn)
             pos += RNTupleSerializer::SerializeUInt64(firstElementIdx, *where);
 
@@ -246,7 +247,8 @@ RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t bufSi
    EColumnType type{EColumnType::kIndex32};
    std::uint16_t bitsOnStorage;
    std::uint32_t fieldId;
-   std::uint32_t flags;
+   std::uint16_t flags;
+   std::uint16_t representationId;
    std::uint64_t firstElementIdx = 0;
    if (fnFrameSizeLeft() < RNTupleSerializer::SerializeColumnType(type, nullptr) +
                            sizeof(std::uint16_t) + 2 * sizeof(std::uint32_t))
@@ -259,7 +261,8 @@ RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t bufSi
    bytes += result.Unwrap();
    bytes += RNTupleSerializer::DeserializeUInt16(bytes, bitsOnStorage);
    bytes += RNTupleSerializer::DeserializeUInt32(bytes, fieldId);
-   bytes += RNTupleSerializer::DeserializeUInt32(bytes, flags);
+   bytes += RNTupleSerializer::DeserializeUInt16(bytes, flags);
+   bytes += RNTupleSerializer::DeserializeUInt16(bytes, representationId);
    if (flags & RNTupleSerializer::kFlagDeferredColumn) {
       if (fnFrameSizeLeft() < sizeof(std::uint64_t))
          return R__FAIL("column record frame too short");
@@ -269,7 +272,7 @@ RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t bufSi
    if (ROOT::Experimental::Internal::RColumnElementBase::GetBitsOnStorage(type) != bitsOnStorage)
       return R__FAIL("column element size mismatch");
 
-   columnDesc.FieldId(fieldId).Type(type).FirstElementIndex(firstElementIdx);
+   columnDesc.FieldId(fieldId).Type(type).FirstElementIndex(firstElementIdx).RepresentationId(representationId);
 
    return frameSize;
 }

@@ -626,7 +626,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::PopulatePageImpl(ColumnHandle_t c
       pageZero.GrowUnchecked(pageInfo.fNElements);
       pageZero.SetWindow(clusterInfo.fColumnOffset + pageInfo.fFirstInPage,
                          RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
-      fPagePool->RegisterPage(pageZero, RPageDeleter([](const RPage &, void *) {}, nullptr));
+      fPagePool.RegisterPage(pageZero);
       return pageZero;
    }
 
@@ -656,7 +656,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::PopulatePageImpl(ColumnHandle_t c
          fCurrentCluster = fClusterPool->GetCluster(clusterId, fActivePhysicalColumns.ToColumnSet());
       R__ASSERT(fCurrentCluster->ContainsColumn(columnId));
 
-      auto cachedPage = fPagePool->GetPage(columnId, RClusterIndex(clusterId, idxInCluster));
+      auto cachedPage = fPagePool.GetPage(columnId, RClusterIndex(clusterId, idxInCluster));
       if (!cachedPage.IsNull())
          return cachedPage;
 
@@ -675,15 +675,14 @@ ROOT::Experimental::Internal::RPageSourceDaos::PopulatePageImpl(ColumnHandle_t c
 
    newPage.SetWindow(clusterInfo.fColumnOffset + pageInfo.fFirstInPage,
                      RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
-   fPagePool->RegisterPage(
-      newPage, RPageDeleter([](const RPage &page, void *) { RPageAllocatorHeap::DeletePage(page); }, nullptr));
+   fPagePool.RegisterPage(newPage);
    fCounters->fNPagePopulated.Inc();
    return newPage;
 }
 
 void ROOT::Experimental::Internal::RPageSourceDaos::ReleasePage(RPage &page)
 {
-   fPagePool->ReturnPage(page);
+   fPagePool.ReturnPage(page);
 }
 
 std::unique_ptr<ROOT::Experimental::Internal::RPageSource>

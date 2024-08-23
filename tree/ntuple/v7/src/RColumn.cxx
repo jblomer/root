@@ -53,6 +53,8 @@ void ROOT::Experimental::Internal::RColumn::ConnectPageSink(DescriptorId_t field
    fFirstElementIndex = firstElementIndex;
    fHandleSink = fPageSink->AddColumn(fieldId, *this);
    fWritePage = fPageSink->ReservePage(fHandleSink, fPageSink->GetWriteOptions().GetInitialNElementsPerPage());
+   if (fWritePage.IsNull())
+      throw RException(R__FAIL("page buffer memory budget too small"));
 }
 
 void ROOT::Experimental::Internal::RColumn::ConnectPageSource(DescriptorId_t fieldId, RPageSource &pageSource)
@@ -74,6 +76,7 @@ void ROOT::Experimental::Internal::RColumn::Flush()
 
    fPageSink->CommitPage(fHandleSink, fWritePage);
    fWritePage = fPageSink->ReservePage(fHandleSink, fPageSink->GetWriteOptions().GetInitialNElementsPerPage());
+   R__ASSERT(!fWritePage.IsNull());
    fWritePage.Reset(fNElements);
 }
 

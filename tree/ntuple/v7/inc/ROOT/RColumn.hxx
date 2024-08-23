@@ -81,7 +81,6 @@ private:
    /// to the minimal size.
    void HandleWritePageIfFull()
    {
-      // TODO(jblomer): take into account memory budget
       auto newMaxElements = fWritePage.GetMaxElements() * 2;
       if (newMaxElements * fElement->GetSize() > fPageSink->GetWriteOptions().GetMaxUnzippedPageSize()) {
          newMaxElements = fPageSink->GetWriteOptions().GetMaxUnzippedPageSize() / fElement->GetSize();
@@ -92,10 +91,14 @@ private:
          Flush();
       } else {
          auto expandedPage = fPageSink->ReservePage(fHandleSink, newMaxElements);
-         memcpy(expandedPage.GetBuffer(), fWritePage.GetBuffer(), fWritePage.GetNBytes());
-         expandedPage.Reset(fNElements);
-         expandedPage.GrowUnchecked(fWritePage.GetNElements());
-         fWritePage = std::move(expandedPage);
+         if (expandedPage.IsNull()) {
+            Flush();
+         } else {
+            memcpy(expandedPage.GetBuffer(), fWritePage.GetBuffer(), fWritePage.GetNBytes());
+            expandedPage.Reset(fNElements);
+            expandedPage.GrowUnchecked(fWritePage.GetNElements());
+            fWritePage = std::move(expandedPage);
+         }
       }
    }
 
@@ -335,6 +338,7 @@ public:
    RPageSink *GetPageSink() const { return fPageSink; }
    RPageStorage::ColumnHandle_t GetHandleSource() const { return fHandleSource; }
    RPageStorage::ColumnHandle_t GetHandleSink() const { return fHandleSink; }
+   std::size_t GetWritePageCapacity() const { return fWritePage.GetCapacity(); }
 }; // class RColumn
 
 } // namespace Internal

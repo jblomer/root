@@ -1,6 +1,6 @@
-# RNTuple Reference Specifications 0.2.6.0
+# RNTuple Reference Specifications 1.0.0.0
 
-**Note:** This is work in progress. The RNTuple specification is not yet finalized.
+This document describes the RNTuple binary on-disk layout.
 
 ## Versioning Notes
 

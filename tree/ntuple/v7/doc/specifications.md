@@ -8,8 +8,8 @@ The RNTuple binary format version is inspired by semantic versioning.
 It uses the following scheme: EPOCH.MAJOR.MINOR.PATCH
 
 _Epoch_: an increment of the epoch indicates backwards-incompatible changes.
-The RNTuple pre-release has epoch 0.
-The fist public release will get epoch 1.
+The RNTuple pre-release had epoch 0.
+As of the first public release, the epoch is 1.
 There is currently no further epoch foreseen.
 
 _Major_: an increment of the major version indicates forward-incompatible changes.
@@ -48,11 +48,11 @@ The only relevant means of finding objects is the locator information, consistin
 
 Every embedding must define an **anchor** that contains the format version supported by the writer,
 and envelope links (location, compressed and uncompressed size) of the header and footer envelopes.
-For the ROOT file embedding, the **ROOT::Experimental::RNTuple** object acts as an anchor.
+For the ROOT file embedding, the **ROOT::RNTuple** object acts as an anchor.
 
 ### Anchor schema
 
-The current (class version 6) **ROOT::Experimental::RNTuple** object has the following schema:
+The current (class version 6) **ROOT::RNTuple** object has the following schema:
 
 ```
  0                   1                   2                   3
@@ -1001,9 +1001,9 @@ The on-disk representation is similar to a `std::vector<T>` where `T` is the val
   - Child field of type `T`, which must by a type with RNTuple I/O support.
     The name of the child field is `_0`.
 
-### ROOT::Experimental::RNTupleCardinality<SizeT>
+### ROOT::RNTupleCardinality<SizeT>
 
-A field whose type is `ROOT::Experimental::RNTupleCardinality<SizeT>` is associated to a single column of type (Split)Index32 or (Split)Index64.
+A field whose type is `ROOT::RNTupleCardinality<SizeT>` is associated to a single column of type (Split)Index32 or (Split)Index64.
 This field presents the offsets in the index column as lengths that correspond to the cardinality of the pointed-to collection.
 
 The value for the $i$-th element is computed by subtracting the $(i-1)$-th value from the $i$-th value in the index column.

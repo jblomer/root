@@ -521,6 +521,9 @@ bool ROOT::Experimental::Internal::RWritePageMemoryManager::TryEvict(std::size_t
    if (fMaxAllocatedBytes - fCurrentAllocatedBytes >= targetAvailableSize)
       return true;
 
+   R__ASSERT(false); // do we exhause the page buffer budget at all?
+   return false; // Don't flush foreign columns. Return false to indicate that the calling column must flush
+
    auto itr = fColumnsSortedByPageSize.begin();
    while (itr != fColumnsSortedByPageSize.end()) {
       if (itr->fCurrentPageSize <= pageSizeLimit)

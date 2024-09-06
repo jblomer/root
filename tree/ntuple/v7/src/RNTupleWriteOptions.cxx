@@ -79,5 +79,5 @@ std::size_t ROOT::Experimental::RNTupleWriteOptions::GetPageBufferBudget() const
    if (fPageBufferBudget != 0)
       return fPageBufferBudget;
 
-   return GetApproxZippedClusterSize() + (GetCompression() != 0) * GetApproxZippedClusterSize();
+   return 2 * (GetApproxZippedClusterSize() + (GetCompression() != 0) * GetApproxZippedClusterSize());
 }

@@ -3,6 +3,7 @@
 #include <TFile.h>
 #include <TTree.h>
 #include <TChain.h>
+#include <TObject.h>
 
 #include <cstdio>
 #include <string>
@@ -615,6 +616,31 @@ TEST(RNTupleImporter, ComplexClass)
       reference.Init3();
       EXPECT_EQ(reference, *object);
    }
+}
+
+TEST(RNTupleImporter, TObject)
+{
+   FileRaii fileGuard("test_ntuple_importer_tobject.root");
+   {
+      std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTree>("tree", "");
+      TObject *obj = nullptr;
+      tree->Branch("foo", &obj);
+      obj->SetUniqueID(137);
+      tree->Fill();
+      tree->Write();
+   }
+
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath());
+   importer->SetIsQuiet(true);
+   importer->SetNTupleName("ntuple");
+   importer->Import();
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(1U, reader->GetNEntries());
+   auto object = reader->GetModel().GetDefaultEntry().GetPtr<TObject>("foo");
+   reader->LoadEntry(0);
+   EXPECT_EQ(137, object->GetUniqueID());
 }
 
 TEST(RNTupleImporter, CollectionProxyClass)

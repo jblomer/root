@@ -392,4 +392,40 @@ TEST(PageStorageFile, LoadClustersIMT)
 
    ROOT::DisableImplicitMT();
 }
+
+TEST(PageStorageFile, LoadClustersIncrementallyIMT)
+{
+   IMTRAII _;
+
+   FileRaii fileGuard("ntuple_test_pagestoragefile_loadclustersincimt.root");
+
+   {
+      auto model = ROOT::Experimental::RNTupleModel::Create();
+      model->MakeField<float>("pt", 42.0);
+      model->MakeField<float>("E", 137.0);
+
+      auto writer = ROOT::Experimental::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto reader = ROOT::Experimental::RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   reader->EnableMetrics();
+
+   auto pt = std::make_shared<float>();
+   auto viewPt = reader->GetView<float>("pt", pt);
+   viewPt(0);
+   viewPt(0); // Again (should not re-decompress)
+   EXPECT_FLOAT_EQ(42.0, *pt);
+
+   reader->PrintInfo(ROOT::Experimental::ENTupleInfo::kMetrics);
+
+   auto E = std::make_shared<float>();
+   auto viewE = reader->GetView<float>("E", E);
+   viewE(0);
+   viewE(0); // Again (should not re-decompress)
+   viewPt(0); // Again (should not re-decompress)
+   EXPECT_FLOAT_EQ(137.0, *E);
+
+   reader->PrintInfo(ROOT::Experimental::ENTupleInfo::kMetrics);
+}
 #endif

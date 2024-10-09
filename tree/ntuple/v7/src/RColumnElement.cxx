@@ -50,6 +50,7 @@ ROOT::Experimental::Internal::RColumnElementBase::GetValidBitRange(EColumnType t
    case EColumnType::kSplitIndex32: return std::make_pair(32, 32);
    case EColumnType::kSplitReal64: return std::make_pair(64, 64);
    case EColumnType::kSplitReal32: return std::make_pair(32, 32);
+   case EColumnType::kSplitReal16: return std::make_pair(16, 16);
    case EColumnType::kSplitInt64: return std::make_pair(64, 64);
    case EColumnType::kSplitUInt64: return std::make_pair(64, 64);
    case EColumnType::kSplitInt32: return std::make_pair(32, 32);
@@ -91,6 +92,7 @@ std::string ROOT::Experimental::Internal::RColumnElementBase::GetTypeName(EColum
    case EColumnType::kSplitIndex32: return "SplitIndex32";
    case EColumnType::kSplitReal64: return "SplitReal64";
    case EColumnType::kSplitReal32: return "SplitReal32";
+   case EColumnType::kSplitReal16: return "SplitReal16";
    case EColumnType::kSplitInt64: return "SplitInt64";
    case EColumnType::kSplitUInt64: return "SplitUInt64";
    case EColumnType::kSplitInt32: return "SplitInt32";
@@ -135,6 +137,8 @@ ROOT::Experimental::Internal::RColumnElementBase::Generate<void>(EColumnType typ
       return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kSplitIndex32>>();
    case EColumnType::kSplitReal64: return std::make_unique<RColumnElement<double, EColumnType::kSplitReal64>>();
    case EColumnType::kSplitReal32: return std::make_unique<RColumnElement<float, EColumnType::kSplitReal32>>();
+   // TODO: Change to std::float16_t in-memory type once available (from C++23).
+   case EColumnType::kSplitReal16: return std::make_unique<RColumnElement<float, EColumnType::kSplitReal16>>();
    case EColumnType::kSplitInt64: return std::make_unique<RColumnElement<std::int64_t, EColumnType::kSplitInt64>>();
    case EColumnType::kSplitUInt64: return std::make_unique<RColumnElement<std::uint64_t, EColumnType::kSplitUInt64>>();
    case EColumnType::kSplitInt32: return std::make_unique<RColumnElement<std::int32_t, EColumnType::kSplitInt32>>();

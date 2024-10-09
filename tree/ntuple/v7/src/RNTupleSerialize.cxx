@@ -703,6 +703,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnType(ROOT::Exper
    case EColumnType::kSplitIndex32: return SerializeUInt16(0x0F, buffer);
    case EColumnType::kSplitReal64: return SerializeUInt16(0x10, buffer);
    case EColumnType::kSplitReal32: return SerializeUInt16(0x11, buffer);
+   case EColumnType::kSplitReal16: return SerializeUInt16(0x12, buffer);
    case EColumnType::kSplitInt64: return SerializeUInt16(0x1A, buffer);
    case EColumnType::kSplitUInt64: return SerializeUInt16(0x13, buffer);
    case EColumnType::kSplitInt32: return SerializeUInt16(0x1B, buffer);
@@ -749,6 +750,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeColumnType(const voi
    case 0x0F: type = EColumnType::kSplitIndex32; break;
    case 0x10: type = EColumnType::kSplitReal64; break;
    case 0x11: type = EColumnType::kSplitReal32; break;
+   case 0x12: type = EColumnType::kSplitReal16; break;
    case 0x1A: type = EColumnType::kSplitInt64; break;
    case 0x13: type = EColumnType::kSplitUInt64; break;
    case 0x1B: type = EColumnType::kSplitInt32; break;

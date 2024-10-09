@@ -1219,6 +1219,7 @@ void ROOT::Experimental::RFieldBase::AutoAdjustColumnTypes(const RNTupleWriteOpt
          case EColumnType::kSplitIndex32: colType = EColumnType::kIndex32; break;
          case EColumnType::kSplitReal64: colType = EColumnType::kReal64; break;
          case EColumnType::kSplitReal32: colType = EColumnType::kReal32; break;
+         case EColumnType::kSplitReal16: colType = EColumnType::kReal16; break;
          case EColumnType::kSplitInt64: colType = EColumnType::kInt64; break;
          case EColumnType::kSplitInt32: colType = EColumnType::kInt32; break;
          case EColumnType::kSplitInt16: colType = EColumnType::kInt16; break;
@@ -1524,6 +1525,7 @@ ROOT::Experimental::RField<float>::GetColumnRepresentations() const
    static RColumnRepresentations representations({{EColumnType::kSplitReal32},
                                                   {EColumnType::kReal32},
                                                   {EColumnType::kReal16},
+                                                  {EColumnType::kSplitReal16},
                                                   {EColumnType::kReal32Trunc},
                                                   {EColumnType::kReal32Quant}},
                                                  {{EColumnType::kSplitReal64}, {EColumnType::kReal64}});
@@ -1547,6 +1549,7 @@ ROOT::Experimental::RField<double>::GetColumnRepresentations() const
                                                   {EColumnType::kSplitReal32},
                                                   {EColumnType::kReal32},
                                                   {EColumnType::kReal16},
+                                                  {EColumnType::kSplitReal16},
                                                   {EColumnType::kReal32Trunc},
                                                   {EColumnType::kReal32Quant}},
                                                  {});

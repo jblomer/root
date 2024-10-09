@@ -351,6 +351,7 @@ std::unique_ptr<RColumnElementBase> GenerateColumnElementInternal(EColumnType ty
    case EColumnType::kSplitIndex32: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitIndex32>>();
    case EColumnType::kSplitReal64: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitReal64>>();
    case EColumnType::kSplitReal32: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitReal32>>();
+   case EColumnType::kSplitReal16: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitReal16>>();
    case EColumnType::kSplitInt64: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitInt64>>();
    case EColumnType::kSplitUInt64: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitUInt64>>();
    case EColumnType::kSplitInt32: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitInt32>>();
@@ -804,6 +805,43 @@ public:
 };
 
 template <>
+class RColumnElement<float, EColumnType::kSplitReal16> : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = false;
+   static constexpr std::size_t kSize = sizeof(float);
+   static constexpr std::size_t kBitsOnStorage = 16;
+   RColumnElement() : RColumnElementBase(kSize, kBitsOnStorage) {}
+   bool IsMappable() const final { return kIsMappable; }
+
+   void Pack(void *dst, const void *src, std::size_t count) const final
+   {
+      const float *floatArray = reinterpret_cast<const float *>(src);
+      auto splitArray = reinterpret_cast<unsigned char *>(dst);
+
+      for (std::size_t i = 0; i < count; ++i) {
+         std::uint16_t half = ROOT::Experimental::Internal::FloatToHalf(floatArray[i]);
+         ByteSwapIfNecessary(half);
+         splitArray[i] = reinterpret_cast<const unsigned char *>(&half)[0];
+         splitArray[count + i] = reinterpret_cast<const unsigned char *>(&half)[1];
+      }
+   }
+
+   void Unpack(void *dst, const void *src, std::size_t count) const final
+   {
+      auto floatArray = reinterpret_cast<float *>(dst);
+      auto splitArray = reinterpret_cast<const unsigned char *>(src);
+
+      for (std::size_t i = 0; i < count; ++i) {
+         std::uint16_t half;
+         reinterpret_cast<unsigned char *>(&half)[0] = splitArray[i];
+         reinterpret_cast<unsigned char *>(&half)[1] = splitArray[count + i];
+         ByteSwapIfNecessary(half);
+         floatArray[i] = ROOT::Experimental::Internal::HalfToFloat(half);
+      }
+   }
+};
+
+template <>
 class RColumnElement<double, EColumnType::kReal16> : public RColumnElementBase {
 public:
    static constexpr bool kIsMappable = false;
@@ -832,6 +870,43 @@ public:
          std::uint16_t val = uint16Array[i];
          ByteSwapIfNecessary(val);
          doubleArray[i] = static_cast<double>(ROOT::Experimental::Internal::HalfToFloat(val));
+      }
+   }
+};
+
+template <>
+class RColumnElement<double, EColumnType::kSplitReal16> : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = false;
+   static constexpr std::size_t kSize = sizeof(double);
+   static constexpr std::size_t kBitsOnStorage = 16;
+   RColumnElement() : RColumnElementBase(kSize, kBitsOnStorage) {}
+   bool IsMappable() const final { return kIsMappable; }
+
+   void Pack(void *dst, const void *src, std::size_t count) const final
+   {
+      auto doubleArray = reinterpret_cast<const double *>(src);
+      auto splitArray = reinterpret_cast<unsigned char *>(dst);
+
+      for (std::size_t i = 0; i < count; ++i) {
+         std::uint16_t half = ROOT::Experimental::Internal::FloatToHalf(doubleArray[i]);
+         ByteSwapIfNecessary(half);
+         splitArray[i] = reinterpret_cast<const unsigned char *>(&half)[0];
+         splitArray[count + i] = reinterpret_cast<const unsigned char *>(&half)[1];
+      }
+   }
+
+   void Unpack(void *dst, const void *src, std::size_t count) const final
+   {
+      auto doubleArray = reinterpret_cast<float *>(dst);
+      auto splitArray = reinterpret_cast<const unsigned char *>(src);
+
+      for (std::size_t i = 0; i < count; ++i) {
+         std::uint16_t half;
+         reinterpret_cast<unsigned char *>(&half)[0] = splitArray[i];
+         reinterpret_cast<unsigned char *>(&half)[1] = splitArray[count + i];
+         ByteSwapIfNecessary(half);
+         doubleArray[i] = ROOT::Experimental::Internal::HalfToFloat(half);
       }
    }
 };

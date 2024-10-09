@@ -430,7 +430,10 @@ public:
    /// Sets this field to use a half precision representation, occupying half as much storage space (16 bits:
    /// 1 sign bit, 5 exponent bits, 10 mantissa bits) on disk.
    /// This is mutually exclusive with `SetTruncated` and `SetQuantized`.
-   void SetHalfPrecision() { SetColumnRepresentatives({{EColumnType::kReal16}}); }
+   void SetHalfPrecision(bool splitEncoding = true)
+   {
+      SetColumnRepresentatives({{splitEncoding ? EColumnType::kSplitReal16 : EColumnType::kReal16}});
+   }
 
    /// Set the on-disk representation of this field to a single-precision float truncated to `nBits`.
    /// The remaining (32 - `nBits`) bits will be truncated from the number's mantissa.

@@ -72,6 +72,7 @@ enum class EColumnType {
    kSplitIndex32,
    kSplitReal64,
    kSplitReal32,
+   kSplitReal16,
    kSplitInt64,
    kSplitUInt64,
    kSplitInt32,

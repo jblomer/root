@@ -373,6 +373,18 @@ public:
    }
 
    /// Raises an exception if there is no field with the given name.
+   template <typename T>
+   RNTupleDirectAccessView<T> GetDirectAccessView(std::string_view fieldName)
+   {
+      auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName, fField.GetOnDiskId());
+      if (fieldId == kInvalidDescriptorId) {
+         throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '" +
+                                  fSource->GetSharedDescriptorGuard()->GetName() + "'"));
+      }
+      return RNTupleDirectAccessView<T>(RNTupleDirectAccessView<T>::CreateField(fieldId, fSource));
+   }
+
+   /// Raises an exception if there is no field with the given name.
    RNTupleCollectionView GetCollectionView(std::string_view fieldName)
    {
       auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName, fField.GetOnDiskId());

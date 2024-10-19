@@ -350,6 +350,8 @@ private:
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 
+   RVariantField(std::string_view name, const RVariantField &source); // Used by CloneImpl()
+
    size_t fMaxItemSize = 0;
    size_t fMaxAlignment = 1;
    /// In the std::variant memory layout, at which byte number is the index stored

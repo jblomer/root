@@ -136,7 +136,7 @@ protected:
    ClusterSize_t fNWritten;
    std::size_t fValueSize;
 
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
    void GenerateColumns(const RNTupleDescriptor &desc) final;
@@ -177,12 +177,6 @@ class RField<ROOT::VecOps::RVec<ItemT>> final : public RRVecField {
    using ContainerT = typename ROOT::VecOps::RVec<ItemT>;
 
 protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
-   {
-      auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
-      return std::make_unique<RField<ROOT::VecOps::RVec<ItemT>>>(newName, std::move(newItemField));
-   }
-
    void ConstructValue(void *where) const final { new (where) ContainerT(); }
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<ContainerT>>(); }
 
@@ -256,7 +250,7 @@ private:
 protected:
    RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField, bool isUntyped);
 
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;

@@ -336,7 +336,7 @@ protected:
    /// are changed to their unencoded counterparts.
    void AutoAdjustColumnTypes(const RNTupleWriteOptions &options);
 
-   /// Called by Clone(), which additionally copies the on-disk ID
+   /// Called by Clone(), which copies additional common information such as the on-disk ID
    virtual std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const = 0;
 
    /// Constructs value in a given location of size at least GetValueSize(). Called by the base class' CreateValue().

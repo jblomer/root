@@ -57,7 +57,7 @@ class RFieldVisitor;
 /// Therefore, the zero field must not be connected to a page source or sink.
 class RFieldZero final : public RFieldBase {
 protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
    void ConstructValue(void *) const final {}
 
 public:

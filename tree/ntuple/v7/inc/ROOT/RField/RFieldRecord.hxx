@@ -60,6 +60,9 @@ protected:
 
    std::size_t GetItemPadding(std::size_t baseOffset, std::size_t itemAlignment) const;
 
+   // Used by CloneImpl() of this class and derived classes
+   RRecordField(std::string_view name, const RRecordField &source);
+
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
 
    void ConstructValue(void *where) const override;
@@ -124,6 +127,8 @@ private:
    static std::string GetTypeList(const std::array<std::unique_ptr<RFieldBase>, 2> &itemFields);
 
 protected:
+   RPairField(std::string_view name, const RPairField &source); // Used by CloneImpl()
+
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
 
    void ConstructValue(void *where) const override;
@@ -201,6 +206,8 @@ private:
 
    TClass *fClass = nullptr;
    static std::string GetTypeList(const std::vector<std::unique_ptr<RFieldBase>> &itemFields);
+
+   RTupleField(std::string_view name, const RTupleField &source); // Used by CloneImpl()
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;

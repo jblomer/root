@@ -1308,7 +1308,7 @@ std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RFieldZero::CloneImpl(std::string_view /*newName*/) const
 {
    auto result = std::make_unique<RFieldZero>();
-   for (auto &f : fSubFields)
+   for (const auto &f : fSubFields)
       result->Attach(f->Clone(f->GetFieldName()));
    return result;
 }
@@ -2488,6 +2488,16 @@ void ROOT::Experimental::RProxiedCollectionField::AcceptVisitor(Detail::RFieldVi
 
 //------------------------------------------------------------------------------
 
+ROOT::Experimental::RRecordField::RRecordField(std::string_view name, const RRecordField &source)
+   : ROOT::Experimental::RFieldBase(name, source.GetTypeName(), ENTupleStructure::kRecord, false /* isSimple */),
+     fMaxAlignment(source.fMaxAlignment), fSize(source.fSize), fOffsets(source.fOffsets)
+{
+   for (const auto &f : source.GetSubFields()) {
+      Attach(f->Clone(f->GetFieldName()));
+   }
+   fTraits = source.fTraits;
+}
+
 ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName,
                                                std::vector<std::unique_ptr<RFieldBase>> &&itemFields,
                                                const std::vector<std::size_t> &offsets, std::string_view typeName)
@@ -2541,11 +2551,7 @@ std::size_t ROOT::Experimental::RRecordField::GetItemPadding(std::size_t baseOff
 std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RRecordField::CloneImpl(std::string_view newName) const
 {
-   std::vector<std::unique_ptr<RFieldBase>> cloneItems;
-   cloneItems.reserve(fSubFields.size());
-   for (auto &item : fSubFields)
-      cloneItems.emplace_back(item->Clone(item->GetFieldName()));
-   return std::unique_ptr<RRecordField>(new RRecordField(newName, std::move(cloneItems), fOffsets, GetTypeName()));
+   return std::unique_ptr<RRecordField>(new RRecordField(newName, *this));
 }
 
 std::size_t ROOT::Experimental::RRecordField::AppendImpl(const void *from)
@@ -3426,6 +3432,16 @@ std::string ROOT::Experimental::RVariantField::GetTypeList(const std::vector<RFi
    return result;
 }
 
+ROOT::Experimental::RVariantField::RVariantField(std::string_view name, const RVariantField &source)
+   : ROOT::Experimental::RFieldBase(name, source.GetTypeName(), ENTupleStructure::kVariant, false /* isSimple */),
+     fMaxItemSize(source.fMaxItemSize), fMaxAlignment(source.fMaxAlignment), fTagOffset(source.fTagOffset),
+     fVariantOffset(source.fVariantOffset), fNWritten(source.fNWritten.size(), 0)
+{
+   for (const auto &f : source.GetSubFields())
+      Attach(f->Clone(f->GetFieldName()));
+   fTraits = source.fTraits;
+}
+
 ROOT::Experimental::RVariantField::RVariantField(std::string_view fieldName,
                                                  const std::vector<RFieldBase *> &itemFields)
    : ROOT::Experimental::RFieldBase(fieldName, "std::variant<" + GetTypeList(itemFields) + ">",
@@ -3462,14 +3478,7 @@ ROOT::Experimental::RVariantField::RVariantField(std::string_view fieldName,
 std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RVariantField::CloneImpl(std::string_view newName) const
 {
-   auto nFields = fSubFields.size();
-   std::vector<RFieldBase *> itemFields;
-   itemFields.reserve(nFields);
-   for (unsigned i = 0; i < nFields; ++i) {
-      // TODO(jblomer): use unique_ptr in RVariantField constructor
-      itemFields.emplace_back(fSubFields[i]->Clone(fSubFields[i]->GetFieldName()).release());
-   }
-   return std::make_unique<RVariantField>(newName, itemFields);
+   return std::unique_ptr<RVariantField>(new RVariantField(newName, *this));
 }
 
 std::uint8_t ROOT::Experimental::RVariantField::GetTag(const void *variantPtr, std::size_t tagOffset)
@@ -3904,6 +3913,10 @@ ROOT::Experimental::RPairField::RPairField::GetTypeList(const std::array<std::un
    return itemFields[0]->GetTypeName() + "," + itemFields[1]->GetTypeName();
 }
 
+ROOT::Experimental::RPairField::RPairField(std::string_view name, const RPairField &source)
+   : RRecordField(name, source), fClass(source.fClass)
+{}
+
 ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
                                            std::array<std::unique_ptr<RFieldBase>, 2> &&itemFields,
                                            const std::array<std::size_t, 2> &offsets)
@@ -3937,12 +3950,7 @@ ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
 std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RPairField::CloneImpl(std::string_view newName) const
 {
-   std::array<std::unique_ptr<RFieldBase>, 2> items{fSubFields[0]->Clone(fSubFields[0]->GetFieldName()),
-                                                    fSubFields[1]->Clone(fSubFields[1]->GetFieldName())};
-
-   std::unique_ptr<RPairField> result(new RPairField(newName, std::move(items), {fOffsets[0], fOffsets[1]}));
-   result->fClass = fClass;
-   return result;
+   return std::unique_ptr<RPairField>(new RPairField(newName, *this));
 }
 
 void ROOT::Experimental::RPairField::ConstructValue(void *where) const
@@ -3969,6 +3977,12 @@ ROOT::Experimental::RTupleField::RTupleField::GetTypeList(const std::vector<std:
    }
    result.pop_back(); // remove trailing comma
    return result;
+}
+
+ROOT::Experimental::RTupleField::RTupleField(std::string_view name, const RTupleField &source)
+   : RRecordField(name, source), fClass(source.fClass)
+{
+
 }
 
 ROOT::Experimental::RTupleField::RTupleField(std::string_view fieldName,
@@ -4006,14 +4020,7 @@ ROOT::Experimental::RTupleField::RTupleField(std::string_view fieldName,
 std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RTupleField::CloneImpl(std::string_view newName) const
 {
-   std::vector<std::unique_ptr<RFieldBase>> items;
-   items.reserve(fSubFields.size());
-   for (const auto &item : fSubFields)
-      items.push_back(item->Clone(item->GetFieldName()));
-
-   std::unique_ptr<RTupleField> result(new RTupleField(newName, std::move(items), fOffsets));
-   result->fClass = fClass;
-   return result;
+   return std::unique_ptr<RTupleField>(new RTupleField(newName, *this));
 }
 
 void ROOT::Experimental::RTupleField::ConstructValue(void *where) const

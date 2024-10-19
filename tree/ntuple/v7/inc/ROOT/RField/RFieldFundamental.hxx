@@ -362,11 +362,11 @@ class RRealField : public RSimpleField<T> {
    double fValueMax = std::numeric_limits<T>::max();
 
 protected:
-   void OnClone(RRealField<T> &cloned) const
+   // Used by derived CloneImpl()
+   RRealField(std::string_view name, const RRealField &source)
+      : RSimpleField<T>(name, source.GetTypeName()), fBitWidth(source.fBitWidth), fValueMin(source.fValueMin),
+        fValueMax(source.fValueMax)
    {
-      cloned.fBitWidth = fBitWidth;
-      cloned.fValueMin = fValueMin;
-      cloned.fValueMax = fValueMax;
    }
 
    void GenerateColumns() final
@@ -472,13 +472,13 @@ public:
 
 template <>
 class RField<float> final : public RRealField<float> {
+   RField(std::string_view name, const RField &source) : RRealField<float>(name, source) {}
+
    const RColumnRepresentations &GetColumnRepresentations() const final;
 
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
-      auto cloned = std::make_unique<RField>(newName);
-      OnClone(*cloned);
-      return cloned;
+      return std::unique_ptr<RField>(new RField(newName, *this));
    }
 
 public:
@@ -491,13 +491,13 @@ public:
 
 template <>
 class RField<double> final : public RRealField<double> {
+   RField(std::string_view name, const RField &source) : RRealField<double>(name, source) {}
+
    const RColumnRepresentations &GetColumnRepresentations() const final;
 
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
-      auto cloned = std::make_unique<RField>(newName);
-      OnClone(*cloned);
-      return cloned;
+      return std::unique_ptr<RField>(new RField(newName, *this));
    }
 
 public:

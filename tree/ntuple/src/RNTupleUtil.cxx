@@ -13,21 +13,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "ROOT/RError.hxx"
 #include "ROOT/RNTupleUtil.hxx"
 
-#include "ROOT/RLogger.hxx"
-#include "ROOT/RMiniFile.hxx"
-
 #include <algorithm>
+#include <array>
 #include <cctype>
-#include <cstring>
-#include <iostream>
-
-ROOT::RLogChannel &ROOT::Internal::NTupleLog()
-{
-   static RLogChannel sLog("ROOT.NTuple");
-   return sLog;
-}
+#include <string>
+#include <utility>
 
 ROOT::RResult<void> ROOT::Internal::EnsureValidNameForRNTuple(std::string_view name, std::string_view where)
 {

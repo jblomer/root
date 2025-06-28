@@ -21,7 +21,7 @@
 #include <vector>
 #include <unordered_set>
 
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 
 namespace ROOT::Internal {
 class RPageSource;

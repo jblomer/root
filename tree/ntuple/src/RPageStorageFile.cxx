@@ -17,6 +17,7 @@
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
+#include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageAllocator.hxx>
@@ -24,7 +25,6 @@
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RRawFile.hxx>
 #include <ROOT/RRawFileTFile.hxx>
-#include <ROOT/RNTupleUtil.hxx>
 
 #include <RVersion.h>
 #include <TDirectory.h>

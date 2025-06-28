@@ -21,8 +21,8 @@
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleReadOptions.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
-#include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPagePool.hxx>
 #include <ROOT/RSpan.hxx>

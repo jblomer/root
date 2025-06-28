@@ -13,6 +13,7 @@
 
 #include "ROOT/RColumn.hxx"
 #include <ROOT/RColumnElementBase.hxx>
+#include <ROOT/RNTupleUtil.hxx>
 
 #include "RColumnElement.hxx"
 

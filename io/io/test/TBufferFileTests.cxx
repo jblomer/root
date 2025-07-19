@@ -26,3 +26,17 @@ TEST(TBufferFile, ROOT_8367)
    EXPECT_FLOAT_EQ(v2[6], 7.);
    EXPECT_EQ(v2.size(), 7);
 }
+
+#include <TFile.h>
+#include <memory>
+
+TEST(TBufferFile, Large)
+{
+   std::unique_ptr<TFile> f(TFile::Open("large.root", "RECREATE"));
+
+   std::vector<int> v;
+   v.resize(1000 * 1000 * 1000);
+   f->WriteObject(&v, "v");
+   f->Write();
+   f->Close();
+}

@@ -228,13 +228,6 @@ void TBuffer::Expand(Int_t newsize, Bool_t copy)
    }
    const Int_t extraspace = (fMode&kWrite)!=0 ? kExtraSpace : 0;
 
-   if ( ((Long64_t)newsize+extraspace) > kMaxBufferSize) {
-      if (l < kMaxBufferSize) {
-         newsize = kMaxBufferSize - extraspace;
-      } else {
-         Fatal("Expand","Requested size (%d) is too large (max is %d).", newsize, kMaxBufferSize);
-      }
-   }
    if ( (fMode&kWrite)!=0 ) {
       fBuffer  = fReAllocFunc(fBuffer, newsize+kExtraSpace,
                               copy ? fBufSize+kExtraSpace : 0);

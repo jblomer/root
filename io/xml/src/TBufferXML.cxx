@@ -459,7 +459,7 @@ void TBufferXML::XmlReadBlock(XMLNodePointer_t blocknode)
    char *fUnzipBuffer = nullptr;
 
    if (gDebug > 2)
-      Info("XmlReadBlock", "Block size = %d, Length = %d, Compressed = %d", blockSize, Length(), blockCompressed);
+      Info("XmlReadBlock", "Block size = %d, Length = %zu, Compressed = %d", blockSize, Length(), blockCompressed);
 
    if (blockSize > BufferSize())
       Expand(blockSize);

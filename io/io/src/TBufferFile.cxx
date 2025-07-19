@@ -2091,29 +2091,21 @@ void TBufferFile::WriteFastArray(const Short_t *h, Long64_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of n ints into the I/O buffer.
-/// \note Due to the current limit of the buffer size, the function aborts execution of the program in case of underflow or overflow. See https://github.com/root-project/root/issues/6734 for more details.
 
 void TBufferFile::WriteFastArray(const Int_t *ii, Long64_t n)
 {
    if (n == 0) return;
 
-   constexpr Int_t dataWidth = 4;
-   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
-   if (n < 0 || n > maxElements)
-   {
-      Fatal("WriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-routes the error handler to not die when Fatal is called
-   }
-
-   Int_t l = sizeof(Int_t)*n;
-   if (fBufCur + l > fBufMax) AutoExpand(fBufSize+l);
+   size_t l = sizeof(Int_t) * n;
+   if (fBufCur + l > fBufMax)
+      AutoExpand(fBufSize + l);
 
 #ifdef R__BYTESWAP
 # ifdef USE_BSWAPCPY
    bswapcpy32(fBufCur, ii, n);
    fBufCur += l;
 # else
-   for (int i = 0; i < n; i++)
+   for (size_t i = 0; i < n; i++)
       tobuf(fBufCur, ii[i]);
 # endif
 #else
@@ -3458,7 +3450,8 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
       sinfo = (TStreamerInfo*)cl->GetConversionStreamerInfo( onFileClass, version );
       if( !sinfo ) {
          Error("ReadClassBuffer",
-               "Could not find the right streamer info to convert %s version %d into a %s, object skipped at offset %d",
+               "Could not find the right streamer info to convert %s version %d into a %s, "
+               "object skipped at offset %zu",
                onFileClass->GetName(), version, cl->GetName(), Length() );
          CheckByteCount(start, count, onFileClass);
          return 0;
@@ -3474,7 +3467,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
       auto infos = cl->GetStreamerInfos();
       auto ninfos = infos->GetSize();
       if (version < -1 || version >= ninfos) {
-         Error("ReadClassBuffer", "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
+         Error("ReadClassBuffer", "class: %s, attempting to access a wrong version: %d, object skipped at offset %zu",
                cl->GetName(), version, Length() );
          CheckByteCount(start, count, cl);
          return 0;
@@ -3505,7 +3498,8 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
                CheckByteCount(start, count, cl);
                return 0;
             } else {
-               Error("ReadClassBuffer", "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %d",
+               Error("ReadClassBuffer", "Could not find the StreamerInfo for version %d of the class %s, "
+                     "object skipped at offset %zu",
                      version, cl->GetName(), Length() );
                CheckByteCount(start, count, cl);
                return 0;
@@ -3567,7 +3561,8 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
       sinfo = (TStreamerInfo*)cl->GetConversionStreamerInfo( onFileClass, version );
       if( !sinfo ) {
          Error("ReadClassBuffer",
-               "Could not find the right streamer info to convert %s version %d into a %s, object skipped at offset %d",
+               "Could not find the right streamer info to convert %s version %d into a %s, "
+               "object skipped at offset %zu",
                onFileClass->GetName(), version, cl->GetName(), Length() );
          CheckByteCount(R__s, R__c, onFileClass);
          return 0;
@@ -3591,7 +3586,8 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
             Int_t infocapacity = infos->Capacity();
             if (infocapacity) {
                if (version < -1 || version >= infocapacity) {
-                  Error("ReadClassBuffer","class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
+                  Error("ReadClassBuffer","class: %s, attempting to access a wrong version: %d, "
+                        "object skipped at offset %zu",
                         cl->GetName(), version, Length());
                   CheckByteCount(R__s, R__c, cl);
                   return 0;
@@ -3653,7 +3649,8 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
                CheckByteCount(R__s, R__c, cl);
                return 0;
             } else {
-               Error( "ReadClassBuffer", "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %d",
+               Error("ReadClassBuffer", "Could not find the StreamerInfo for version %d of the class %s, "
+                     "object skipped at offset %zu",
                      version, cl->GetName(), Length() );
                CheckByteCount(R__s, R__c, cl);
                return 0;

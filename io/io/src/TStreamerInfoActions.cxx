@@ -126,7 +126,7 @@ namespace TStreamerInfoActions
          aElement->GetSequenceType(sequenceType);
 
          printf("StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
-                " %s, bufpos=%d, arr=%p, offset=%d (%s)\n",
+                " %s, bufpos=%zu, arr=%p, offset=%d (%s)\n",
                 info->GetClass()->GetName(), aElement->GetName(), fElemId, fCompInfo->fType,
                 aElement->ClassName(), buf.Length(), addr, fOffset, sequenceType.Data());
       }
@@ -1274,7 +1274,7 @@ namespace TStreamerInfoActions
       {
          if (gDebug > 1) {
             TStreamerInfo *info = (TStreamerInfo*)fInfo;
-            printf("StreamerInfoAction, class:%s, %sDataCache, bufpos=%d, arr=%p, offset=%d, onfileObject=%p\n",
+            printf("StreamerInfoAction, class:%s, %sDataCache, bufpos=%zu, arr=%p, offset=%d, onfileObject=%p\n",
                   info->GetClass()->GetName(), fOnfileObject ? "Push" : "Pop", buffer.Length(), object, fOffset, fOnfileObject);
 
          }
@@ -1350,7 +1350,7 @@ namespace TStreamerInfoActions
             TStreamerInfo *info = (TStreamerInfo*)fInfo;
             TStreamerElement *aElement = fCompInfo->fElem;
             fprintf(stdout,"StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
-                   " %s, bufpos=%d, arr=%p, eoffset=%d, Redirect=%p\n",
+                   " %s, bufpos=%zu, arr=%p, eoffset=%d, Redirect=%p\n",
                    info->GetClass()->GetName(),aElement->GetName(),fElemId,fCompInfo->fType,
                    aElement->ClassName(),b.Length(),addr, 0,b.PeekDataCache() ? b.PeekDataCache()->GetObjectAt(0) : 0);
          }

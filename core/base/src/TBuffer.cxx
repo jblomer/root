@@ -19,8 +19,7 @@ Buffer base class used for serializing objects.
 #include "TClass.h"
 #include "TProcessID.h"
 
-constexpr Int_t kExtraSpace    = 8;   // extra space at end of buffer (used for free block count)
-constexpr Int_t kMaxBufferSize  = 0x7FFFFFFE;  // largest possible size.
+constexpr size_t kExtraSpace    = 8;   // extra space at end of buffer (used for free block count)
 
 
 ClassImp(TBuffer);
@@ -72,8 +71,6 @@ TBuffer::TBuffer(EMode mode)
 
 TBuffer::TBuffer(EMode mode, Int_t bufsiz)
 {
-   if (bufsiz < 0)
-      Fatal("TBuffer","Request to create a buffer with a negative size, likely due to an integer overflow: 0x%x for a max of 0x%x.", bufsiz, kMaxBufferSize);
    if (bufsiz < kMinimalSize) bufsiz = kMinimalSize;
    fBufSize  = bufsiz;
    fMode     = mode;
@@ -103,8 +100,6 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz)
 
 TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc)
 {
-   if (bufsiz < 0)
-      Fatal("TBuffer","Request to create a buffer with a negative size, likely due to an integer overflow: 0x%x for a max of 0x%x.", bufsiz, kMaxBufferSize);
    fBufSize  = bufsiz;
    fMode     = mode;
    fVersion  = 0;
@@ -115,6 +110,8 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharF
    if (buf) {
       fBuffer = (char *)buf;
       if ( (fMode&kWrite)!=0 ) {
+         if (fBufSize <= kExtraSpace)
+            Expand( kMinimalSize );
          fBufSize -= kExtraSpace;
       }
       if (!adopt) ResetBit(kIsOwner);
@@ -128,10 +125,6 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharF
    fBufMax = fBuffer + fBufSize;
 
    SetReAllocFunc( reallocfunc );
-
-   if (buf && ( (fMode&kWrite)!=0 ) && fBufSize < 0) {
-      Expand( kMinimalSize );
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -155,15 +148,10 @@ TBuffer::~TBuffer()
 /// If the size_needed is larger than the current size, the policy
 /// is to expand to double the current size or the size_needed which ever is largest.
 
-void TBuffer::AutoExpand(Int_t size_needed)
+void TBuffer::AutoExpand(size_t size_needed)
 {
-   if (size_needed < 0) {
-      Fatal("AutoExpand","Request to expand to a negative size, likely due to an integer overflow: 0x%x for a max of 0x%x.", size_needed, kMaxBufferSize);
-   }
    if (size_needed > fBufSize) {
-      Long64_t doubling = 2LLU * fBufSize;
-      if (doubling > kMaxBufferSize)
-         doubling = kMaxBufferSize;
+      size_t doubling = fBufSize * 2;
       if (size_needed > doubling) {
          Expand(size_needed);
       } else {
@@ -184,7 +172,7 @@ void TBuffer::AutoExpand(Int_t size_needed)
 /// is provided, a Fatal error will be issued if the Buffer attempts to
 /// expand.
 
-void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocCharFun_t reallocfunc)
+void TBuffer::SetBuffer(void *buf, size_t newsiz, Bool_t adopt, ReAllocCharFun_t reallocfunc)
 {
    if (fBuffer && TestBit(kIsOwner))
       delete [] fBuffer;
@@ -198,6 +186,8 @@ void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocCharFun_t
    fBufCur = fBuffer;
    if (newsiz > 0) {
       if ( (fMode&kWrite)!=0 ) {
+         if (fBufSize <= kExtraSpace)
+            Expand(kMinimalSize);
          fBufSize = newsiz - kExtraSpace;
       } else {
          fBufSize = newsiz;
@@ -206,10 +196,6 @@ void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocCharFun_t
    fBufMax = fBuffer + fBufSize;
 
    SetReAllocFunc( reallocfunc );
-
-   if (buf && ( (fMode&kWrite)!=0 ) && fBufSize < 0) {
-      Expand( kMinimalSize );
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -220,13 +206,12 @@ void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocCharFun_t
 /// In order to avoid losing data, if the current length is greater than
 /// the requested size, we only shrink down to the current length.
 
-void TBuffer::Expand(Int_t newsize, Bool_t copy)
+void TBuffer::Expand(size_t newsize, Bool_t copy)
 {
-   Int_t l  = Length();
+   size_t l  = Length();
    if ( (l > newsize) && copy ) {
       newsize = l;
    }
-   const Int_t extraspace = (fMode&kWrite)!=0 ? kExtraSpace : 0;
 
    if ( (fMode&kWrite)!=0 ) {
       fBuffer  = fReAllocFunc(fBuffer, newsize+kExtraSpace,

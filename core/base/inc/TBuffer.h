@@ -47,7 +47,7 @@ protected:
 
    Bool_t           fMode;          //Read or write mode
    Int_t            fVersion;       //Buffer format version
-   Int_t            fBufSize;       //Size of buffer
+   size_t           fBufSize;       //Size of buffer
    char            *fBuffer;        //Buffer used to store objects
    char            *fBufCur;        //Current position in buffer
    char            *fBufMax;        //End of buffer
@@ -87,19 +87,19 @@ public:
    Bool_t   IsWriting() const { return (fMode & kWrite) != 0; }
    void     SetReadMode();
    void     SetWriteMode();
-   void     SetBuffer(void *buf, UInt_t bufsiz = 0, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
+   void     SetBuffer(void *buf, size_t bufsiz = 0, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
    ReAllocCharFun_t GetReAllocFunc() const;
    void     SetReAllocFunc(ReAllocCharFun_t reallocfunc = nullptr);
-   void     SetBufferOffset(Int_t offset = 0) { fBufCur = fBuffer+offset; }
+   void     SetBufferOffset(size_t offset = 0) { fBufCur = fBuffer+offset; }
    void     SetParent(TObject *parent);
    TObject *GetParent()  const;
    char    *Buffer()     const { return fBuffer; }
    char    *GetCurrent() const { return fBufCur; }
-   Int_t    BufferSize() const { return fBufSize; }
+   size_t   BufferSize() const { return fBufSize; }
    void     DetachBuffer() { fBuffer = nullptr; }
-   Int_t    Length()     const { return (Int_t)(fBufCur - fBuffer); }
-   void     Expand(Int_t newsize, Bool_t copy = kTRUE);  // expand buffer to newsize
-   void     AutoExpand(Int_t size_needed);  // expand buffer to newsize
+   size_t   Length()     const { return fBufCur - fBuffer; }
+   void     Expand(size_t newsize, Bool_t copy = kTRUE);  // expand buffer to newsize
+   void     AutoExpand(size_t size_needed);  // expand buffer to newsize
    Bool_t   ByteSwapBuffer(Long64_t n, EDataType type);  // Byte-swap N primitive-elements in the buffer
 
    virtual Bool_t     CheckObject(const TObject *obj) = 0;

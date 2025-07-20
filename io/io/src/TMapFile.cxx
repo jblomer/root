@@ -669,7 +669,7 @@ void TMapFile::Update(TObject *obj)
          TBufferFile *b;
          if (!mr->fBufSize) {
             const char *cname = mr->fObject->ClassName();
-            mr->fBufSize = GetBestBuffer();
+            mr->fBufSize = TBuffer::kInitialSize;
 
             ROOT::Internal::gMmallocDesc = fMmallocDesc;
             mr->fBuffer = new char[mr->fBufSize];
@@ -1130,21 +1130,6 @@ void TMapFile::SumBuffer(Int_t bufsize)
    fWritten++;
    fSumBuffer  += bufsize;
    fSum2Buffer += bufsize*bufsize;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return the best buffer size for objects in this file.
-///
-/// The best buffer size is estimated based on the current mean value
-/// and standard deviation of all objects written so far to this file.
-/// Returns mean value + one standard deviation.
-
-Int_t TMapFile::GetBestBuffer()
-{
-   if (!fWritten) return TBuffer::kMinimalSize;
-   Double_t mean = fSumBuffer/fWritten;
-   Double_t rms2 = TMath::Abs(fSum2Buffer/fSumBuffer - mean*mean);
-   return (Int_t)(mean + std::sqrt(rms2));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

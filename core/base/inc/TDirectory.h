@@ -217,7 +217,6 @@ public:
    virtual void       *GetObjectChecked(const char *namecycle, const char* classname);
    virtual void       *GetObjectChecked(const char *namecycle, const TClass* cl);
    virtual void       *GetObjectUnchecked(const char *namecycle);
-   virtual Int_t       GetBufferSize() const {return 0;}
    virtual TFile      *GetFile() const { return nullptr; }
    virtual TKey       *GetKey(const char * /*name */, Short_t /* cycle */=9999) const {return nullptr;}
    virtual TList      *GetList() const { return fList; }
@@ -254,7 +253,6 @@ public:
    virtual void        Save() {}
    virtual Int_t       SaveObjectAs(const TObject * /*obj*/, const char * /*filename*/="", Option_t * /*option*/="") const;
    virtual void        SaveSelf(Bool_t /*force*/ = kFALSE) {}
-   virtual void        SetBufferSize(Int_t /* bufsize */) {}
    virtual void        SetModified() {}
    virtual void        SetMother(TObject *mother) {fMother = (TObject*)mother;}
            void        SetName(const char* newname) override;

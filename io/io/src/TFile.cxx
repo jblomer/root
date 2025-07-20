@@ -1165,26 +1165,6 @@ void TFile::FillBuffer(char *&buffer)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the best buffer size of objects on this file.
-///
-/// The best buffer size is estimated based on the current mean value
-/// and standard deviation of all objects written so far to this file.
-/// Returns mean value + one standard deviation.
-
-Int_t TFile::GetBestBuffer() const
-{
-   if (!fWritten) return TBuffer::kInitialSize;
-   Double_t mean = fSumBuffer/fWritten;
-   Double_t rms2 = TMath::Abs(fSum2Buffer/fSumBuffer -mean*mean);
-   Double_t result = mean + sqrt(rms2);
-   if (result >= (double)std::numeric_limits<Int_t>::max()) {
-      return std::numeric_limits<Int_t>::max() -1;
-   } else {
-      return (Int_t)result;
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Return the file compression factor.
 ///
 /// Add total number of compressed/uncompressed bytes for each key.
@@ -3524,7 +3504,7 @@ void TFile::WriteStreamerInfo()
    //free previous StreamerInfo record
    if (fSeekInfo) MakeFree(fSeekInfo,fSeekInfo+fNbytesInfo-1);
    //Create new key
-   TKey key(&list,"StreamerInfo",GetBestBuffer(), this);
+   TKey key(&list, "StreamerInfo", TBuffer::kInitialSize, this);
    fKeys->Remove(&key);
    fSeekInfo   = key.GetSeekKey();
    fNbytesInfo = key.GetNbytes();

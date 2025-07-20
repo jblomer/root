@@ -126,7 +126,6 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
       cl = TDirectoryFile::IsA();
    }
 
-   fBufferSize  = 0;
    fWritable    = kTRUE;
 
    InitDirectoryFile(cl);
@@ -597,7 +596,7 @@ void TDirectoryFile::Close(Option_t *option)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete Objects or/and keys in the current directory.
-/// 
+///
 /// \param[in] namecycle Encodes the name and cycle of the objects to delete in
 /// the current directory (e.g. the top directory of a TFile)
 ///   - <em>namecycle</em> has the format <em>name;cycle</em>.
@@ -1134,19 +1133,6 @@ void *TDirectoryFile::GetObjectChecked(const char *namecycle, const TClass* expe
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the buffer size to create new TKeys.
-///
-/// If the stored fBufferSize is null, the value returned is the average
-/// buffer size of objects in the file so far.
-
-Int_t TDirectoryFile::GetBufferSize() const
-{
-   if (fBufferSize <= 0) return fFile->GetBestBuffer();
-   else                  return fBufferSize;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to key with name,cycle. If no key exists with the specified
 /// cycle, returns the key with the highest cycle that is lower than the requested cycle.
 ///
@@ -1518,7 +1504,6 @@ void TDirectoryFile::ResetAfterMerge(TFileMergeInfo *info)
    fDatimeM.Set();
    fNbytesKeys = 0; // updated when the keys are written
    fNbytesName = 0; // updated by Init
-   // Does not change (user customization): fBufferSize;
    fSeekDir = 0;    // updated by Init
    fSeekParent = 0; // updated by Init
    fSeekKeys = 0;   // updated by Init
@@ -1656,16 +1641,6 @@ void TDirectoryFile::SaveSelf(Bool_t force)
          if (dirsav && dirsav != this) dirsav->cd();
       }
    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set the default buffer size when creating new TKeys.
-///
-/// See also TDirectoryFile::GetBufferSize
-
-void TDirectoryFile::SetBufferSize(Int_t bufsize)
-{
-   fBufferSize = bufsize;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1895,10 +1870,6 @@ Int_t TDirectoryFile::Write(const char *n, Int_t opt, Int_t bufsize) const
 /// TFree list of free blocks of the file.
 ///   - The buffer is written to the file.
 ///
-/// By default, the buffersize will be taken from the average buffer size
-/// of all objects written to the current file so far.
-/// Use TDirectoryFile::SetBufferSize to force a given buffer size.
-///
 /// If a name is specified, it will be the name of the key.
 /// If name is not given, the name of the key will be the name as returned
 /// by obj->GetName().
@@ -1948,8 +1919,6 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
    opt.ToLower();
 
    TKey *key=0, *oldkey=0;
-   Int_t bsize = GetBufferSize();
-   if (bufsize > 0) bsize = bufsize;
 
    const char *oname;
    if (name && *name)
@@ -1984,26 +1953,23 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
    if (opt.Contains("writedelete")) {
       oldkey = GetKey(oname);
    }
-   key = fFile->CreateKey(this, obj, oname, bsize);
+   key = fFile->CreateKey(this, obj, oname, TBuffer::kInitialSize);
    if (newName) delete [] newName;
 
    if (!key->GetSeekKey()) {
       fKeys->Remove(key);
       delete key;
-      if (bufsize) fFile->SetBufferSize(bufsize);
       return 0;
    }
    fFile->SumBuffer(key->GetObjlen());
    Int_t nbytes = key->WriteFile(0);
    if (fFile->TestBit(TFile::kWriteError)) {
-      if (bufsize) fFile->SetBufferSize(bufsize);
       return 0;
    }
    if (oldkey) {
       oldkey->Delete();
       delete oldkey;
    }
-   if (bufsize) fFile->SetBufferSize(bufsize);
 
    return nbytes;
 }
@@ -2102,8 +2068,6 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
    }
 
    TKey *key, *oldkey = nullptr;
-   Int_t bsize = GetBufferSize();
-   if (bufsize > 0) bsize = bufsize;
 
    TString opt = option;
    opt.ToLower();
@@ -2133,7 +2097,7 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
    if (opt.Contains("writedelete")) {
       oldkey = GetKey(oname);
    }
-   key = fFile->CreateKey(this, obj, cl, oname, bsize);
+   key = fFile->CreateKey(this, obj, cl, oname, TBuffer::kInitialSize);
    if (newName) delete [] newName;
 
    if (!key->GetSeekKey()) {

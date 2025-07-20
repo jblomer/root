@@ -64,7 +64,6 @@ protected:
    TObject   *Remove(TObject *obj, Bool_t lock);
    TObject   *Remove(const char *name, Bool_t lock);
    void       SumBuffer(Int_t bufsize);
-   Int_t      GetBestBuffer();
 
    void   CreateSemaphore(Int_t pid = 0);
    Int_t  AcquireSemaphore();

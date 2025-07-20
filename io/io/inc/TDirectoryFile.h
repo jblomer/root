@@ -38,7 +38,6 @@ protected:
    TDatime     fDatimeM;                 ///< Date and time of last modification
    Int_t       fNbytesKeys{0};           ///< Number of bytes for the keys
    Int_t       fNbytesName{0};           ///< Number of bytes in TNamed at creation time
-   Int_t       fBufferSize{0};           ///< Default buffer size to create new TKeys
    Long64_t    fSeekDir{0};              ///< Location of directory on file
    Long64_t    fSeekParent{0};           ///< Location of parent directory on file
    Long64_t    fSeekKeys{0};             ///< Location of Keys record on file
@@ -87,7 +86,6 @@ public:
            void       *GetObjectChecked(const char *namecycle, const char* classname) override;
            void       *GetObjectChecked(const char *namecycle, const TClass* cl) override;
            void       *GetObjectUnchecked(const char *namecycle) override;
-           Int_t       GetBufferSize() const override;
    const TDatime      &GetCreationDate() const { return fDatimeC; }
            TFile      *GetFile() const override { return fFile; }
            TKey       *GetKey(const char *name, Short_t cycle=9999) const override;
@@ -114,7 +112,6 @@ public:
            void        Save() override;
            void        SaveSelf(Bool_t force = kFALSE) override;
            Int_t       SaveObjectAs(const TObject *obj, const char *filename="", Option_t *option="") const override;
-           void        SetBufferSize(Int_t bufsize) override;
            void        SetModified() override {fModified = kTRUE;}
            void        SetSeekDir(Long64_t v) override { fSeekDir = v; }
            void        SetTRefAction(TObject *ref, TObject *parent) override;

@@ -53,6 +53,7 @@ protected:
    TString           fBasicUrlOrg;      // save original url in case of temp redirection
    void             *fFullCache;        //! complete content of the file, some http server may return complete content
    Long64_t          fFullCacheSize;    //! size of the cached content
+   Int_t             fWritten = 0;      //! TODO: it seems that fWritten was used as a "last error" memory
 
    static TUrl       fgProxy;           // globally set proxy URL
    static Long64_t   fgMaxFullCacheSize; // maximal size of full-cached content, 500 MB by default

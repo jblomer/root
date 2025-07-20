@@ -1961,7 +1961,6 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
       delete key;
       return 0;
    }
-   fFile->SumBuffer(key->GetObjlen());
    Int_t nbytes = key->WriteFile(0);
    if (fFile->TestBit(TFile::kWriteError)) {
       return 0;
@@ -2105,7 +2104,6 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
       delete key;
       return 0;
    }
-   fFile->SumBuffer(key->GetObjlen());
    Int_t nbytes = key->WriteFile(0);
    if (fFile->TestBit(TFile::kWriteError)) return 0;
 

@@ -8,7 +8,7 @@
 
 //
 //
-//   V 0.1  VI 8/10/2000 
+//   V 0.1  VI 8/10/2000
 //          a SimEvent with Phytia generator infos
 
 # 1 "Utilities/Persistency/interface/Persistency.h" 1
@@ -53,13 +53,13 @@ namespace std {
 # 1 "/local/stage1/wmtan/ofc/COBRA_7_0_0/src/Porting/Linux2-EGCS/wrappers/stddef.h" 1
 /*
  * This stddef.h file is used to replace the gnu provided one when
- * ooddlx is run. 
+ * ooddlx is run.
  * It fixes a bug in the GNU version which defines NULL as ((void *)0)
  * even for __cplusplus parsers
  *
- * NOTE: this file is compiler dependent and has been taken from 
- * egcs-2.91.60 19981201 (egcs-1.1.1 release) 
- *  
+ * NOTE: this file is compiler dependent and has been taken from
+ * egcs-2.91.60 19981201 (egcs-1.1.1 release)
+ *
  * Dirk.Duellmann@cern.ch
  */
 
@@ -269,7 +269,7 @@ typedef unsigned int size_t;
    symbols in the _FOO_T_ family, stays defined even after its
    corresponding type is defined).  If we define wchar_t, then we
    must undef _WCHAR_T_; for BSD/386 1.1 (and perhaps others), if
-   we undef _WCHAR_T_, then we must also define rune_t, since 
+   we undef _WCHAR_T_, then we must also define rune_t, since
    headers like runetype.h assume that if machine/ansi.h is included,
    and _BSD_WCHAR_T_ is not defined, then rune_t is available.
    machine/ansi.h says, "Note that _WCHAR_T_ and _RUNE_T_ must be of
@@ -467,7 +467,7 @@ string operator+(const string& a,const string& b) ;
 
 typedef string cstring;
 
-#pragma endif 
+#pragma endif
 
 # 13 "/home/wmtan/root/cint/stl/_string" 2
 
@@ -505,7 +505,7 @@ namespace std {
 #pragma mask_newdelete 0x10;
 
 
-// Imported from ANSI/ISO C++ 1997/Nov draft 
+// Imported from ANSI/ISO C++ 1997/Nov draft
 // Got some ideas from Scott Snyder, Fermi-lab
 // Modified by Masaharu Goto
 // SGI KCC porting by Philippe Canal, Fermi-lab
@@ -564,13 +564,13 @@ struct pair {
 # 1 "/local/stage1/wmtan/ofc/COBRA_7_0_0/src/Porting/Linux2-EGCS/wrappers/stddef.h" 1
 /*
  * This stddef.h file is used to replace the gnu provided one when
- * ooddlx is run. 
+ * ooddlx is run.
  * It fixes a bug in the GNU version which defines NULL as ((void *)0)
  * even for __cplusplus parsers
  *
- * NOTE: this file is compiler dependent and has been taken from 
- * egcs-2.91.60 19981201 (egcs-1.1.1 release) 
- *  
+ * NOTE: this file is compiler dependent and has been taken from
+ * egcs-2.91.60 19981201 (egcs-1.1.1 release)
+ *
  * Dirk.Duellmann@cern.ch
  */
 /* !_STDDEF_H && !_STDDEF_H_ && !_ANSI_STDDEF_H && !__STDDEF_H__
@@ -623,10 +623,9 @@ public:
   typedef X element_type;
   explicit auto_ptr(X* p = 0) : ptr(p), owns(p?true:false) {}
   auto_ptr(auto_ptr& a) {owns=a.owns; ptr=a.ptr; a.owns=0;}
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr(auto_ptr<T>& a) {owns=a.owns; ptr=a.release();}
-  
 
 
 
@@ -634,7 +633,8 @@ public:
 
 
 
-  
+
+
   auto_ptr& operator=(auto_ptr& a) {
     if (a.ptr != ptr) {
       if (owns) delete ptr;
@@ -644,7 +644,7 @@ public:
     }
     return(*this);
   }
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr& operator=(auto_ptr<T>& a) {
     if (a.ptr != ptr) {
@@ -654,9 +654,9 @@ public:
     }
     return(*this);
   }
-  
+
   ~auto_ptr() { if(owns) delete ptr; }
-  
+
   X& operator*() const { return *ptr; }
   X* operator->() const { return ptr; }
   X* get() const { return ptr; }
@@ -700,7 +700,7 @@ public:
 
 
 // Imported from STL HP implementation 1994
-// Imported from STL SGI implementation 1997 
+// Imported from STL SGI implementation 1997
 // Imported from ANSI/ISO C++ draft Nov 1997
 // Modified by Masaharu Goto
 // May need to improve for the latest standard
@@ -730,8 +730,8 @@ template <class T, class Distance> struct random_access_iterator {};
 ////////////////////////////////////////////////////////////////////////
 // iterator_category overloaded function
 ////////////////////////////////////////////////////////////////////////
-template <class T, class Distance> 
-inline input_iterator_tag 
+template <class T, class Distance>
+inline input_iterator_tag
 iterator_category(const input_iterator<T, Distance>&) {
     return input_iterator_tag();
 }
@@ -740,33 +740,33 @@ inline output_iterator_tag iterator_category(const output_iterator&) {
     return output_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline forward_iterator_tag
 iterator_category(const forward_iterator<T, Distance>&) {
     return forward_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline bidirectional_iterator_tag
 iterator_category(const bidirectional_iterator<T, Distance>&) {
     return bidirectional_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline random_access_iterator_tag
 iterator_category(const random_access_iterator<T, Distance>&) {
     return random_access_iterator_tag();
 }
 
 template <class T>
-inline random_access_iterator_tag 
+inline random_access_iterator_tag
 iterator_category(const T*) {
     return random_access_iterator_tag();
 }
 
 
 // iterator_traits, iterator and reverse_iterator template may not be
-// needed for precompiled library interface 
+// needed for precompiled library interface
 
 ////////////////////////////////////////////////////////////////////////
 // iterator_traits
@@ -821,7 +821,7 @@ struct iterator {
 // reverse_iterator
 ////////////////////////////////////////////////////////////////////////
 template <class Iterator>
-class reverse_iterator 
+class reverse_iterator
 
 
 
@@ -863,7 +863,7 @@ class reverse_iterator
    reverse_iterator  operator- (difference_type n) const;
    reverse_iterator& operator-=(difference_type n);
    reference operator[](difference_type n) const;
-}; 
+};
 
 # 207 "/home/wmtan/root/cint/lib/prec_stl/iterator"
 
@@ -1022,7 +1022,7 @@ public:
 
 
 // clause _lib.binders_, binders:
-template <class Operation> 
+template <class Operation>
 class binder1st
   : public unary_function<Operation::second_argument_type,
                           Operation::result_type>
@@ -1146,13 +1146,13 @@ class map {
 
 
 
-  class iterator 
+  class iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -1182,13 +1182,13 @@ class map {
 
 
 
-  class reverse_iterator 
+  class reverse_iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -1329,7 +1329,7 @@ class map {
 #pragma mask_newdelete 0x10;
 
 
-// Imported from ANSI/ISO C++ 1997/Nov draft 
+// Imported from ANSI/ISO C++ 1997/Nov draft
 // Got some ideas from Scott Snyder, Fermi-lab
 // Modified by Masaharu Goto
 // SGI KCC porting by Philippe Canal, Fermi-lab
@@ -1388,13 +1388,13 @@ struct pair {
 # 1 "/local/stage1/wmtan/ofc/COBRA_7_0_0/src/Porting/Linux2-EGCS/wrappers/stddef.h" 1
 /*
  * This stddef.h file is used to replace the gnu provided one when
- * ooddlx is run. 
+ * ooddlx is run.
  * It fixes a bug in the GNU version which defines NULL as ((void *)0)
  * even for __cplusplus parsers
  *
- * NOTE: this file is compiler dependent and has been taken from 
- * egcs-2.91.60 19981201 (egcs-1.1.1 release) 
- *  
+ * NOTE: this file is compiler dependent and has been taken from
+ * egcs-2.91.60 19981201 (egcs-1.1.1 release)
+ *
  * Dirk.Duellmann@cern.ch
  */
 /* !_STDDEF_H && !_STDDEF_H_ && !_ANSI_STDDEF_H && !__STDDEF_H__
@@ -1447,10 +1447,9 @@ public:
   typedef X element_type;
   explicit auto_ptr(X* p = 0) : ptr(p), owns(p?true:false) {}
   auto_ptr(auto_ptr& a) {owns=a.owns; ptr=a.ptr; a.owns=0;}
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr(auto_ptr<T>& a) {owns=a.owns; ptr=a.release();}
-  
 
 
 
@@ -1458,7 +1457,8 @@ public:
 
 
 
-  
+
+
   auto_ptr& operator=(auto_ptr& a) {
     if (a.ptr != ptr) {
       if (owns) delete ptr;
@@ -1468,7 +1468,7 @@ public:
     }
     return(*this);
   }
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr& operator=(auto_ptr<T>& a) {
     if (a.ptr != ptr) {
@@ -1478,9 +1478,9 @@ public:
     }
     return(*this);
   }
-  
+
   ~auto_ptr() { if(owns) delete ptr; }
-  
+
   X& operator*() const { return *ptr; }
   X* operator->() const { return ptr; }
   X* get() const { return ptr; }
@@ -1524,7 +1524,7 @@ public:
 
 
 // Imported from STL HP implementation 1994
-// Imported from STL SGI implementation 1997 
+// Imported from STL SGI implementation 1997
 // Imported from ANSI/ISO C++ draft Nov 1997
 // Modified by Masaharu Goto
 // May need to improve for the latest standard
@@ -1554,8 +1554,8 @@ template <class T, class Distance> struct random_access_iterator {};
 ////////////////////////////////////////////////////////////////////////
 // iterator_category overloaded function
 ////////////////////////////////////////////////////////////////////////
-template <class T, class Distance> 
-inline input_iterator_tag 
+template <class T, class Distance>
+inline input_iterator_tag
 iterator_category(const input_iterator<T, Distance>&) {
     return input_iterator_tag();
 }
@@ -1564,33 +1564,33 @@ inline output_iterator_tag iterator_category(const output_iterator&) {
     return output_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline forward_iterator_tag
 iterator_category(const forward_iterator<T, Distance>&) {
     return forward_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline bidirectional_iterator_tag
 iterator_category(const bidirectional_iterator<T, Distance>&) {
     return bidirectional_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline random_access_iterator_tag
 iterator_category(const random_access_iterator<T, Distance>&) {
     return random_access_iterator_tag();
 }
 
 template <class T>
-inline random_access_iterator_tag 
+inline random_access_iterator_tag
 iterator_category(const T*) {
     return random_access_iterator_tag();
 }
 
 
 // iterator_traits, iterator and reverse_iterator template may not be
-// needed for precompiled library interface 
+// needed for precompiled library interface
 
 ////////////////////////////////////////////////////////////////////////
 // iterator_traits
@@ -1645,7 +1645,7 @@ struct iterator {
 // reverse_iterator
 ////////////////////////////////////////////////////////////////////////
 template <class Iterator>
-class reverse_iterator 
+class reverse_iterator
 
 
 
@@ -1687,7 +1687,7 @@ class reverse_iterator
    reverse_iterator  operator- (difference_type n) const;
    reverse_iterator& operator-=(difference_type n);
    reference operator[](difference_type n) const;
-}; 
+};
 
 # 207 "/home/wmtan/root/cint/lib/prec_stl/iterator"
 
@@ -1846,7 +1846,7 @@ public:
 
 
 // clause _lib.binders_, binders:
-template <class Operation> 
+template <class Operation>
 class binder1st
   : public unary_function<Operation::second_argument_type,
                           Operation::result_type>
@@ -1970,13 +1970,13 @@ class multimap {
 
 
 
-  class iterator 
+  class iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -2006,13 +2006,13 @@ class multimap {
 
 
 
-  class reverse_iterator 
+  class reverse_iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -2885,8 +2885,8 @@ namespace std {
 *  Run time type identification
 *
 * Memo:
-*   typeid(typename) , typeid(expression) is implemented as special 
-*  function in the cint body src/G__func.c. 
+*   typeid(typename) , typeid(expression) is implemented as special
+*  function in the cint body src/G__func.c.
 *
 *   As an extention, G__typeid(char *name) is defined in src/G__func.c
 *  too for more dynamic use of the typeid.
@@ -2938,7 +2938,7 @@ bool bool() { return false; }
 /*********************************************************************
 * Functions embedded in cint core
 * Most of those functions are defined in src/sizeof.c
-* 
+*
 *********************************************************************/
 // type_info typeid(expression);
 // type_info typeid(char *typename);
@@ -2952,7 +2952,7 @@ bool bool() { return false; }
 * type_info
 *
 *  Included in ANSI/ISO resolution proposal 1995 spring
-* 
+*
 *********************************************************************/
 class type_info {
  public:
@@ -2983,9 +2983,9 @@ class type_info {
 
 bool type_info::operator==(const type_info& a) const
 {
-  if(reftype == a.reftype && tagnum == a.tagnum && type == a.type) 
+  if(reftype == a.reftype && tagnum == a.tagnum && type == a.type)
     return(true);
-  else 
+  else
     return(false);
 }
 
@@ -2997,11 +2997,11 @@ bool type_info::operator!=(const type_info& a) const
 
 bool type_info::before(const type_info& a) const
 {
-  if(-1!=tagnum) 
+  if(-1!=tagnum)
     return( tagnum < a.tagnum );
-  else if(-1!=a.tagnum) 
+  else if(-1!=a.tagnum)
     return( -1 < a.tagnum );
-  else 
+  else
     return( type < a.type );
 }
 
@@ -3056,7 +3056,7 @@ class G__class_info : public type_info {
   G__class_info() { init(); }
   G__class_info(type_info& a) { init(a); }
   G__class_info(char *classname) { init(G__typeid(classname)); }
-  
+
   void init() {
     typenum = -1;
     reftype = 0;
@@ -3114,7 +3114,7 @@ class G__class_info : public type_info {
   }
 
 };
-  
+
 
 /*********************************************************************
 * G__variable_info
@@ -3164,7 +3164,7 @@ class G__variable_info {
   long handle; // pointer to variable table
   long index;
   long tagnum; // class/struct identity
-};  
+};
 
 /*********************************************************************
 * G__function_info
@@ -3216,7 +3216,7 @@ class G__function_info {
   long handle; // pointer to variable table
   long index;
   long tagnum; // class/struct identity
-};  
+};
 
 /*********************************************************************
 * G__string_buf
@@ -3542,7 +3542,7 @@ namespace ROOT {
       DelFunc_t            fDelete;
       DelArrFunc_t         fDeleteArray;
       DesFunc_t            fDestructor;
-      
+
    public:
       TGenericClassInfo(const char *fullClassname,
                        const char *declFileName, Int_t declFileLine,
@@ -3559,7 +3559,7 @@ namespace ROOT {
       TGenericClassInfo(const char *fullClassname, Int_t version,
                        const char *declFileName, Int_t declFileLine,
                        const type_info &info, const TInitBehavior *action,
-                       VoidFuncPtr_t dictionary, 
+                       VoidFuncPtr_t dictionary,
                        IsAFunc_t isa, Int_t pragmabits);
 
       void Init(Int_t pragmabits);
@@ -3592,7 +3592,7 @@ namespace ROOT {
       void                 SetNew(NewFunc_t newFunc);
       void                 SetNewArray(NewArrFunc_t newArrayFunc);
       Short_t              SetVersion(Short_t version);
-      
+
    };
 
 }
@@ -3893,7 +3893,7 @@ namespace std {
  ************************************************************************
  * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
- * Permission to use, copy, modify and distribute this software and its 
+ * Permission to use, copy, modify and distribute this software and its
  * documentation for any purpose is hereby granted without fee,
  * provided that the above copyright notice appear in all copies and
  * that both that copyright notice and this permission notice appear
@@ -3914,7 +3914,7 @@ namespace std {
 #pragma ifndef G__SSTREAM_H
 typedef ostrstream ostringstream;
 typedef istrstream istringstream;
-//typedef strstream stringstream;  // problem, 
+//typedef strstream stringstream;  // problem,
 #pragma else
 typedef ostringstream ostrstream;
 typedef istringstream istrstream;
@@ -3972,33 +3972,33 @@ typedef long streampos;
 //class io_state;
 class streambuf;
 class fstreambase;
-typedef long         SZ_T;       
+typedef long         SZ_T;
 typedef SZ_T         streamsize;
 
 class ios {
  public:
   typedef int      iostate;
   enum io_state {
-    goodbit     = 0x00,   
-    badbit      = 0x01,   
-    eofbit      = 0x02,  
-    failbit     = 0x04  
+    goodbit     = 0x00,
+    badbit      = 0x01,
+    eofbit      = 0x02,
+    failbit     = 0x04
   };
   typedef int      openmode;
   enum open_mode {
-    app         = 0x01,   
-    binary      = 0x02,  
-    in          = 0x04, 
-    out         = 0x08,   
-    trunc       = 0x10,                  
-    ate         = 0x20 
+    app         = 0x01,
+    binary      = 0x02,
+    in          = 0x04,
+    out         = 0x08,
+    trunc       = 0x10,
+    ate         = 0x20
   };
   typedef int      seekdir;
   enum seek_dir {
-    beg         = 0x0,    
-    cur         = 0x1,    
-    end         = 0x2   
-  };        
+    beg         = 0x0,
+    cur         = 0x1,
+    end         = 0x2
+  };
   typedef int      fmtflags;
   enum fmt_flags {
     boolalpha   = 0x0001,
@@ -4010,22 +4010,22 @@ class ios {
     oct         = 0x0040,
     right       = 0x0080,
     scientific  = 0x0100,
-    showbase    = 0x0200, 
-    showpoint   = 0x0400, 
-    showpos     = 0x0800, 
-    skipws      = 0x1000, 
-    unitbuf     = 0x2000, 
-    uppercase   = 0x4000, 
+    showbase    = 0x0200,
+    showpoint   = 0x0400,
+    showpos     = 0x0800,
+    skipws      = 0x1000,
+    unitbuf     = 0x2000,
+    uppercase   = 0x4000,
     adjustfield = left | right | internal,
     basefield   = dec | oct | hex,
     floatfield  = scientific | fixed
   };
-  enum event { 
+  enum event {
     erase_event   = 0x0001,
     imbue_event   = 0x0002,
     copyfmt_event = 0x0004
   };
-  
+
   ios() { x_width=0; }
   streamsize width(streamsize wide) { x_width=wide; }
  protected:
@@ -4101,7 +4101,7 @@ ostream& ostream::operator <<(long x)
   if(x_width) {
     char buf[50];
     sprintf(buf,"%d",x);
-    if(x_width>strlen(buf)) 
+    if(x_width>strlen(buf))
       for(int i=strlen(buf);i<x_width;i++) fputc(' ',fout);
     x_width=0;
   }
@@ -4114,7 +4114,7 @@ ostream& ostream::operator <<(unsigned long x)
   if(x_width) {
     char buf[50];
     sprintf(buf,"%u",x);
-    if(x_width>strlen(buf)) 
+    if(x_width>strlen(buf))
       for(int i=strlen(buf);i<x_width;i++) fputc(' ',fout);
     x_width=0;
   }
@@ -4127,7 +4127,7 @@ ostream& ostream::operator <<(double d)
   if(x_width) {
     char buf[50];
     sprintf(buf,"%g",d);
-    if(x_width>strlen(buf)) 
+    if(x_width>strlen(buf))
       for(int i=strlen(buf);i<x_width;i++) fputc(' ',fout);
     x_width=0;
   }
@@ -4140,7 +4140,7 @@ ostream& ostream::operator <<(void *p)
   if(x_width) {
     char buf[50];
     sprintf(buf,"0x%x",p);
-    if(x_width>strlen(buf)) 
+    if(x_width>strlen(buf))
       for(int i=strlen(buf);i<x_width;i++) fputc(' ',fout);
     x_width=0;
   }
@@ -4172,10 +4172,10 @@ public:
   istream(char *fname);
   ~istream();
   void close() { if(fin) fclose(fin); fin= __null ;}
-  ostream& tie(ostream& cx); 
+  ostream& tie(ostream& cx);
   FILE *fp() { return(fin); }
   int rdstate();
-  
+
   istream& operator >>(char& c);
   istream& operator >>(char *s);
   istream& operator >>(short& s);
@@ -4206,12 +4206,12 @@ istream::istream(char *fname)
 }
 
 
-ostream& istream::tie(ostream& cx) 
-     
-{ 
-  ostream *tmp; 
-  tmp=tie; 
-  tie = &cx; 
+ostream& istream::tie(ostream& cx)
+
+{
+  ostream *tmp;
+  tmp=tie;
+  tie = &cx;
   return(*tmp);
 }
 
@@ -4316,7 +4316,7 @@ class iostream : public istream , public ostream {
 
 
 /*********************************************************************
-* ofstream, ifstream 
+* ofstream, ifstream
 *
 *********************************************************************/
 
@@ -4363,7 +4363,7 @@ ostream& ostream::form(char *format ...) {
 /*********************************************************************
 * iostream manipurator emulation
 *
-*  Following description must be deleted when pointer to compiled 
+*  Following description must be deleted when pointer to compiled
 * function is fully supported.
 *********************************************************************/
 class G__CINT_ENDL { int dmy; } endl;
@@ -4380,15 +4380,15 @@ class G__CINT_NOSUPPORT { int dmy; } ;
 # 1 "/home/wmtan/root/cint/include/_iostream" 1
 // include/_iostream
 
-std::ostream& operator<<(std::ostream& ostr,std::G__CINT_ENDL& i) 
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_ENDL& i)
         {return(std::endl(ostr));}
-std::ostream& operator<<(std::ostream& ostr,std::G__CINT_ENDS& i) 
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_ENDS& i)
         {return(std::ends(ostr));}
-std::ostream& operator<<(std::ostream& ostr,std::G__CINT_FLUSH& i) 
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_FLUSH& i)
         {return(std::flush(ostr));}
-std::istream& operator>>(std::istream& istr,std::G__CINT_ws& i) 
+std::istream& operator>>(std::istream& istr,std::G__CINT_ws& i)
         {return(std::ws(istr));}
-std::istream& operator>>(std::istream& istr,std::G__CINT_WS& i) 
+std::istream& operator>>(std::istream& istr,std::G__CINT_WS& i)
         {return(std::WS(istr));}
 
 
@@ -5529,7 +5529,7 @@ protected:
 
    static TObjArray  *fgExecs;  //List of execs
    static TObject    *fgObject; //Pointer to object (set in Action on Demand)
-      
+
 public:
    //status bits
    enum { kNotComputed = (1 << ( 12 )) };
@@ -5547,7 +5547,7 @@ public:
    Bool_t             IsValid() const {return GetUniqueID()!=0 ? kTRUE : kFALSE;}virtual void       SetAction(const char *name);
    virtual void       SetAction(TObject *parent);
    static  void       SetObject(TObject *obj);
-   
+
    friend Bool_t operator==(const TRef &r1, const TRef &r2);
    friend Bool_t operator!=(const TRef &r1, const TRef &r2);
 
@@ -5614,7 +5614,7 @@ namespace std {
 #pragma mask_newdelete 0x10;
 
 
-// Imported from ANSI/ISO C++ 1997/Nov draft 
+// Imported from ANSI/ISO C++ 1997/Nov draft
 // Got some ideas from Scott Snyder, Fermi-lab
 // Modified by Masaharu Goto
 // SGI KCC porting by Philippe Canal, Fermi-lab
@@ -5673,13 +5673,13 @@ struct pair {
 # 1 "/local/stage1/wmtan/ofc/COBRA_7_0_0/src/Porting/Linux2-EGCS/wrappers/stddef.h" 1
 /*
  * This stddef.h file is used to replace the gnu provided one when
- * ooddlx is run. 
+ * ooddlx is run.
  * It fixes a bug in the GNU version which defines NULL as ((void *)0)
  * even for __cplusplus parsers
  *
- * NOTE: this file is compiler dependent and has been taken from 
- * egcs-2.91.60 19981201 (egcs-1.1.1 release) 
- *  
+ * NOTE: this file is compiler dependent and has been taken from
+ * egcs-2.91.60 19981201 (egcs-1.1.1 release)
+ *
  * Dirk.Duellmann@cern.ch
  */
 /* !_STDDEF_H && !_STDDEF_H_ && !_ANSI_STDDEF_H && !__STDDEF_H__
@@ -5732,10 +5732,9 @@ public:
   typedef X element_type;
   explicit auto_ptr(X* p = 0) : ptr(p), owns(p?true:false) {}
   auto_ptr(auto_ptr& a) {owns=a.owns; ptr=a.ptr; a.owns=0;}
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr(auto_ptr<T>& a) {owns=a.owns; ptr=a.release();}
-  
 
 
 
@@ -5743,7 +5742,8 @@ public:
 
 
 
-  
+
+
   auto_ptr& operator=(auto_ptr& a) {
     if (a.ptr != ptr) {
       if (owns) delete ptr;
@@ -5753,7 +5753,7 @@ public:
     }
     return(*this);
   }
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr& operator=(auto_ptr<T>& a) {
     if (a.ptr != ptr) {
@@ -5763,9 +5763,9 @@ public:
     }
     return(*this);
   }
-  
+
   ~auto_ptr() { if(owns) delete ptr; }
-  
+
   X& operator*() const { return *ptr; }
   X* operator->() const { return ptr; }
   X* get() const { return ptr; }
@@ -5809,7 +5809,7 @@ public:
 
 
 // Imported from STL HP implementation 1994
-// Imported from STL SGI implementation 1997 
+// Imported from STL SGI implementation 1997
 // Imported from ANSI/ISO C++ draft Nov 1997
 // Modified by Masaharu Goto
 // May need to improve for the latest standard
@@ -5839,8 +5839,8 @@ template <class T, class Distance> struct random_access_iterator {};
 ////////////////////////////////////////////////////////////////////////
 // iterator_category overloaded function
 ////////////////////////////////////////////////////////////////////////
-template <class T, class Distance> 
-inline input_iterator_tag 
+template <class T, class Distance>
+inline input_iterator_tag
 iterator_category(const input_iterator<T, Distance>&) {
     return input_iterator_tag();
 }
@@ -5849,33 +5849,33 @@ inline output_iterator_tag iterator_category(const output_iterator&) {
     return output_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline forward_iterator_tag
 iterator_category(const forward_iterator<T, Distance>&) {
     return forward_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline bidirectional_iterator_tag
 iterator_category(const bidirectional_iterator<T, Distance>&) {
     return bidirectional_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline random_access_iterator_tag
 iterator_category(const random_access_iterator<T, Distance>&) {
     return random_access_iterator_tag();
 }
 
 template <class T>
-inline random_access_iterator_tag 
+inline random_access_iterator_tag
 iterator_category(const T*) {
     return random_access_iterator_tag();
 }
 
 
 // iterator_traits, iterator and reverse_iterator template may not be
-// needed for precompiled library interface 
+// needed for precompiled library interface
 
 ////////////////////////////////////////////////////////////////////////
 // iterator_traits
@@ -5930,7 +5930,7 @@ struct iterator {
 // reverse_iterator
 ////////////////////////////////////////////////////////////////////////
 template <class Iterator>
-class reverse_iterator 
+class reverse_iterator
 
 
 
@@ -5972,7 +5972,7 @@ class reverse_iterator
    reverse_iterator  operator- (difference_type n) const;
    reverse_iterator& operator-=(difference_type n);
    reference operator[](difference_type n) const;
-}; 
+};
 
 # 207 "/home/wmtan/root/cint/lib/prec_stl/iterator"
 
@@ -6131,7 +6131,7 @@ public:
 
 
 // clause _lib.binders_, binders:
-template <class Operation> 
+template <class Operation>
 class binder1st
   : public unary_function<Operation::second_argument_type,
                           Operation::result_type>
@@ -6255,13 +6255,13 @@ class map {
 
 
 
-  class iterator 
+  class iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -6291,13 +6291,13 @@ class map {
 
 
 
-  class reverse_iterator 
+  class reverse_iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -6438,7 +6438,7 @@ class map {
 #pragma mask_newdelete 0x10;
 
 
-// Imported from ANSI/ISO C++ 1997/Nov draft 
+// Imported from ANSI/ISO C++ 1997/Nov draft
 // Got some ideas from Scott Snyder, Fermi-lab
 // Modified by Masaharu Goto
 // SGI KCC porting by Philippe Canal, Fermi-lab
@@ -6497,13 +6497,13 @@ struct pair {
 # 1 "/local/stage1/wmtan/ofc/COBRA_7_0_0/src/Porting/Linux2-EGCS/wrappers/stddef.h" 1
 /*
  * This stddef.h file is used to replace the gnu provided one when
- * ooddlx is run. 
+ * ooddlx is run.
  * It fixes a bug in the GNU version which defines NULL as ((void *)0)
  * even for __cplusplus parsers
  *
- * NOTE: this file is compiler dependent and has been taken from 
- * egcs-2.91.60 19981201 (egcs-1.1.1 release) 
- *  
+ * NOTE: this file is compiler dependent and has been taken from
+ * egcs-2.91.60 19981201 (egcs-1.1.1 release)
+ *
  * Dirk.Duellmann@cern.ch
  */
 /* !_STDDEF_H && !_STDDEF_H_ && !_ANSI_STDDEF_H && !__STDDEF_H__
@@ -6556,10 +6556,9 @@ public:
   typedef X element_type;
   explicit auto_ptr(X* p = 0) : ptr(p), owns(p?true:false) {}
   auto_ptr(auto_ptr& a) {owns=a.owns; ptr=a.ptr; a.owns=0;}
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr(auto_ptr<T>& a) {owns=a.owns; ptr=a.release();}
-  
 
 
 
@@ -6567,7 +6566,8 @@ public:
 
 
 
-  
+
+
   auto_ptr& operator=(auto_ptr& a) {
     if (a.ptr != ptr) {
       if (owns) delete ptr;
@@ -6577,7 +6577,7 @@ public:
     }
     return(*this);
   }
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr& operator=(auto_ptr<T>& a) {
     if (a.ptr != ptr) {
@@ -6587,9 +6587,9 @@ public:
     }
     return(*this);
   }
-  
+
   ~auto_ptr() { if(owns) delete ptr; }
-  
+
   X& operator*() const { return *ptr; }
   X* operator->() const { return ptr; }
   X* get() const { return ptr; }
@@ -6633,7 +6633,7 @@ public:
 
 
 // Imported from STL HP implementation 1994
-// Imported from STL SGI implementation 1997 
+// Imported from STL SGI implementation 1997
 // Imported from ANSI/ISO C++ draft Nov 1997
 // Modified by Masaharu Goto
 // May need to improve for the latest standard
@@ -6663,8 +6663,8 @@ template <class T, class Distance> struct random_access_iterator {};
 ////////////////////////////////////////////////////////////////////////
 // iterator_category overloaded function
 ////////////////////////////////////////////////////////////////////////
-template <class T, class Distance> 
-inline input_iterator_tag 
+template <class T, class Distance>
+inline input_iterator_tag
 iterator_category(const input_iterator<T, Distance>&) {
     return input_iterator_tag();
 }
@@ -6673,33 +6673,33 @@ inline output_iterator_tag iterator_category(const output_iterator&) {
     return output_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline forward_iterator_tag
 iterator_category(const forward_iterator<T, Distance>&) {
     return forward_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline bidirectional_iterator_tag
 iterator_category(const bidirectional_iterator<T, Distance>&) {
     return bidirectional_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline random_access_iterator_tag
 iterator_category(const random_access_iterator<T, Distance>&) {
     return random_access_iterator_tag();
 }
 
 template <class T>
-inline random_access_iterator_tag 
+inline random_access_iterator_tag
 iterator_category(const T*) {
     return random_access_iterator_tag();
 }
 
 
 // iterator_traits, iterator and reverse_iterator template may not be
-// needed for precompiled library interface 
+// needed for precompiled library interface
 
 ////////////////////////////////////////////////////////////////////////
 // iterator_traits
@@ -6754,7 +6754,7 @@ struct iterator {
 // reverse_iterator
 ////////////////////////////////////////////////////////////////////////
 template <class Iterator>
-class reverse_iterator 
+class reverse_iterator
 
 
 
@@ -6796,7 +6796,7 @@ class reverse_iterator
    reverse_iterator  operator- (difference_type n) const;
    reverse_iterator& operator-=(difference_type n);
    reference operator[](difference_type n) const;
-}; 
+};
 
 # 207 "/home/wmtan/root/cint/lib/prec_stl/iterator"
 
@@ -6955,7 +6955,7 @@ public:
 
 
 // clause _lib.binders_, binders:
-template <class Operation> 
+template <class Operation>
 class binder1st
   : public unary_function<Operation::second_argument_type,
                           Operation::result_type>
@@ -7079,13 +7079,13 @@ class multimap {
 
 
 
-  class iterator 
+  class iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -7115,13 +7115,13 @@ class multimap {
 
 
 
-  class reverse_iterator 
+  class reverse_iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -7340,7 +7340,7 @@ namespace std {
 #pragma mask_newdelete 0x10;
 
 
-// Imported from ANSI/ISO C++ 1997/Nov draft 
+// Imported from ANSI/ISO C++ 1997/Nov draft
 // Got some ideas from Scott Snyder, Fermi-lab
 // Modified by Masaharu Goto
 // SGI KCC porting by Philippe Canal, Fermi-lab
@@ -7399,13 +7399,13 @@ struct pair {
 # 1 "/local/stage1/wmtan/ofc/COBRA_7_0_0/src/Porting/Linux2-EGCS/wrappers/stddef.h" 1
 /*
  * This stddef.h file is used to replace the gnu provided one when
- * ooddlx is run. 
+ * ooddlx is run.
  * It fixes a bug in the GNU version which defines NULL as ((void *)0)
  * even for __cplusplus parsers
  *
- * NOTE: this file is compiler dependent and has been taken from 
- * egcs-2.91.60 19981201 (egcs-1.1.1 release) 
- *  
+ * NOTE: this file is compiler dependent and has been taken from
+ * egcs-2.91.60 19981201 (egcs-1.1.1 release)
+ *
  * Dirk.Duellmann@cern.ch
  */
 /* !_STDDEF_H && !_STDDEF_H_ && !_ANSI_STDDEF_H && !__STDDEF_H__
@@ -7458,10 +7458,9 @@ public:
   typedef X element_type;
   explicit auto_ptr(X* p = 0) : ptr(p), owns(p?true:false) {}
   auto_ptr(auto_ptr& a) {owns=a.owns; ptr=a.ptr; a.owns=0;}
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr(auto_ptr<T>& a) {owns=a.owns; ptr=a.release();}
-  
 
 
 
@@ -7469,7 +7468,8 @@ public:
 
 
 
-  
+
+
   auto_ptr& operator=(auto_ptr& a) {
     if (a.ptr != ptr) {
       if (owns) delete ptr;
@@ -7479,7 +7479,7 @@ public:
     }
     return(*this);
   }
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr& operator=(auto_ptr<T>& a) {
     if (a.ptr != ptr) {
@@ -7489,9 +7489,9 @@ public:
     }
     return(*this);
   }
-  
+
   ~auto_ptr() { if(owns) delete ptr; }
-  
+
   X& operator*() const { return *ptr; }
   X* operator->() const { return ptr; }
   X* get() const { return ptr; }
@@ -7535,7 +7535,7 @@ public:
 
 
 // Imported from STL HP implementation 1994
-// Imported from STL SGI implementation 1997 
+// Imported from STL SGI implementation 1997
 // Imported from ANSI/ISO C++ draft Nov 1997
 // Modified by Masaharu Goto
 // May need to improve for the latest standard
@@ -7565,8 +7565,8 @@ template <class T, class Distance> struct random_access_iterator {};
 ////////////////////////////////////////////////////////////////////////
 // iterator_category overloaded function
 ////////////////////////////////////////////////////////////////////////
-template <class T, class Distance> 
-inline input_iterator_tag 
+template <class T, class Distance>
+inline input_iterator_tag
 iterator_category(const input_iterator<T, Distance>&) {
     return input_iterator_tag();
 }
@@ -7575,33 +7575,33 @@ inline output_iterator_tag iterator_category(const output_iterator&) {
     return output_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline forward_iterator_tag
 iterator_category(const forward_iterator<T, Distance>&) {
     return forward_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline bidirectional_iterator_tag
 iterator_category(const bidirectional_iterator<T, Distance>&) {
     return bidirectional_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline random_access_iterator_tag
 iterator_category(const random_access_iterator<T, Distance>&) {
     return random_access_iterator_tag();
 }
 
 template <class T>
-inline random_access_iterator_tag 
+inline random_access_iterator_tag
 iterator_category(const T*) {
     return random_access_iterator_tag();
 }
 
 
 // iterator_traits, iterator and reverse_iterator template may not be
-// needed for precompiled library interface 
+// needed for precompiled library interface
 
 ////////////////////////////////////////////////////////////////////////
 // iterator_traits
@@ -7656,7 +7656,7 @@ struct iterator {
 // reverse_iterator
 ////////////////////////////////////////////////////////////////////////
 template <class Iterator>
-class reverse_iterator 
+class reverse_iterator
 
 
 
@@ -7698,7 +7698,7 @@ class reverse_iterator
    reverse_iterator  operator- (difference_type n) const;
    reverse_iterator& operator-=(difference_type n);
    reference operator[](difference_type n) const;
-}; 
+};
 
 # 207 "/home/wmtan/root/cint/lib/prec_stl/iterator"
 
@@ -7857,7 +7857,7 @@ public:
 
 
 // clause _lib.binders_, binders:
-template <class Operation> 
+template <class Operation>
 class binder1st
   : public unary_function<Operation::second_argument_type,
                           Operation::result_type>
@@ -7981,13 +7981,13 @@ class map {
 
 
 
-  class iterator 
+  class iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -8017,13 +8017,13 @@ class map {
 
 
 
-  class reverse_iterator 
+  class reverse_iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -8164,7 +8164,7 @@ class map {
 #pragma mask_newdelete 0x10;
 
 
-// Imported from ANSI/ISO C++ 1997/Nov draft 
+// Imported from ANSI/ISO C++ 1997/Nov draft
 // Got some ideas from Scott Snyder, Fermi-lab
 // Modified by Masaharu Goto
 // SGI KCC porting by Philippe Canal, Fermi-lab
@@ -8223,13 +8223,13 @@ struct pair {
 # 1 "/local/stage1/wmtan/ofc/COBRA_7_0_0/src/Porting/Linux2-EGCS/wrappers/stddef.h" 1
 /*
  * This stddef.h file is used to replace the gnu provided one when
- * ooddlx is run. 
+ * ooddlx is run.
  * It fixes a bug in the GNU version which defines NULL as ((void *)0)
  * even for __cplusplus parsers
  *
- * NOTE: this file is compiler dependent and has been taken from 
- * egcs-2.91.60 19981201 (egcs-1.1.1 release) 
- *  
+ * NOTE: this file is compiler dependent and has been taken from
+ * egcs-2.91.60 19981201 (egcs-1.1.1 release)
+ *
  * Dirk.Duellmann@cern.ch
  */
 /* !_STDDEF_H && !_STDDEF_H_ && !_ANSI_STDDEF_H && !__STDDEF_H__
@@ -8282,10 +8282,9 @@ public:
   typedef X element_type;
   explicit auto_ptr(X* p = 0) : ptr(p), owns(p?true:false) {}
   auto_ptr(auto_ptr& a) {owns=a.owns; ptr=a.ptr; a.owns=0;}
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr(auto_ptr<T>& a) {owns=a.owns; ptr=a.release();}
-  
 
 
 
@@ -8293,7 +8292,8 @@ public:
 
 
 
-  
+
+
   auto_ptr& operator=(auto_ptr& a) {
     if (a.ptr != ptr) {
       if (owns) delete ptr;
@@ -8303,7 +8303,7 @@ public:
     }
     return(*this);
   }
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr& operator=(auto_ptr<T>& a) {
     if (a.ptr != ptr) {
@@ -8313,9 +8313,9 @@ public:
     }
     return(*this);
   }
-  
+
   ~auto_ptr() { if(owns) delete ptr; }
-  
+
   X& operator*() const { return *ptr; }
   X* operator->() const { return ptr; }
   X* get() const { return ptr; }
@@ -8359,7 +8359,7 @@ public:
 
 
 // Imported from STL HP implementation 1994
-// Imported from STL SGI implementation 1997 
+// Imported from STL SGI implementation 1997
 // Imported from ANSI/ISO C++ draft Nov 1997
 // Modified by Masaharu Goto
 // May need to improve for the latest standard
@@ -8389,8 +8389,8 @@ template <class T, class Distance> struct random_access_iterator {};
 ////////////////////////////////////////////////////////////////////////
 // iterator_category overloaded function
 ////////////////////////////////////////////////////////////////////////
-template <class T, class Distance> 
-inline input_iterator_tag 
+template <class T, class Distance>
+inline input_iterator_tag
 iterator_category(const input_iterator<T, Distance>&) {
     return input_iterator_tag();
 }
@@ -8399,33 +8399,33 @@ inline output_iterator_tag iterator_category(const output_iterator&) {
     return output_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline forward_iterator_tag
 iterator_category(const forward_iterator<T, Distance>&) {
     return forward_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline bidirectional_iterator_tag
 iterator_category(const bidirectional_iterator<T, Distance>&) {
     return bidirectional_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline random_access_iterator_tag
 iterator_category(const random_access_iterator<T, Distance>&) {
     return random_access_iterator_tag();
 }
 
 template <class T>
-inline random_access_iterator_tag 
+inline random_access_iterator_tag
 iterator_category(const T*) {
     return random_access_iterator_tag();
 }
 
 
 // iterator_traits, iterator and reverse_iterator template may not be
-// needed for precompiled library interface 
+// needed for precompiled library interface
 
 ////////////////////////////////////////////////////////////////////////
 // iterator_traits
@@ -8480,7 +8480,7 @@ struct iterator {
 // reverse_iterator
 ////////////////////////////////////////////////////////////////////////
 template <class Iterator>
-class reverse_iterator 
+class reverse_iterator
 
 
 
@@ -8522,7 +8522,7 @@ class reverse_iterator
    reverse_iterator  operator- (difference_type n) const;
    reverse_iterator& operator-=(difference_type n);
    reference operator[](difference_type n) const;
-}; 
+};
 
 # 207 "/home/wmtan/root/cint/lib/prec_stl/iterator"
 
@@ -8681,7 +8681,7 @@ public:
 
 
 // clause _lib.binders_, binders:
-template <class Operation> 
+template <class Operation>
 class binder1st
   : public unary_function<Operation::second_argument_type,
                           Operation::result_type>
@@ -8805,13 +8805,13 @@ class multimap {
 
 
 
-  class iterator 
+  class iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -8841,13 +8841,13 @@ class multimap {
 
 
 
-  class reverse_iterator 
+  class reverse_iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -9002,7 +9002,7 @@ namespace std {
 #pragma mask_newdelete 0x10;
 
 
-// Imported from ANSI/ISO C++ 1997/Nov draft 
+// Imported from ANSI/ISO C++ 1997/Nov draft
 // Got some ideas from Scott Snyder, Fermi-lab
 // Modified by Masaharu Goto
 // SGI KCC porting by Philippe Canal, Fermi-lab
@@ -9029,7 +9029,7 @@ namespace std {
 
 
 // Imported from STL HP implementation 1994
-// Imported from STL SGI implementation 1997 
+// Imported from STL SGI implementation 1997
 // Imported from ANSI/ISO C++ draft Nov 1997
 // Modified by Masaharu Goto
 // May need to improve for the latest standard
@@ -9059,8 +9059,8 @@ template <class T, class Distance> struct random_access_iterator {};
 ////////////////////////////////////////////////////////////////////////
 // iterator_category overloaded function
 ////////////////////////////////////////////////////////////////////////
-template <class T, class Distance> 
-inline input_iterator_tag 
+template <class T, class Distance>
+inline input_iterator_tag
 iterator_category(const input_iterator<T, Distance>&) {
     return input_iterator_tag();
 }
@@ -9069,33 +9069,33 @@ inline output_iterator_tag iterator_category(const output_iterator&) {
     return output_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline forward_iterator_tag
 iterator_category(const forward_iterator<T, Distance>&) {
     return forward_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline bidirectional_iterator_tag
 iterator_category(const bidirectional_iterator<T, Distance>&) {
     return bidirectional_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline random_access_iterator_tag
 iterator_category(const random_access_iterator<T, Distance>&) {
     return random_access_iterator_tag();
 }
 
 template <class T>
-inline random_access_iterator_tag 
+inline random_access_iterator_tag
 iterator_category(const T*) {
     return random_access_iterator_tag();
 }
 
 
 // iterator_traits, iterator and reverse_iterator template may not be
-// needed for precompiled library interface 
+// needed for precompiled library interface
 
 ////////////////////////////////////////////////////////////////////////
 // iterator_traits
@@ -9150,7 +9150,7 @@ struct iterator {
 // reverse_iterator
 ////////////////////////////////////////////////////////////////////////
 template <class Iterator>
-class reverse_iterator 
+class reverse_iterator
 
 
 
@@ -9192,7 +9192,7 @@ class reverse_iterator
    reverse_iterator  operator- (difference_type n) const;
    reverse_iterator& operator-=(difference_type n);
    reference operator[](difference_type n) const;
-}; 
+};
 
 # 207 "/home/wmtan/root/cint/lib/prec_stl/iterator"
 
@@ -9235,13 +9235,13 @@ class reverse_iterator
 # 1 "/local/stage1/wmtan/ofc/COBRA_7_0_0/src/Porting/Linux2-EGCS/wrappers/stddef.h" 1
 /*
  * This stddef.h file is used to replace the gnu provided one when
- * ooddlx is run. 
+ * ooddlx is run.
  * It fixes a bug in the GNU version which defines NULL as ((void *)0)
  * even for __cplusplus parsers
  *
- * NOTE: this file is compiler dependent and has been taken from 
- * egcs-2.91.60 19981201 (egcs-1.1.1 release) 
- *  
+ * NOTE: this file is compiler dependent and has been taken from
+ * egcs-2.91.60 19981201 (egcs-1.1.1 release)
+ *
  * Dirk.Duellmann@cern.ch
  */
 /* !_STDDEF_H && !_STDDEF_H_ && !_ANSI_STDDEF_H && !__STDDEF_H__
@@ -9294,10 +9294,9 @@ public:
   typedef X element_type;
   explicit auto_ptr(X* p = 0) : ptr(p), owns(p?true:false) {}
   auto_ptr(auto_ptr& a) {owns=a.owns; ptr=a.ptr; a.owns=0;}
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr(auto_ptr<T>& a) {owns=a.owns; ptr=a.release();}
-  
 
 
 
@@ -9305,7 +9304,8 @@ public:
 
 
 
-  
+
+
   auto_ptr& operator=(auto_ptr& a) {
     if (a.ptr != ptr) {
       if (owns) delete ptr;
@@ -9315,7 +9315,7 @@ public:
     }
     return(*this);
   }
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr& operator=(auto_ptr<T>& a) {
     if (a.ptr != ptr) {
@@ -9325,9 +9325,9 @@ public:
     }
     return(*this);
   }
-  
+
   ~auto_ptr() { if(owns) delete ptr; }
-  
+
   X& operator*() const { return *ptr; }
   X* operator->() const { return ptr; }
   X* get() const { return ptr; }
@@ -9430,7 +9430,7 @@ class vector {
 
 
 
-  class reverse_iterator 
+  class reverse_iterator
 
 
 
@@ -9533,16 +9533,16 @@ class vector {
 
 
   // input iter
-  friend vector::iterator 
+  friend vector::iterator
     find(vector::iterator first,vector::iterator last,const T& value);
   // forward iter
-  friend vector::iterator 
+  friend vector::iterator
     find_end(vector::iterator first1,vector::iterator last1,
              vector::iterator first2,vector::iterator last2);
-  friend vector::iterator 
+  friend vector::iterator
     find_first_of(vector::iterator first1,vector::iterator last1,
                   vector::iterator first2,vector::iterator last2);
-  friend vector::iterator 
+  friend vector::iterator
     adjacent_find(vector::iterator first,vector::iterator last);
   // input iter
 
@@ -9582,7 +9582,7 @@ class vector {
   friend void replace(vector::iterator first,vector::iterator last,
                       const T& old_value,const T& new_value);
   // input, output iter -> forward iter
-  friend vector::iterator 
+  friend vector::iterator
     replace_copy(vector::iterator first,vector::iterator last,
                  vector::iterator result,
                  const T& old_value,const T& new_value);
@@ -9601,7 +9601,7 @@ class vector {
                 vector::iterator result,const T& value);
   friend vector::iterator
     unique(vector::iterator first,vector::iterator last);
-  friend vector::iterator 
+  friend vector::iterator
     unique_copy(vector::iterator first,vector::iterator last,
                 vector::iterator result);
   friend void reverse(vector::iterator first,vector::iterator last);
@@ -9614,7 +9614,7 @@ class vector {
 
 
   // forward iter
-  friend vector::iterator 
+  friend vector::iterator
     rotate_copy(vector::iterator first,vector::iterator mid,
                 vector::iterator last,vector::iterator result);
   // randomaccess iter
@@ -9631,9 +9631,9 @@ class vector {
   friend void nth_element(vector::iterator first,vector::iterator nth,
                           vector::iterator last);
   // forward iter
-  friend vector::iterator 
+  friend vector::iterator
     lower_bound(vector::iterator first,vector::iterator last,const T& value);
-  friend vector::iterator 
+  friend vector::iterator
     upper_bound(vector::iterator first,vector::iterator last,const T& value);
 
 
@@ -9648,19 +9648,19 @@ class vector {
                             vector::iterator last);
   friend bool includes(vector::iterator first1,vector::iterator last1,
                        vector::iterator first2,vector::iterator last2);
-  friend vector::iterator 
+  friend vector::iterator
     set_union(vector::iterator first1,vector::iterator last1,
               vector::iterator first2,vector::iterator last2,
               vector::iterator result);
-  friend vector::iterator 
+  friend vector::iterator
     set_intersection(vector::iterator first1,vector::iterator last1,
                      vector::iterator first2,vector::iterator last2,
                      vector::iterator result);
-  friend vector::iterator 
+  friend vector::iterator
     set_difference(vector::iterator first1,vector::iterator last1,
                    vector::iterator first2,vector::iterator last2,
                    vector::iterator result);
-  friend vector::iterator 
+  friend vector::iterator
     set_symmetric_difference(vector::iterator first1,vector::iterator last1,
                              vector::iterator first2,vector::iterator last2,
                              vector::iterator result);
@@ -9673,9 +9673,9 @@ class vector {
   friend const T& min(const T& a,const T& b);
   friend const T& max(const T& a,const T& b);
   // forward iter
-  friend vector::iterator 
+  friend vector::iterator
     min_element(vector::iterator first,vector::iterator last);
-  friend vector::iterator 
+  friend vector::iterator
     max_element(vector::iterator first,vector::iterator last);
   // input iter
   friend bool
@@ -9760,7 +9760,7 @@ namespace std {
 #pragma mask_newdelete 0x10;
 
 
-// Imported from ANSI/ISO C++ 1997/Nov draft 
+// Imported from ANSI/ISO C++ 1997/Nov draft
 // Got some ideas from Scott Snyder, Fermi-lab
 // Modified by Masaharu Goto
 // SGI KCC porting by Philippe Canal, Fermi-lab
@@ -9787,7 +9787,7 @@ namespace std {
 
 
 // Imported from STL HP implementation 1994
-// Imported from STL SGI implementation 1997 
+// Imported from STL SGI implementation 1997
 // Imported from ANSI/ISO C++ draft Nov 1997
 // Modified by Masaharu Goto
 // May need to improve for the latest standard
@@ -9817,8 +9817,8 @@ template <class T, class Distance> struct random_access_iterator {};
 ////////////////////////////////////////////////////////////////////////
 // iterator_category overloaded function
 ////////////////////////////////////////////////////////////////////////
-template <class T, class Distance> 
-inline input_iterator_tag 
+template <class T, class Distance>
+inline input_iterator_tag
 iterator_category(const input_iterator<T, Distance>&) {
     return input_iterator_tag();
 }
@@ -9827,33 +9827,33 @@ inline output_iterator_tag iterator_category(const output_iterator&) {
     return output_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline forward_iterator_tag
 iterator_category(const forward_iterator<T, Distance>&) {
     return forward_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline bidirectional_iterator_tag
 iterator_category(const bidirectional_iterator<T, Distance>&) {
     return bidirectional_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline random_access_iterator_tag
 iterator_category(const random_access_iterator<T, Distance>&) {
     return random_access_iterator_tag();
 }
 
 template <class T>
-inline random_access_iterator_tag 
+inline random_access_iterator_tag
 iterator_category(const T*) {
     return random_access_iterator_tag();
 }
 
 
 // iterator_traits, iterator and reverse_iterator template may not be
-// needed for precompiled library interface 
+// needed for precompiled library interface
 
 ////////////////////////////////////////////////////////////////////////
 // iterator_traits
@@ -9908,7 +9908,7 @@ struct iterator {
 // reverse_iterator
 ////////////////////////////////////////////////////////////////////////
 template <class Iterator>
-class reverse_iterator 
+class reverse_iterator
 
 
 
@@ -9950,7 +9950,7 @@ class reverse_iterator
    reverse_iterator  operator- (difference_type n) const;
    reverse_iterator& operator-=(difference_type n);
    reference operator[](difference_type n) const;
-}; 
+};
 
 # 207 "/home/wmtan/root/cint/lib/prec_stl/iterator"
 
@@ -9993,13 +9993,13 @@ class reverse_iterator
 # 1 "/local/stage1/wmtan/ofc/COBRA_7_0_0/src/Porting/Linux2-EGCS/wrappers/stddef.h" 1
 /*
  * This stddef.h file is used to replace the gnu provided one when
- * ooddlx is run. 
+ * ooddlx is run.
  * It fixes a bug in the GNU version which defines NULL as ((void *)0)
  * even for __cplusplus parsers
  *
- * NOTE: this file is compiler dependent and has been taken from 
- * egcs-2.91.60 19981201 (egcs-1.1.1 release) 
- *  
+ * NOTE: this file is compiler dependent and has been taken from
+ * egcs-2.91.60 19981201 (egcs-1.1.1 release)
+ *
  * Dirk.Duellmann@cern.ch
  */
 /* !_STDDEF_H && !_STDDEF_H_ && !_ANSI_STDDEF_H && !__STDDEF_H__
@@ -10052,10 +10052,9 @@ public:
   typedef X element_type;
   explicit auto_ptr(X* p = 0) : ptr(p), owns(p?true:false) {}
   auto_ptr(auto_ptr& a) {owns=a.owns; ptr=a.ptr; a.owns=0;}
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr(auto_ptr<T>& a) {owns=a.owns; ptr=a.release();}
-  
 
 
 
@@ -10063,7 +10062,8 @@ public:
 
 
 
-  
+
+
   auto_ptr& operator=(auto_ptr& a) {
     if (a.ptr != ptr) {
       if (owns) delete ptr;
@@ -10073,7 +10073,7 @@ public:
     }
     return(*this);
   }
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr& operator=(auto_ptr<T>& a) {
     if (a.ptr != ptr) {
@@ -10083,9 +10083,9 @@ public:
     }
     return(*this);
   }
-  
+
   ~auto_ptr() { if(owns) delete ptr; }
-  
+
   X& operator*() const { return *ptr; }
   X* operator->() const { return ptr; }
   X* get() const { return ptr; }
@@ -10188,7 +10188,7 @@ class vector {
 
 
 
-  class reverse_iterator 
+  class reverse_iterator
 
 
 
@@ -10291,16 +10291,16 @@ class vector {
 
 
   // input iter
-  friend vector::iterator 
+  friend vector::iterator
     find(vector::iterator first,vector::iterator last,const T& value);
   // forward iter
-  friend vector::iterator 
+  friend vector::iterator
     find_end(vector::iterator first1,vector::iterator last1,
              vector::iterator first2,vector::iterator last2);
-  friend vector::iterator 
+  friend vector::iterator
     find_first_of(vector::iterator first1,vector::iterator last1,
                   vector::iterator first2,vector::iterator last2);
-  friend vector::iterator 
+  friend vector::iterator
     adjacent_find(vector::iterator first,vector::iterator last);
   // input iter
 
@@ -10340,7 +10340,7 @@ class vector {
   friend void replace(vector::iterator first,vector::iterator last,
                       const T& old_value,const T& new_value);
   // input, output iter -> forward iter
-  friend vector::iterator 
+  friend vector::iterator
     replace_copy(vector::iterator first,vector::iterator last,
                  vector::iterator result,
                  const T& old_value,const T& new_value);
@@ -10359,7 +10359,7 @@ class vector {
                 vector::iterator result,const T& value);
   friend vector::iterator
     unique(vector::iterator first,vector::iterator last);
-  friend vector::iterator 
+  friend vector::iterator
     unique_copy(vector::iterator first,vector::iterator last,
                 vector::iterator result);
   friend void reverse(vector::iterator first,vector::iterator last);
@@ -10372,7 +10372,7 @@ class vector {
 
 
   // forward iter
-  friend vector::iterator 
+  friend vector::iterator
     rotate_copy(vector::iterator first,vector::iterator mid,
                 vector::iterator last,vector::iterator result);
   // randomaccess iter
@@ -10389,9 +10389,9 @@ class vector {
   friend void nth_element(vector::iterator first,vector::iterator nth,
                           vector::iterator last);
   // forward iter
-  friend vector::iterator 
+  friend vector::iterator
     lower_bound(vector::iterator first,vector::iterator last,const T& value);
-  friend vector::iterator 
+  friend vector::iterator
     upper_bound(vector::iterator first,vector::iterator last,const T& value);
 
 
@@ -10406,19 +10406,19 @@ class vector {
                             vector::iterator last);
   friend bool includes(vector::iterator first1,vector::iterator last1,
                        vector::iterator first2,vector::iterator last2);
-  friend vector::iterator 
+  friend vector::iterator
     set_union(vector::iterator first1,vector::iterator last1,
               vector::iterator first2,vector::iterator last2,
               vector::iterator result);
-  friend vector::iterator 
+  friend vector::iterator
     set_intersection(vector::iterator first1,vector::iterator last1,
                      vector::iterator first2,vector::iterator last2,
                      vector::iterator result);
-  friend vector::iterator 
+  friend vector::iterator
     set_difference(vector::iterator first1,vector::iterator last1,
                    vector::iterator first2,vector::iterator last2,
                    vector::iterator result);
-  friend vector::iterator 
+  friend vector::iterator
     set_symmetric_difference(vector::iterator first1,vector::iterator last1,
                              vector::iterator first2,vector::iterator last2,
                              vector::iterator result);
@@ -10431,9 +10431,9 @@ class vector {
   friend const T& min(const T& a,const T& b);
   friend const T& max(const T& a,const T& b);
   // forward iter
-  friend vector::iterator 
+  friend vector::iterator
     min_element(vector::iterator first,vector::iterator last);
-  friend vector::iterator 
+  friend vector::iterator
     max_element(vector::iterator first,vector::iterator last);
   // input iter
   friend bool
@@ -10553,13 +10553,13 @@ struct pair {
 # 1 "/local/stage1/wmtan/ofc/COBRA_7_0_0/src/Porting/Linux2-EGCS/wrappers/stddef.h" 1
 /*
  * This stddef.h file is used to replace the gnu provided one when
- * ooddlx is run. 
+ * ooddlx is run.
  * It fixes a bug in the GNU version which defines NULL as ((void *)0)
  * even for __cplusplus parsers
  *
- * NOTE: this file is compiler dependent and has been taken from 
- * egcs-2.91.60 19981201 (egcs-1.1.1 release) 
- *  
+ * NOTE: this file is compiler dependent and has been taken from
+ * egcs-2.91.60 19981201 (egcs-1.1.1 release)
+ *
  * Dirk.Duellmann@cern.ch
  */
 /* !_STDDEF_H && !_STDDEF_H_ && !_ANSI_STDDEF_H && !__STDDEF_H__
@@ -10612,10 +10612,9 @@ public:
   typedef X element_type;
   explicit auto_ptr(X* p = 0) : ptr(p), owns(p?true:false) {}
   auto_ptr(auto_ptr& a) {owns=a.owns; ptr=a.ptr; a.owns=0;}
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr(auto_ptr<T>& a) {owns=a.owns; ptr=a.release();}
-  
 
 
 
@@ -10623,7 +10622,8 @@ public:
 
 
 
-  
+
+
   auto_ptr& operator=(auto_ptr& a) {
     if (a.ptr != ptr) {
       if (owns) delete ptr;
@@ -10633,7 +10633,7 @@ public:
     }
     return(*this);
   }
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr& operator=(auto_ptr<T>& a) {
     if (a.ptr != ptr) {
@@ -10643,9 +10643,9 @@ public:
     }
     return(*this);
   }
-  
+
   ~auto_ptr() { if(owns) delete ptr; }
-  
+
   X& operator*() const { return *ptr; }
   X* operator->() const { return ptr; }
   X* get() const { return ptr; }
@@ -10689,7 +10689,7 @@ public:
 
 
 // Imported from STL HP implementation 1994
-// Imported from STL SGI implementation 1997 
+// Imported from STL SGI implementation 1997
 // Imported from ANSI/ISO C++ draft Nov 1997
 // Modified by Masaharu Goto
 // May need to improve for the latest standard
@@ -10719,8 +10719,8 @@ template <class T, class Distance> struct random_access_iterator {};
 ////////////////////////////////////////////////////////////////////////
 // iterator_category overloaded function
 ////////////////////////////////////////////////////////////////////////
-template <class T, class Distance> 
-inline input_iterator_tag 
+template <class T, class Distance>
+inline input_iterator_tag
 iterator_category(const input_iterator<T, Distance>&) {
     return input_iterator_tag();
 }
@@ -10729,33 +10729,33 @@ inline output_iterator_tag iterator_category(const output_iterator&) {
     return output_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline forward_iterator_tag
 iterator_category(const forward_iterator<T, Distance>&) {
     return forward_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline bidirectional_iterator_tag
 iterator_category(const bidirectional_iterator<T, Distance>&) {
     return bidirectional_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline random_access_iterator_tag
 iterator_category(const random_access_iterator<T, Distance>&) {
     return random_access_iterator_tag();
 }
 
 template <class T>
-inline random_access_iterator_tag 
+inline random_access_iterator_tag
 iterator_category(const T*) {
     return random_access_iterator_tag();
 }
 
 
 // iterator_traits, iterator and reverse_iterator template may not be
-// needed for precompiled library interface 
+// needed for precompiled library interface
 
 ////////////////////////////////////////////////////////////////////////
 // iterator_traits
@@ -10810,7 +10810,7 @@ struct iterator {
 // reverse_iterator
 ////////////////////////////////////////////////////////////////////////
 template <class Iterator>
-class reverse_iterator 
+class reverse_iterator
 
 
 
@@ -10852,7 +10852,7 @@ class reverse_iterator
    reverse_iterator  operator- (difference_type n) const;
    reverse_iterator& operator-=(difference_type n);
    reference operator[](difference_type n) const;
-}; 
+};
 
 # 207 "/home/wmtan/root/cint/lib/prec_stl/iterator"
 
@@ -11011,7 +11011,7 @@ public:
 
 
 // clause _lib.binders_, binders:
-template <class Operation> 
+template <class Operation>
 class binder1st
   : public unary_function<Operation::second_argument_type,
                           Operation::result_type>
@@ -11282,7 +11282,7 @@ class set {
   // Generic algorithm
 
 
-  friend set::iterator 
+  friend set::iterator
     find(set::iterator first,set::iterator last,const Key& value);
   friend set::iterator
     search(set::iterator first1,set::iterator last1,
@@ -11381,13 +11381,13 @@ struct pair {
 # 1 "/local/stage1/wmtan/ofc/COBRA_7_0_0/src/Porting/Linux2-EGCS/wrappers/stddef.h" 1
 /*
  * This stddef.h file is used to replace the gnu provided one when
- * ooddlx is run. 
+ * ooddlx is run.
  * It fixes a bug in the GNU version which defines NULL as ((void *)0)
  * even for __cplusplus parsers
  *
- * NOTE: this file is compiler dependent and has been taken from 
- * egcs-2.91.60 19981201 (egcs-1.1.1 release) 
- *  
+ * NOTE: this file is compiler dependent and has been taken from
+ * egcs-2.91.60 19981201 (egcs-1.1.1 release)
+ *
  * Dirk.Duellmann@cern.ch
  */
 /* !_STDDEF_H && !_STDDEF_H_ && !_ANSI_STDDEF_H && !__STDDEF_H__
@@ -11440,10 +11440,9 @@ public:
   typedef X element_type;
   explicit auto_ptr(X* p = 0) : ptr(p), owns(p?true:false) {}
   auto_ptr(auto_ptr& a) {owns=a.owns; ptr=a.ptr; a.owns=0;}
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr(auto_ptr<T>& a) {owns=a.owns; ptr=a.release();}
-  
 
 
 
@@ -11451,7 +11450,8 @@ public:
 
 
 
-  
+
+
   auto_ptr& operator=(auto_ptr& a) {
     if (a.ptr != ptr) {
       if (owns) delete ptr;
@@ -11461,7 +11461,7 @@ public:
     }
     return(*this);
   }
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr& operator=(auto_ptr<T>& a) {
     if (a.ptr != ptr) {
@@ -11471,9 +11471,9 @@ public:
     }
     return(*this);
   }
-  
+
   ~auto_ptr() { if(owns) delete ptr; }
-  
+
   X& operator*() const { return *ptr; }
   X* operator->() const { return ptr; }
   X* get() const { return ptr; }
@@ -11517,7 +11517,7 @@ public:
 
 
 // Imported from STL HP implementation 1994
-// Imported from STL SGI implementation 1997 
+// Imported from STL SGI implementation 1997
 // Imported from ANSI/ISO C++ draft Nov 1997
 // Modified by Masaharu Goto
 // May need to improve for the latest standard
@@ -11547,8 +11547,8 @@ template <class T, class Distance> struct random_access_iterator {};
 ////////////////////////////////////////////////////////////////////////
 // iterator_category overloaded function
 ////////////////////////////////////////////////////////////////////////
-template <class T, class Distance> 
-inline input_iterator_tag 
+template <class T, class Distance>
+inline input_iterator_tag
 iterator_category(const input_iterator<T, Distance>&) {
     return input_iterator_tag();
 }
@@ -11557,33 +11557,33 @@ inline output_iterator_tag iterator_category(const output_iterator&) {
     return output_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline forward_iterator_tag
 iterator_category(const forward_iterator<T, Distance>&) {
     return forward_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline bidirectional_iterator_tag
 iterator_category(const bidirectional_iterator<T, Distance>&) {
     return bidirectional_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline random_access_iterator_tag
 iterator_category(const random_access_iterator<T, Distance>&) {
     return random_access_iterator_tag();
 }
 
 template <class T>
-inline random_access_iterator_tag 
+inline random_access_iterator_tag
 iterator_category(const T*) {
     return random_access_iterator_tag();
 }
 
 
 // iterator_traits, iterator and reverse_iterator template may not be
-// needed for precompiled library interface 
+// needed for precompiled library interface
 
 ////////////////////////////////////////////////////////////////////////
 // iterator_traits
@@ -11638,7 +11638,7 @@ struct iterator {
 // reverse_iterator
 ////////////////////////////////////////////////////////////////////////
 template <class Iterator>
-class reverse_iterator 
+class reverse_iterator
 
 
 
@@ -11680,7 +11680,7 @@ class reverse_iterator
    reverse_iterator  operator- (difference_type n) const;
    reverse_iterator& operator-=(difference_type n);
    reference operator[](difference_type n) const;
-}; 
+};
 
 # 207 "/home/wmtan/root/cint/lib/prec_stl/iterator"
 
@@ -11839,7 +11839,7 @@ public:
 
 
 // clause _lib.binders_, binders:
-template <class Operation> 
+template <class Operation>
 class binder1st
   : public unary_function<Operation::second_argument_type,
                           Operation::result_type>
@@ -12109,7 +12109,7 @@ class multiset {
   // Generic algorithm
 
 
-  friend multiset::iterator 
+  friend multiset::iterator
     find(multiset::iterator first,multiset::iterator last,const Key& value);
   friend multiset::iterator
     search(multiset::iterator first1,multiset::iterator last1,
@@ -12162,7 +12162,7 @@ namespace std {
 #pragma mask_newdelete 0x10;
 
 
-// Imported from ANSI/ISO C++ 1997/Nov draft 
+// Imported from ANSI/ISO C++ 1997/Nov draft
 // Got some ideas from Scott Snyder, Fermi-lab
 // Modified by Masaharu Goto
 // SGI KCC porting by Philippe Canal, Fermi-lab
@@ -12221,13 +12221,13 @@ struct pair {
 # 1 "/local/stage1/wmtan/ofc/COBRA_7_0_0/src/Porting/Linux2-EGCS/wrappers/stddef.h" 1
 /*
  * This stddef.h file is used to replace the gnu provided one when
- * ooddlx is run. 
+ * ooddlx is run.
  * It fixes a bug in the GNU version which defines NULL as ((void *)0)
  * even for __cplusplus parsers
  *
- * NOTE: this file is compiler dependent and has been taken from 
- * egcs-2.91.60 19981201 (egcs-1.1.1 release) 
- *  
+ * NOTE: this file is compiler dependent and has been taken from
+ * egcs-2.91.60 19981201 (egcs-1.1.1 release)
+ *
  * Dirk.Duellmann@cern.ch
  */
 /* !_STDDEF_H && !_STDDEF_H_ && !_ANSI_STDDEF_H && !__STDDEF_H__
@@ -12280,10 +12280,9 @@ public:
   typedef X element_type;
   explicit auto_ptr(X* p = 0) : ptr(p), owns(p?true:false) {}
   auto_ptr(auto_ptr& a) {owns=a.owns; ptr=a.ptr; a.owns=0;}
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr(auto_ptr<T>& a) {owns=a.owns; ptr=a.release();}
-  
 
 
 
@@ -12291,7 +12290,8 @@ public:
 
 
 
-  
+
+
   auto_ptr& operator=(auto_ptr& a) {
     if (a.ptr != ptr) {
       if (owns) delete ptr;
@@ -12301,7 +12301,7 @@ public:
     }
     return(*this);
   }
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr& operator=(auto_ptr<T>& a) {
     if (a.ptr != ptr) {
@@ -12311,9 +12311,9 @@ public:
     }
     return(*this);
   }
-  
+
   ~auto_ptr() { if(owns) delete ptr; }
-  
+
   X& operator*() const { return *ptr; }
   X* operator->() const { return ptr; }
   X* get() const { return ptr; }
@@ -12357,7 +12357,7 @@ public:
 
 
 // Imported from STL HP implementation 1994
-// Imported from STL SGI implementation 1997 
+// Imported from STL SGI implementation 1997
 // Imported from ANSI/ISO C++ draft Nov 1997
 // Modified by Masaharu Goto
 // May need to improve for the latest standard
@@ -12387,8 +12387,8 @@ template <class T, class Distance> struct random_access_iterator {};
 ////////////////////////////////////////////////////////////////////////
 // iterator_category overloaded function
 ////////////////////////////////////////////////////////////////////////
-template <class T, class Distance> 
-inline input_iterator_tag 
+template <class T, class Distance>
+inline input_iterator_tag
 iterator_category(const input_iterator<T, Distance>&) {
     return input_iterator_tag();
 }
@@ -12397,33 +12397,33 @@ inline output_iterator_tag iterator_category(const output_iterator&) {
     return output_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline forward_iterator_tag
 iterator_category(const forward_iterator<T, Distance>&) {
     return forward_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline bidirectional_iterator_tag
 iterator_category(const bidirectional_iterator<T, Distance>&) {
     return bidirectional_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline random_access_iterator_tag
 iterator_category(const random_access_iterator<T, Distance>&) {
     return random_access_iterator_tag();
 }
 
 template <class T>
-inline random_access_iterator_tag 
+inline random_access_iterator_tag
 iterator_category(const T*) {
     return random_access_iterator_tag();
 }
 
 
 // iterator_traits, iterator and reverse_iterator template may not be
-// needed for precompiled library interface 
+// needed for precompiled library interface
 
 ////////////////////////////////////////////////////////////////////////
 // iterator_traits
@@ -12478,7 +12478,7 @@ struct iterator {
 // reverse_iterator
 ////////////////////////////////////////////////////////////////////////
 template <class Iterator>
-class reverse_iterator 
+class reverse_iterator
 
 
 
@@ -12520,7 +12520,7 @@ class reverse_iterator
    reverse_iterator  operator- (difference_type n) const;
    reverse_iterator& operator-=(difference_type n);
    reference operator[](difference_type n) const;
-}; 
+};
 
 # 207 "/home/wmtan/root/cint/lib/prec_stl/iterator"
 
@@ -12679,7 +12679,7 @@ public:
 
 
 // clause _lib.binders_, binders:
-template <class Operation> 
+template <class Operation>
 class binder1st
   : public unary_function<Operation::second_argument_type,
                           Operation::result_type>
@@ -12803,13 +12803,13 @@ class map {
 
 
 
-  class iterator 
+  class iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -12839,13 +12839,13 @@ class map {
 
 
 
-  class reverse_iterator 
+  class reverse_iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -12986,7 +12986,7 @@ class map {
 #pragma mask_newdelete 0x10;
 
 
-// Imported from ANSI/ISO C++ 1997/Nov draft 
+// Imported from ANSI/ISO C++ 1997/Nov draft
 // Got some ideas from Scott Snyder, Fermi-lab
 // Modified by Masaharu Goto
 // SGI KCC porting by Philippe Canal, Fermi-lab
@@ -13045,13 +13045,13 @@ struct pair {
 # 1 "/local/stage1/wmtan/ofc/COBRA_7_0_0/src/Porting/Linux2-EGCS/wrappers/stddef.h" 1
 /*
  * This stddef.h file is used to replace the gnu provided one when
- * ooddlx is run. 
+ * ooddlx is run.
  * It fixes a bug in the GNU version which defines NULL as ((void *)0)
  * even for __cplusplus parsers
  *
- * NOTE: this file is compiler dependent and has been taken from 
- * egcs-2.91.60 19981201 (egcs-1.1.1 release) 
- *  
+ * NOTE: this file is compiler dependent and has been taken from
+ * egcs-2.91.60 19981201 (egcs-1.1.1 release)
+ *
  * Dirk.Duellmann@cern.ch
  */
 /* !_STDDEF_H && !_STDDEF_H_ && !_ANSI_STDDEF_H && !__STDDEF_H__
@@ -13104,10 +13104,9 @@ public:
   typedef X element_type;
   explicit auto_ptr(X* p = 0) : ptr(p), owns(p?true:false) {}
   auto_ptr(auto_ptr& a) {owns=a.owns; ptr=a.ptr; a.owns=0;}
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr(auto_ptr<T>& a) {owns=a.owns; ptr=a.release();}
-  
 
 
 
@@ -13115,7 +13114,8 @@ public:
 
 
 
-  
+
+
   auto_ptr& operator=(auto_ptr& a) {
     if (a.ptr != ptr) {
       if (owns) delete ptr;
@@ -13125,7 +13125,7 @@ public:
     }
     return(*this);
   }
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr& operator=(auto_ptr<T>& a) {
     if (a.ptr != ptr) {
@@ -13135,9 +13135,9 @@ public:
     }
     return(*this);
   }
-  
+
   ~auto_ptr() { if(owns) delete ptr; }
-  
+
   X& operator*() const { return *ptr; }
   X* operator->() const { return ptr; }
   X* get() const { return ptr; }
@@ -13181,7 +13181,7 @@ public:
 
 
 // Imported from STL HP implementation 1994
-// Imported from STL SGI implementation 1997 
+// Imported from STL SGI implementation 1997
 // Imported from ANSI/ISO C++ draft Nov 1997
 // Modified by Masaharu Goto
 // May need to improve for the latest standard
@@ -13211,8 +13211,8 @@ template <class T, class Distance> struct random_access_iterator {};
 ////////////////////////////////////////////////////////////////////////
 // iterator_category overloaded function
 ////////////////////////////////////////////////////////////////////////
-template <class T, class Distance> 
-inline input_iterator_tag 
+template <class T, class Distance>
+inline input_iterator_tag
 iterator_category(const input_iterator<T, Distance>&) {
     return input_iterator_tag();
 }
@@ -13221,33 +13221,33 @@ inline output_iterator_tag iterator_category(const output_iterator&) {
     return output_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline forward_iterator_tag
 iterator_category(const forward_iterator<T, Distance>&) {
     return forward_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline bidirectional_iterator_tag
 iterator_category(const bidirectional_iterator<T, Distance>&) {
     return bidirectional_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline random_access_iterator_tag
 iterator_category(const random_access_iterator<T, Distance>&) {
     return random_access_iterator_tag();
 }
 
 template <class T>
-inline random_access_iterator_tag 
+inline random_access_iterator_tag
 iterator_category(const T*) {
     return random_access_iterator_tag();
 }
 
 
 // iterator_traits, iterator and reverse_iterator template may not be
-// needed for precompiled library interface 
+// needed for precompiled library interface
 
 ////////////////////////////////////////////////////////////////////////
 // iterator_traits
@@ -13302,7 +13302,7 @@ struct iterator {
 // reverse_iterator
 ////////////////////////////////////////////////////////////////////////
 template <class Iterator>
-class reverse_iterator 
+class reverse_iterator
 
 
 
@@ -13344,7 +13344,7 @@ class reverse_iterator
    reverse_iterator  operator- (difference_type n) const;
    reverse_iterator& operator-=(difference_type n);
    reference operator[](difference_type n) const;
-}; 
+};
 
 # 207 "/home/wmtan/root/cint/lib/prec_stl/iterator"
 
@@ -13503,7 +13503,7 @@ public:
 
 
 // clause _lib.binders_, binders:
-template <class Operation> 
+template <class Operation>
 class binder1st
   : public unary_function<Operation::second_argument_type,
                           Operation::result_type>
@@ -13627,13 +13627,13 @@ class multimap {
 
 
 
-  class iterator 
+  class iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -13663,13 +13663,13 @@ class multimap {
 
 
 
-  class reverse_iterator 
+  class reverse_iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -13810,15 +13810,15 @@ namespace std {
 # 1 "/home/wmtan/root/cint/include/_iostream" 1
 // include/_iostream
 
-std::ostream& operator<<(std::ostream& ostr,std::G__CINT_ENDL& i) 
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_ENDL& i)
         {return(std::endl(ostr));}
-std::ostream& operator<<(std::ostream& ostr,std::G__CINT_ENDS& i) 
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_ENDS& i)
         {return(std::ends(ostr));}
-std::ostream& operator<<(std::ostream& ostr,std::G__CINT_FLUSH& i) 
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_FLUSH& i)
         {return(std::flush(ostr));}
-std::istream& operator>>(std::istream& istr,std::G__CINT_ws& i) 
+std::istream& operator>>(std::istream& istr,std::G__CINT_ws& i)
         {return(std::ws(istr));}
-std::istream& operator>>(std::istream& istr,std::G__CINT_WS& i) 
+std::istream& operator>>(std::istream& istr,std::G__CINT_WS& i)
         {return(std::WS(istr));}
 
 
@@ -16745,7 +16745,7 @@ string dName;
 string fName;
 
 mutable ooRunObj *pObjContainingNameScopes; //! Transient
-private: static TClass *fgIsA; public: static TClass *Class(); static const char *Class_Name(); static Version_t Class_Version() { return   1  ; } static void Dictionary(); virtual TClass *IsA() const { return   opiRefBase  ::Class(); } virtual void ShowMembers(TMemberInspector &insp, char *parent); virtual void Streamer(TBuffer &b); void StreamerNVirtual(TBuffer &b) {   opiRefBase  ::Streamer(b); } static const char *DeclFileName() { return "Utilities/Persistency/interface/ooRefBase.h"; } static int ImplFileLine(); static const char *ImplFileName();  static int DeclFileLine() { return 134; } 
+private: static TClass *fgIsA; public: static TClass *Class(); static const char *Class_Name(); static Version_t Class_Version() { return   1  ; } static void Dictionary(); virtual TClass *IsA() const { return   opiRefBase  ::Class(); } virtual void ShowMembers(TMemberInspector &insp, char *parent); virtual void Streamer(TBuffer &b); void StreamerNVirtual(TBuffer &b) {   opiRefBase  ::Streamer(b); } static const char *DeclFileName() { return "Utilities/Persistency/interface/ooRefBase.h"; } static int ImplFileLine(); static const char *ImplFileName();  static int DeclFileLine() { return 134; }
 };
 
 class DataBase {
@@ -16778,9 +16778,9 @@ class ooObj : public TNamed {
 friend class opiRefBase;
 public:
 
-ooObj(); 
+ooObj();
 
-ooObj(const char *name, const char *title); 
+ooObj(const char *name, const char *title);
 
 virtual ~ooObj();
 
@@ -16809,7 +16809,7 @@ void SetTheName(int number);
 private:
 void SetNumOID();
 
-ooObj(const ooObj & obj); 
+ooObj(const ooObj & obj);
 
 protected:
 static multimap<uint32, ooObj *> readObjects;
@@ -16818,7 +16818,7 @@ static vector<TFile *> filesToClose;
 
 bool doUpdate;          //! Transient
 TDirectory *tDirectory; //! Transient
-private: static TClass *fgIsA; public: static TClass *Class(); static const char *Class_Name(); static Version_t Class_Version() { return   1  ; } static void Dictionary(); virtual TClass *IsA() const { return   ooObj  ::Class(); } virtual void ShowMembers(TMemberInspector &insp, char *parent); virtual void Streamer(TBuffer &b); void StreamerNVirtual(TBuffer &b) {   ooObj  ::Streamer(b); } static const char *DeclFileName() { return "Utilities/Persistency/interface/ooObj.h"; } static int ImplFileLine(); static const char *ImplFileName();  static int DeclFileLine() { return 60; } 
+private: static TClass *fgIsA; public: static TClass *Class(); static const char *Class_Name(); static Version_t Class_Version() { return   1  ; } static void Dictionary(); virtual TClass *IsA() const { return   ooObj  ::Class(); } virtual void ShowMembers(TMemberInspector &insp, char *parent); virtual void Streamer(TBuffer &b); void StreamerNVirtual(TBuffer &b) {   ooObj  ::Streamer(b); } static const char *DeclFileName() { return "Utilities/Persistency/interface/ooObj.h"; } static int ImplFileLine(); static const char *ImplFileName();  static int DeclFileLine() { return 60; }
 };
 
 
@@ -16853,7 +16853,7 @@ namespace std {
 #pragma mask_newdelete 0x10;
 
 
-// Imported from ANSI/ISO C++ 1997/Nov draft 
+// Imported from ANSI/ISO C++ 1997/Nov draft
 // Got some ideas from Scott Snyder, Fermi-lab
 // Modified by Masaharu Goto
 // SGI KCC porting by Philippe Canal, Fermi-lab
@@ -16912,13 +16912,13 @@ struct pair {
 # 1 "/local/stage1/wmtan/ofc/COBRA_7_0_0/src/Porting/Linux2-EGCS/wrappers/stddef.h" 1
 /*
  * This stddef.h file is used to replace the gnu provided one when
- * ooddlx is run. 
+ * ooddlx is run.
  * It fixes a bug in the GNU version which defines NULL as ((void *)0)
  * even for __cplusplus parsers
  *
- * NOTE: this file is compiler dependent and has been taken from 
- * egcs-2.91.60 19981201 (egcs-1.1.1 release) 
- *  
+ * NOTE: this file is compiler dependent and has been taken from
+ * egcs-2.91.60 19981201 (egcs-1.1.1 release)
+ *
  * Dirk.Duellmann@cern.ch
  */
 /* !_STDDEF_H && !_STDDEF_H_ && !_ANSI_STDDEF_H && !__STDDEF_H__
@@ -16971,10 +16971,9 @@ public:
   typedef X element_type;
   explicit auto_ptr(X* p = 0) : ptr(p), owns(p?true:false) {}
   auto_ptr(auto_ptr& a) {owns=a.owns; ptr=a.ptr; a.owns=0;}
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr(auto_ptr<T>& a) {owns=a.owns; ptr=a.release();}
-  
 
 
 
@@ -16982,7 +16981,8 @@ public:
 
 
 
-  
+
+
   auto_ptr& operator=(auto_ptr& a) {
     if (a.ptr != ptr) {
       if (owns) delete ptr;
@@ -16992,7 +16992,7 @@ public:
     }
     return(*this);
   }
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr& operator=(auto_ptr<T>& a) {
     if (a.ptr != ptr) {
@@ -17002,9 +17002,9 @@ public:
     }
     return(*this);
   }
-  
+
   ~auto_ptr() { if(owns) delete ptr; }
-  
+
   X& operator*() const { return *ptr; }
   X* operator->() const { return ptr; }
   X* get() const { return ptr; }
@@ -17048,7 +17048,7 @@ public:
 
 
 // Imported from STL HP implementation 1994
-// Imported from STL SGI implementation 1997 
+// Imported from STL SGI implementation 1997
 // Imported from ANSI/ISO C++ draft Nov 1997
 // Modified by Masaharu Goto
 // May need to improve for the latest standard
@@ -17078,8 +17078,8 @@ template <class T, class Distance> struct random_access_iterator {};
 ////////////////////////////////////////////////////////////////////////
 // iterator_category overloaded function
 ////////////////////////////////////////////////////////////////////////
-template <class T, class Distance> 
-inline input_iterator_tag 
+template <class T, class Distance>
+inline input_iterator_tag
 iterator_category(const input_iterator<T, Distance>&) {
     return input_iterator_tag();
 }
@@ -17088,33 +17088,33 @@ inline output_iterator_tag iterator_category(const output_iterator&) {
     return output_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline forward_iterator_tag
 iterator_category(const forward_iterator<T, Distance>&) {
     return forward_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline bidirectional_iterator_tag
 iterator_category(const bidirectional_iterator<T, Distance>&) {
     return bidirectional_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline random_access_iterator_tag
 iterator_category(const random_access_iterator<T, Distance>&) {
     return random_access_iterator_tag();
 }
 
 template <class T>
-inline random_access_iterator_tag 
+inline random_access_iterator_tag
 iterator_category(const T*) {
     return random_access_iterator_tag();
 }
 
 
 // iterator_traits, iterator and reverse_iterator template may not be
-// needed for precompiled library interface 
+// needed for precompiled library interface
 
 ////////////////////////////////////////////////////////////////////////
 // iterator_traits
@@ -17169,7 +17169,7 @@ struct iterator {
 // reverse_iterator
 ////////////////////////////////////////////////////////////////////////
 template <class Iterator>
-class reverse_iterator 
+class reverse_iterator
 
 
 
@@ -17211,7 +17211,7 @@ class reverse_iterator
    reverse_iterator  operator- (difference_type n) const;
    reverse_iterator& operator-=(difference_type n);
    reference operator[](difference_type n) const;
-}; 
+};
 
 # 207 "/home/wmtan/root/cint/lib/prec_stl/iterator"
 
@@ -17370,7 +17370,7 @@ public:
 
 
 // clause _lib.binders_, binders:
-template <class Operation> 
+template <class Operation>
 class binder1st
   : public unary_function<Operation::second_argument_type,
                           Operation::result_type>
@@ -17494,13 +17494,13 @@ class map {
 
 
 
-  class iterator 
+  class iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -17530,13 +17530,13 @@ class map {
 
 
 
-  class reverse_iterator 
+  class reverse_iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -17677,7 +17677,7 @@ class map {
 #pragma mask_newdelete 0x10;
 
 
-// Imported from ANSI/ISO C++ 1997/Nov draft 
+// Imported from ANSI/ISO C++ 1997/Nov draft
 // Got some ideas from Scott Snyder, Fermi-lab
 // Modified by Masaharu Goto
 // SGI KCC porting by Philippe Canal, Fermi-lab
@@ -17736,13 +17736,13 @@ struct pair {
 # 1 "/local/stage1/wmtan/ofc/COBRA_7_0_0/src/Porting/Linux2-EGCS/wrappers/stddef.h" 1
 /*
  * This stddef.h file is used to replace the gnu provided one when
- * ooddlx is run. 
+ * ooddlx is run.
  * It fixes a bug in the GNU version which defines NULL as ((void *)0)
  * even for __cplusplus parsers
  *
- * NOTE: this file is compiler dependent and has been taken from 
- * egcs-2.91.60 19981201 (egcs-1.1.1 release) 
- *  
+ * NOTE: this file is compiler dependent and has been taken from
+ * egcs-2.91.60 19981201 (egcs-1.1.1 release)
+ *
  * Dirk.Duellmann@cern.ch
  */
 /* !_STDDEF_H && !_STDDEF_H_ && !_ANSI_STDDEF_H && !__STDDEF_H__
@@ -17795,10 +17795,9 @@ public:
   typedef X element_type;
   explicit auto_ptr(X* p = 0) : ptr(p), owns(p?true:false) {}
   auto_ptr(auto_ptr& a) {owns=a.owns; ptr=a.ptr; a.owns=0;}
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr(auto_ptr<T>& a) {owns=a.owns; ptr=a.release();}
-  
 
 
 
@@ -17806,7 +17805,8 @@ public:
 
 
 
-  
+
+
   auto_ptr& operator=(auto_ptr& a) {
     if (a.ptr != ptr) {
       if (owns) delete ptr;
@@ -17816,7 +17816,7 @@ public:
     }
     return(*this);
   }
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr& operator=(auto_ptr<T>& a) {
     if (a.ptr != ptr) {
@@ -17826,9 +17826,9 @@ public:
     }
     return(*this);
   }
-  
+
   ~auto_ptr() { if(owns) delete ptr; }
-  
+
   X& operator*() const { return *ptr; }
   X* operator->() const { return ptr; }
   X* get() const { return ptr; }
@@ -17872,7 +17872,7 @@ public:
 
 
 // Imported from STL HP implementation 1994
-// Imported from STL SGI implementation 1997 
+// Imported from STL SGI implementation 1997
 // Imported from ANSI/ISO C++ draft Nov 1997
 // Modified by Masaharu Goto
 // May need to improve for the latest standard
@@ -17902,8 +17902,8 @@ template <class T, class Distance> struct random_access_iterator {};
 ////////////////////////////////////////////////////////////////////////
 // iterator_category overloaded function
 ////////////////////////////////////////////////////////////////////////
-template <class T, class Distance> 
-inline input_iterator_tag 
+template <class T, class Distance>
+inline input_iterator_tag
 iterator_category(const input_iterator<T, Distance>&) {
     return input_iterator_tag();
 }
@@ -17912,33 +17912,33 @@ inline output_iterator_tag iterator_category(const output_iterator&) {
     return output_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline forward_iterator_tag
 iterator_category(const forward_iterator<T, Distance>&) {
     return forward_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline bidirectional_iterator_tag
 iterator_category(const bidirectional_iterator<T, Distance>&) {
     return bidirectional_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline random_access_iterator_tag
 iterator_category(const random_access_iterator<T, Distance>&) {
     return random_access_iterator_tag();
 }
 
 template <class T>
-inline random_access_iterator_tag 
+inline random_access_iterator_tag
 iterator_category(const T*) {
     return random_access_iterator_tag();
 }
 
 
 // iterator_traits, iterator and reverse_iterator template may not be
-// needed for precompiled library interface 
+// needed for precompiled library interface
 
 ////////////////////////////////////////////////////////////////////////
 // iterator_traits
@@ -17993,7 +17993,7 @@ struct iterator {
 // reverse_iterator
 ////////////////////////////////////////////////////////////////////////
 template <class Iterator>
-class reverse_iterator 
+class reverse_iterator
 
 
 
@@ -18035,7 +18035,7 @@ class reverse_iterator
    reverse_iterator  operator- (difference_type n) const;
    reverse_iterator& operator-=(difference_type n);
    reference operator[](difference_type n) const;
-}; 
+};
 
 # 207 "/home/wmtan/root/cint/lib/prec_stl/iterator"
 
@@ -18194,7 +18194,7 @@ public:
 
 
 // clause _lib.binders_, binders:
-template <class Operation> 
+template <class Operation>
 class binder1st
   : public unary_function<Operation::second_argument_type,
                           Operation::result_type>
@@ -18318,13 +18318,13 @@ class multimap {
 
 
 
-  class iterator 
+  class iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -18354,13 +18354,13 @@ class multimap {
 
 
 
-  class reverse_iterator 
+  class reverse_iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -18501,11 +18501,11 @@ friend class opiRefBase;
 friend ostream & operator<< (ostream &, const ooRunObj &);
 public:
 
-ooRunObj(); 
+ooRunObj();
 
-ooRunObj(const char *name, const char *title); 
+ooRunObj(const char *name, const char *title);
 
-ooRunObj(const ooRunObj& obj); 
+ooRunObj(const ooRunObj& obj);
 
 virtual ~ooRunObj();
 
@@ -18520,7 +18520,7 @@ map<string, opiRefBase> namesInScope;
 
 multimap<string, opiRefBase> scopesContainingName;
 
-private: static TClass *fgIsA; public: static TClass *Class(); static const char *Class_Name(); static Version_t Class_Version() { return   1  ; } static void Dictionary(); virtual TClass *IsA() const { return   ooRunObj  ::Class(); } virtual void ShowMembers(TMemberInspector &insp, char *parent); virtual void Streamer(TBuffer &b); void StreamerNVirtual(TBuffer &b) {   ooRunObj  ::Streamer(b); } static const char *DeclFileName() { return "Utilities/Persistency/interface/ooRunObj.h"; } static int ImplFileLine(); static const char *ImplFileName();  static int DeclFileLine() { return 33; } 
+private: static TClass *fgIsA; public: static TClass *Class(); static const char *Class_Name(); static Version_t Class_Version() { return   1  ; } static void Dictionary(); virtual TClass *IsA() const { return   ooRunObj  ::Class(); } virtual void ShowMembers(TMemberInspector &insp, char *parent); virtual void Streamer(TBuffer &b); void StreamerNVirtual(TBuffer &b) {   ooRunObj  ::Streamer(b); } static const char *DeclFileName() { return "Utilities/Persistency/interface/ooRunObj.h"; } static int ImplFileLine(); static const char *ImplFileName();  static int DeclFileLine() { return 33; }
 };
 ostream & operator<<( ostream& o, const ooRunObj& pref);
 ostream & operator<<( ostream& o, const pair<string,opiRefBase>& pref);
@@ -18539,9 +18539,9 @@ class ooEvObj : public ooObj {
 friend class opiRefBase;
 public:
 
-ooEvObj(); 
+ooEvObj();
 
-ooEvObj(const ooEvObj& obj); 
+ooEvObj(const ooEvObj& obj);
 
 virtual ~ooEvObj();
 
@@ -18550,7 +18550,7 @@ virtual void objDelete();
 static uint32 eventCount;
 
 protected:
-private: static TClass *fgIsA; public: static TClass *Class(); static const char *Class_Name(); static Version_t Class_Version() { return   1  ; } static void Dictionary(); virtual TClass *IsA() const { return   ooEvObj  ::Class(); } virtual void ShowMembers(TMemberInspector &insp, char *parent); virtual void Streamer(TBuffer &b); void StreamerNVirtual(TBuffer &b) {   ooEvObj  ::Streamer(b); } static const char *DeclFileName() { return "Utilities/Persistency/interface/ooEvObj.h"; } static int ImplFileLine(); static const char *ImplFileName();  static int DeclFileLine() { return 22; } 
+private: static TClass *fgIsA; public: static TClass *Class(); static const char *Class_Name(); static Version_t Class_Version() { return   1  ; } static void Dictionary(); virtual TClass *IsA() const { return   ooEvObj  ::Class(); } virtual void ShowMembers(TMemberInspector &insp, char *parent); virtual void Streamer(TBuffer &b); void StreamerNVirtual(TBuffer &b) {   ooEvObj  ::Streamer(b); } static const char *DeclFileName() { return "Utilities/Persistency/interface/ooEvObj.h"; } static int ImplFileLine(); static const char *ImplFileName();  static int DeclFileLine() { return 22; }
 };
 
 
@@ -18589,7 +18589,7 @@ namespace std {
 #pragma mask_newdelete 0x10;
 
 
-// Imported from ANSI/ISO C++ 1997/Nov draft 
+// Imported from ANSI/ISO C++ 1997/Nov draft
 // Got some ideas from Scott Snyder, Fermi-lab
 // Modified by Masaharu Goto
 // SGI KCC porting by Philippe Canal, Fermi-lab
@@ -18648,13 +18648,13 @@ struct pair {
 # 1 "/local/stage1/wmtan/ofc/COBRA_7_0_0/src/Porting/Linux2-EGCS/wrappers/stddef.h" 1
 /*
  * This stddef.h file is used to replace the gnu provided one when
- * ooddlx is run. 
+ * ooddlx is run.
  * It fixes a bug in the GNU version which defines NULL as ((void *)0)
  * even for __cplusplus parsers
  *
- * NOTE: this file is compiler dependent and has been taken from 
- * egcs-2.91.60 19981201 (egcs-1.1.1 release) 
- *  
+ * NOTE: this file is compiler dependent and has been taken from
+ * egcs-2.91.60 19981201 (egcs-1.1.1 release)
+ *
  * Dirk.Duellmann@cern.ch
  */
 /* !_STDDEF_H && !_STDDEF_H_ && !_ANSI_STDDEF_H && !__STDDEF_H__
@@ -18707,10 +18707,9 @@ public:
   typedef X element_type;
   explicit auto_ptr(X* p = 0) : ptr(p), owns(p?true:false) {}
   auto_ptr(auto_ptr& a) {owns=a.owns; ptr=a.ptr; a.owns=0;}
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr(auto_ptr<T>& a) {owns=a.owns; ptr=a.release();}
-  
 
 
 
@@ -18718,7 +18717,8 @@ public:
 
 
 
-  
+
+
   auto_ptr& operator=(auto_ptr& a) {
     if (a.ptr != ptr) {
       if (owns) delete ptr;
@@ -18728,7 +18728,7 @@ public:
     }
     return(*this);
   }
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr& operator=(auto_ptr<T>& a) {
     if (a.ptr != ptr) {
@@ -18738,9 +18738,9 @@ public:
     }
     return(*this);
   }
-  
+
   ~auto_ptr() { if(owns) delete ptr; }
-  
+
   X& operator*() const { return *ptr; }
   X* operator->() const { return ptr; }
   X* get() const { return ptr; }
@@ -18784,7 +18784,7 @@ public:
 
 
 // Imported from STL HP implementation 1994
-// Imported from STL SGI implementation 1997 
+// Imported from STL SGI implementation 1997
 // Imported from ANSI/ISO C++ draft Nov 1997
 // Modified by Masaharu Goto
 // May need to improve for the latest standard
@@ -18814,8 +18814,8 @@ template <class T, class Distance> struct random_access_iterator {};
 ////////////////////////////////////////////////////////////////////////
 // iterator_category overloaded function
 ////////////////////////////////////////////////////////////////////////
-template <class T, class Distance> 
-inline input_iterator_tag 
+template <class T, class Distance>
+inline input_iterator_tag
 iterator_category(const input_iterator<T, Distance>&) {
     return input_iterator_tag();
 }
@@ -18824,33 +18824,33 @@ inline output_iterator_tag iterator_category(const output_iterator&) {
     return output_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline forward_iterator_tag
 iterator_category(const forward_iterator<T, Distance>&) {
     return forward_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline bidirectional_iterator_tag
 iterator_category(const bidirectional_iterator<T, Distance>&) {
     return bidirectional_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline random_access_iterator_tag
 iterator_category(const random_access_iterator<T, Distance>&) {
     return random_access_iterator_tag();
 }
 
 template <class T>
-inline random_access_iterator_tag 
+inline random_access_iterator_tag
 iterator_category(const T*) {
     return random_access_iterator_tag();
 }
 
 
 // iterator_traits, iterator and reverse_iterator template may not be
-// needed for precompiled library interface 
+// needed for precompiled library interface
 
 ////////////////////////////////////////////////////////////////////////
 // iterator_traits
@@ -18905,7 +18905,7 @@ struct iterator {
 // reverse_iterator
 ////////////////////////////////////////////////////////////////////////
 template <class Iterator>
-class reverse_iterator 
+class reverse_iterator
 
 
 
@@ -18947,7 +18947,7 @@ class reverse_iterator
    reverse_iterator  operator- (difference_type n) const;
    reverse_iterator& operator-=(difference_type n);
    reference operator[](difference_type n) const;
-}; 
+};
 
 # 207 "/home/wmtan/root/cint/lib/prec_stl/iterator"
 
@@ -19106,7 +19106,7 @@ public:
 
 
 // clause _lib.binders_, binders:
-template <class Operation> 
+template <class Operation>
 class binder1st
   : public unary_function<Operation::second_argument_type,
                           Operation::result_type>
@@ -19230,13 +19230,13 @@ class map {
 
 
 
-  class iterator 
+  class iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -19266,13 +19266,13 @@ class map {
 
 
 
-  class reverse_iterator 
+  class reverse_iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -19413,7 +19413,7 @@ class map {
 #pragma mask_newdelete 0x10;
 
 
-// Imported from ANSI/ISO C++ 1997/Nov draft 
+// Imported from ANSI/ISO C++ 1997/Nov draft
 // Got some ideas from Scott Snyder, Fermi-lab
 // Modified by Masaharu Goto
 // SGI KCC porting by Philippe Canal, Fermi-lab
@@ -19472,13 +19472,13 @@ struct pair {
 # 1 "/local/stage1/wmtan/ofc/COBRA_7_0_0/src/Porting/Linux2-EGCS/wrappers/stddef.h" 1
 /*
  * This stddef.h file is used to replace the gnu provided one when
- * ooddlx is run. 
+ * ooddlx is run.
  * It fixes a bug in the GNU version which defines NULL as ((void *)0)
  * even for __cplusplus parsers
  *
- * NOTE: this file is compiler dependent and has been taken from 
- * egcs-2.91.60 19981201 (egcs-1.1.1 release) 
- *  
+ * NOTE: this file is compiler dependent and has been taken from
+ * egcs-2.91.60 19981201 (egcs-1.1.1 release)
+ *
  * Dirk.Duellmann@cern.ch
  */
 /* !_STDDEF_H && !_STDDEF_H_ && !_ANSI_STDDEF_H && !__STDDEF_H__
@@ -19531,10 +19531,9 @@ public:
   typedef X element_type;
   explicit auto_ptr(X* p = 0) : ptr(p), owns(p?true:false) {}
   auto_ptr(auto_ptr& a) {owns=a.owns; ptr=a.ptr; a.owns=0;}
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr(auto_ptr<T>& a) {owns=a.owns; ptr=a.release();}
-  
 
 
 
@@ -19542,7 +19541,8 @@ public:
 
 
 
-  
+
+
   auto_ptr& operator=(auto_ptr& a) {
     if (a.ptr != ptr) {
       if (owns) delete ptr;
@@ -19552,7 +19552,7 @@ public:
     }
     return(*this);
   }
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr& operator=(auto_ptr<T>& a) {
     if (a.ptr != ptr) {
@@ -19562,9 +19562,9 @@ public:
     }
     return(*this);
   }
-  
+
   ~auto_ptr() { if(owns) delete ptr; }
-  
+
   X& operator*() const { return *ptr; }
   X* operator->() const { return ptr; }
   X* get() const { return ptr; }
@@ -19608,7 +19608,7 @@ public:
 
 
 // Imported from STL HP implementation 1994
-// Imported from STL SGI implementation 1997 
+// Imported from STL SGI implementation 1997
 // Imported from ANSI/ISO C++ draft Nov 1997
 // Modified by Masaharu Goto
 // May need to improve for the latest standard
@@ -19638,8 +19638,8 @@ template <class T, class Distance> struct random_access_iterator {};
 ////////////////////////////////////////////////////////////////////////
 // iterator_category overloaded function
 ////////////////////////////////////////////////////////////////////////
-template <class T, class Distance> 
-inline input_iterator_tag 
+template <class T, class Distance>
+inline input_iterator_tag
 iterator_category(const input_iterator<T, Distance>&) {
     return input_iterator_tag();
 }
@@ -19648,33 +19648,33 @@ inline output_iterator_tag iterator_category(const output_iterator&) {
     return output_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline forward_iterator_tag
 iterator_category(const forward_iterator<T, Distance>&) {
     return forward_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline bidirectional_iterator_tag
 iterator_category(const bidirectional_iterator<T, Distance>&) {
     return bidirectional_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline random_access_iterator_tag
 iterator_category(const random_access_iterator<T, Distance>&) {
     return random_access_iterator_tag();
 }
 
 template <class T>
-inline random_access_iterator_tag 
+inline random_access_iterator_tag
 iterator_category(const T*) {
     return random_access_iterator_tag();
 }
 
 
 // iterator_traits, iterator and reverse_iterator template may not be
-// needed for precompiled library interface 
+// needed for precompiled library interface
 
 ////////////////////////////////////////////////////////////////////////
 // iterator_traits
@@ -19729,7 +19729,7 @@ struct iterator {
 // reverse_iterator
 ////////////////////////////////////////////////////////////////////////
 template <class Iterator>
-class reverse_iterator 
+class reverse_iterator
 
 
 
@@ -19771,7 +19771,7 @@ class reverse_iterator
    reverse_iterator  operator- (difference_type n) const;
    reverse_iterator& operator-=(difference_type n);
    reference operator[](difference_type n) const;
-}; 
+};
 
 # 207 "/home/wmtan/root/cint/lib/prec_stl/iterator"
 
@@ -19930,7 +19930,7 @@ public:
 
 
 // clause _lib.binders_, binders:
-template <class Operation> 
+template <class Operation>
 class binder1st
   : public unary_function<Operation::second_argument_type,
                           Operation::result_type>
@@ -20054,13 +20054,13 @@ class multimap {
 
 
 
-  class iterator 
+  class iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -20090,13 +20090,13 @@ class multimap {
 
 
 
-  class reverse_iterator 
+  class reverse_iterator
 
 
 
 
 
-        : public bidirectional_iterator<T,difference_type> 
+        : public bidirectional_iterator<T,difference_type>
 
         {
    public:
@@ -20236,9 +20236,9 @@ class ooCollObj : public ooObj {
 friend class opiRefBase;
 public:
 
-ooCollObj(); 
+ooCollObj();
 
-ooCollObj(const ooCollObj & obj); 
+ooCollObj(const ooCollObj & obj);
 
 virtual ~ooCollObj();
 
@@ -20252,7 +20252,7 @@ protected:
 
 ooRunObj *pNameScope; //! Transient
 
-private: static TClass *fgIsA; public: static TClass *Class(); static const char *Class_Name(); static Version_t Class_Version() { return   1  ; } static void Dictionary(); virtual TClass *IsA() const { return   ooCollObj  ::Class(); } virtual void ShowMembers(TMemberInspector &insp, char *parent); virtual void Streamer(TBuffer &b); void StreamerNVirtual(TBuffer &b) {   ooCollObj  ::Streamer(b); } static const char *DeclFileName() { return "Utilities/Persistency/interface/ooCollObj.h"; } static int ImplFileLine(); static const char *ImplFileName();  static int DeclFileLine() { return 29; } 
+private: static TClass *fgIsA; public: static TClass *Class(); static const char *Class_Name(); static Version_t Class_Version() { return   1  ; } static void Dictionary(); virtual TClass *IsA() const { return   ooCollObj  ::Class(); } virtual void ShowMembers(TMemberInspector &insp, char *parent); virtual void Streamer(TBuffer &b); void StreamerNVirtual(TBuffer &b) {   ooCollObj  ::Streamer(b); } static const char *DeclFileName() { return "Utilities/Persistency/interface/ooCollObj.h"; } static int ImplFileLine(); static const char *ImplFileName();  static int DeclFileLine() { return 29; }
 };
 
 
@@ -20276,15 +20276,15 @@ namespace std {
 # 1 "/home/wmtan/root/cint/include/_iostream" 1
 // include/_iostream
 
-std::ostream& operator<<(std::ostream& ostr,std::G__CINT_ENDL& i) 
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_ENDL& i)
         {return(std::endl(ostr));}
-std::ostream& operator<<(std::ostream& ostr,std::G__CINT_ENDS& i) 
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_ENDS& i)
         {return(std::ends(ostr));}
-std::ostream& operator<<(std::ostream& ostr,std::G__CINT_FLUSH& i) 
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_FLUSH& i)
         {return(std::flush(ostr));}
-std::istream& operator>>(std::istream& istr,std::G__CINT_ws& i) 
+std::istream& operator>>(std::istream& istr,std::G__CINT_ws& i)
         {return(std::ws(istr));}
-std::istream& operator>>(std::istream& istr,std::G__CINT_WS& i) 
+std::istream& operator>>(std::istream& istr,std::G__CINT_WS& i)
         {return(std::WS(istr));}
 
 
@@ -20461,7 +20461,7 @@ void set_DB(const string dbname) {This_set_DB_function_is_for_TFile_only(dbname)
 //--- for TDirectory only.
 ooStatus refreshOpen(ooMode openMode, bool *isUpdated, bool = false)  const {*isUpdated = false; return open(openMode);}
 
-//--- for federation only 
+//--- for federation only
 ooStatus dumpCatalog(void *outputFile = 0) const {return oocSuccess;}   // stubbed
 
 // --  undocumented
@@ -20577,7 +20577,7 @@ template <> const char * opiRef<TFile>::hostName() const {return Hostname::name(
 
 
 
-/* NOTE: posix.dl is not generated by default. 
+/* NOTE: posix.dl is not generated by default.
  * Goto $CINTSYSDIR/lib/posix directory and do 'sh setup' if you use UNIX. */
 
 #pragma include_noerr "posix.dll"
@@ -20596,7 +20596,7 @@ template <> const char * opiRef<TFile>::hostName() const {return Hostname::name(
 
 template <> const char * opiRef<TFile>::pathName() const {
   static string loc;
-  char * buf=0; 
+  char * buf=0;
   char * ndir = getcwd(buf,0);
   if (ndir!=0) {
     loc = ndir;
@@ -20689,7 +20689,7 @@ inline void ooRunStatus() {}
 
 //
 //
-//   V 0.1  VI 8/10/2000 
+//   V 0.1  VI 8/10/2000
 //          a SimEvent with generator infos
 
 
@@ -20701,7 +20701,7 @@ inline void ooRunStatus() {}
 
 
 //
-//  the persistent part of SimEvent 
+//  the persistent part of SimEvent
 
 //  version     0.1   99/06/03  (VI)
 //                    by value.....
@@ -20778,7 +20778,7 @@ inline void ooRunStatus() {}
 //  standard event id
 //
 //  version     1.0   99/12/15  VI
-//                  
+//
 
 
 # 1 "/home/wmtan/root/cint/stl/string" 1
@@ -20789,7 +20789,7 @@ namespace std {
 
 
 class EventId  {
-  
+
 public:
   /// construct header for dummy event
   EventId() : runNumber_(0), eventInRun_(0){}
@@ -20807,7 +20807,7 @@ public:
 
 
 public:
-  
+
   void from(const string & ev);
 
 private:
@@ -20850,33 +20850,33 @@ class CoreSimEvent{
 
 public:
   /// Event Identifier
-  typedef EventId Id; 
-  
+  typedef EventId Id;
+
 public:
   /// default constructor
   CoreSimEvent() : weight_(0) {}
-  
+
   // constructor
   explicit CoreSimEvent(const Id & iid, const TSimEvent& tev);
-  
+
   /// return the Id
   const Id & id() const { return orcaId_;}
-  
-  
+
+
   /// return event weight
   float weight() const { return weight_;}
-  
+
   /// return the generator level id
   const Id & originalId() const { return originalId_;}
-  
+
 private:
-  
+
   Id orcaId_;
-  
+
   float  weight_;
-  
+
   Id originalId_;
-  
+
 };
 
 
@@ -20886,7 +20886,7 @@ namespace std {
 }
 # 66 "CARF/BaseSimEvent/interface/CoreSimEvent.h" 2
 
-ostream& operator <<(ostream& o , const CoreSimEvent& se); 
+ostream& operator <<(ostream& o , const CoreSimEvent& se);
 
 
 // CoreSIMEVENT_H
@@ -20924,7 +20924,7 @@ namespace std {
 #pragma mask_newdelete 0x10;
 
 
-// Imported from ANSI/ISO C++ 1997/Nov draft 
+// Imported from ANSI/ISO C++ 1997/Nov draft
 // Got some ideas from Scott Snyder, Fermi-lab
 // Modified by Masaharu Goto
 // SGI KCC porting by Philippe Canal, Fermi-lab
@@ -20951,7 +20951,7 @@ namespace std {
 
 
 // Imported from STL HP implementation 1994
-// Imported from STL SGI implementation 1997 
+// Imported from STL SGI implementation 1997
 // Imported from ANSI/ISO C++ draft Nov 1997
 // Modified by Masaharu Goto
 // May need to improve for the latest standard
@@ -20981,8 +20981,8 @@ template <class T, class Distance> struct random_access_iterator {};
 ////////////////////////////////////////////////////////////////////////
 // iterator_category overloaded function
 ////////////////////////////////////////////////////////////////////////
-template <class T, class Distance> 
-inline input_iterator_tag 
+template <class T, class Distance>
+inline input_iterator_tag
 iterator_category(const input_iterator<T, Distance>&) {
     return input_iterator_tag();
 }
@@ -20991,33 +20991,33 @@ inline output_iterator_tag iterator_category(const output_iterator&) {
     return output_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline forward_iterator_tag
 iterator_category(const forward_iterator<T, Distance>&) {
     return forward_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline bidirectional_iterator_tag
 iterator_category(const bidirectional_iterator<T, Distance>&) {
     return bidirectional_iterator_tag();
 }
 
-template <class T, class Distance> 
+template <class T, class Distance>
 inline random_access_iterator_tag
 iterator_category(const random_access_iterator<T, Distance>&) {
     return random_access_iterator_tag();
 }
 
 template <class T>
-inline random_access_iterator_tag 
+inline random_access_iterator_tag
 iterator_category(const T*) {
     return random_access_iterator_tag();
 }
 
 
 // iterator_traits, iterator and reverse_iterator template may not be
-// needed for precompiled library interface 
+// needed for precompiled library interface
 
 ////////////////////////////////////////////////////////////////////////
 // iterator_traits
@@ -21072,7 +21072,7 @@ struct iterator {
 // reverse_iterator
 ////////////////////////////////////////////////////////////////////////
 template <class Iterator>
-class reverse_iterator 
+class reverse_iterator
 
 
 
@@ -21114,7 +21114,7 @@ class reverse_iterator
    reverse_iterator  operator- (difference_type n) const;
    reverse_iterator& operator-=(difference_type n);
    reference operator[](difference_type n) const;
-}; 
+};
 
 # 207 "/home/wmtan/root/cint/lib/prec_stl/iterator"
 
@@ -21157,13 +21157,13 @@ class reverse_iterator
 # 1 "/local/stage1/wmtan/ofc/COBRA_7_0_0/src/Porting/Linux2-EGCS/wrappers/stddef.h" 1
 /*
  * This stddef.h file is used to replace the gnu provided one when
- * ooddlx is run. 
+ * ooddlx is run.
  * It fixes a bug in the GNU version which defines NULL as ((void *)0)
  * even for __cplusplus parsers
  *
- * NOTE: this file is compiler dependent and has been taken from 
- * egcs-2.91.60 19981201 (egcs-1.1.1 release) 
- *  
+ * NOTE: this file is compiler dependent and has been taken from
+ * egcs-2.91.60 19981201 (egcs-1.1.1 release)
+ *
  * Dirk.Duellmann@cern.ch
  */
 /* !_STDDEF_H && !_STDDEF_H_ && !_ANSI_STDDEF_H && !__STDDEF_H__
@@ -21216,10 +21216,9 @@ public:
   typedef X element_type;
   explicit auto_ptr(X* p = 0) : ptr(p), owns(p?true:false) {}
   auto_ptr(auto_ptr& a) {owns=a.owns; ptr=a.ptr; a.owns=0;}
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr(auto_ptr<T>& a) {owns=a.owns; ptr=a.release();}
-  
 
 
 
@@ -21227,7 +21226,8 @@ public:
 
 
 
-  
+
+
   auto_ptr& operator=(auto_ptr& a) {
     if (a.ptr != ptr) {
       if (owns) delete ptr;
@@ -21237,7 +21237,7 @@ public:
     }
     return(*this);
   }
-  
+
   // this implementation may not be correct
   template <class T> auto_ptr& operator=(auto_ptr<T>& a) {
     if (a.ptr != ptr) {
@@ -21247,9 +21247,9 @@ public:
     }
     return(*this);
   }
-  
+
   ~auto_ptr() { if(owns) delete ptr; }
-  
+
   X& operator*() const { return *ptr; }
   X* operator->() const { return ptr; }
   X* get() const { return ptr; }
@@ -21352,7 +21352,7 @@ class vector {
 
 
 
-  class reverse_iterator 
+  class reverse_iterator
 
 
 
@@ -21455,16 +21455,16 @@ class vector {
 
 
   // input iter
-  friend vector::iterator 
+  friend vector::iterator
     find(vector::iterator first,vector::iterator last,const T& value);
   // forward iter
-  friend vector::iterator 
+  friend vector::iterator
     find_end(vector::iterator first1,vector::iterator last1,
              vector::iterator first2,vector::iterator last2);
-  friend vector::iterator 
+  friend vector::iterator
     find_first_of(vector::iterator first1,vector::iterator last1,
                   vector::iterator first2,vector::iterator last2);
-  friend vector::iterator 
+  friend vector::iterator
     adjacent_find(vector::iterator first,vector::iterator last);
   // input iter
 
@@ -21504,7 +21504,7 @@ class vector {
   friend void replace(vector::iterator first,vector::iterator last,
                       const T& old_value,const T& new_value);
   // input, output iter -> forward iter
-  friend vector::iterator 
+  friend vector::iterator
     replace_copy(vector::iterator first,vector::iterator last,
                  vector::iterator result,
                  const T& old_value,const T& new_value);
@@ -21523,7 +21523,7 @@ class vector {
                 vector::iterator result,const T& value);
   friend vector::iterator
     unique(vector::iterator first,vector::iterator last);
-  friend vector::iterator 
+  friend vector::iterator
     unique_copy(vector::iterator first,vector::iterator last,
                 vector::iterator result);
   friend void reverse(vector::iterator first,vector::iterator last);
@@ -21536,7 +21536,7 @@ class vector {
 
 
   // forward iter
-  friend vector::iterator 
+  friend vector::iterator
     rotate_copy(vector::iterator first,vector::iterator mid,
                 vector::iterator last,vector::iterator result);
   // randomaccess iter
@@ -21553,9 +21553,9 @@ class vector {
   friend void nth_element(vector::iterator first,vector::iterator nth,
                           vector::iterator last);
   // forward iter
-  friend vector::iterator 
+  friend vector::iterator
     lower_bound(vector::iterator first,vector::iterator last,const T& value);
-  friend vector::iterator 
+  friend vector::iterator
     upper_bound(vector::iterator first,vector::iterator last,const T& value);
 
 
@@ -21570,19 +21570,19 @@ class vector {
                             vector::iterator last);
   friend bool includes(vector::iterator first1,vector::iterator last1,
                        vector::iterator first2,vector::iterator last2);
-  friend vector::iterator 
+  friend vector::iterator
     set_union(vector::iterator first1,vector::iterator last1,
               vector::iterator first2,vector::iterator last2,
               vector::iterator result);
-  friend vector::iterator 
+  friend vector::iterator
     set_intersection(vector::iterator first1,vector::iterator last1,
                      vector::iterator first2,vector::iterator last2,
                      vector::iterator result);
-  friend vector::iterator 
+  friend vector::iterator
     set_difference(vector::iterator first1,vector::iterator last1,
                    vector::iterator first2,vector::iterator last2,
                    vector::iterator result);
-  friend vector::iterator 
+  friend vector::iterator
     set_symmetric_difference(vector::iterator first1,vector::iterator last1,
                              vector::iterator first2,vector::iterator last2,
                              vector::iterator result);
@@ -21595,9 +21595,9 @@ class vector {
   friend const T& min(const T& a,const T& b);
   friend const T& max(const T& a,const T& b);
   // forward iter
-  friend vector::iterator 
+  friend vector::iterator
     min_element(vector::iterator first,vector::iterator last);
-  friend vector::iterator 
+  friend vector::iterator
     max_element(vector::iterator first,vector::iterator last);
   // input iter
   friend bool
@@ -21662,7 +21662,7 @@ public :
 
   virtual bool close() = 0;
 
-  inline operator void * () { return get();} 
+  inline operator void * () { return get();}
 
   virtual bool isValid() const =0;
 
@@ -21703,7 +21703,7 @@ public :
 
   virtual bool close() { return false;}
 
-  inline operator void * () { return get();} 
+  inline operator void * () { return get();}
 
   virtual bool isValid() const { return false;}
 
@@ -21738,17 +21738,17 @@ public:
   stdVectorConstInterface(): begin_(0), size_(0), owner_(new ZeroHandleAny()){}
   ///
 
-  stdVectorConstInterface(const_iterator b, const_iterator e, const IHandleAny & io= ZeroHandleAny() ) : 
+  stdVectorConstInterface(const_iterator b, const_iterator e, const IHandleAny & io= ZeroHandleAny() ) :
     begin_(b), size_(e-b), owner_(io.clone()) {
-    (*owner_).open(true); 
-  }
-  
-  stdVectorConstInterface(const_iterator b,  size_type s, const IHandleAny & io=ZeroHandleAny()  ) : 
-    begin_(b), size_(s), owner_(io.clone()) {
-    (*owner_).open(true); 
+    (*owner_).open(true);
   }
 
-  stdVectorConstInterface(const vector<T>& v ) : 
+  stdVectorConstInterface(const_iterator b,  size_type s, const IHandleAny & io=ZeroHandleAny()  ) :
+    begin_(b), size_(s), owner_(io.clone()) {
+    (*owner_).open(true);
+  }
+
+  stdVectorConstInterface(const vector<T>& v ) :
     begin_(&*v.begin()), size_(v.size()) , owner_(new ZeroHandleAny()) {}
 
   ~stdVectorConstInterface() {
@@ -21757,62 +21757,62 @@ public:
   }
 
   ///
-  self& init(const vector<T>& v) { 
+  self& init(const vector<T>& v) {
     (*owner_).close();
     delete owner_; owner_= new ZeroHandleAny();
-    begin_=&*v.begin(); size_=v.size(); 
+    begin_=&*v.begin(); size_=v.size();
     return *this;
   }
 
   ///
   self& init(const_iterator b, const_iterator e, const IHandleAny & io=ZeroHandleAny()) {     (*owner_).close();
     delete owner_;
-    begin_=b; 
-    size_=e-b; 
+    begin_=b;
+    size_=e-b;
     owner_=io.clone();
-    (*owner_).open(true); 
+    (*owner_).open(true);
     return *this;
   }
- 
-  self& init(const_iterator  b, size_type s, const IHandleAny & io=ZeroHandleAny()) { 
+
+  self& init(const_iterator  b, size_type s, const IHandleAny & io=ZeroHandleAny()) {
     (*owner_).close();
     delete owner_;
-    begin_=b; 
-    size_=s; 
+    begin_=b;
+    size_=s;
     owner_=io.clone();
-    (*owner_).open(true); 
+    (*owner_).open(true);
     return *this;
   }
 
 
   /// copy constr
   stdVectorConstInterface(const self& rh) :
-    begin_(rh.begin_), size_(rh.size_), owner_((*rh.owner_).clone()) { 
-    (*owner_).open(true); 
+    begin_(rh.begin_), size_(rh.size_), owner_((*rh.owner_).clone()) {
+    (*owner_).open(true);
   }
 
   ///
   self& operator=(const self& rh) {
     if ( &rh == this) return *this;
     (*owner_).close();
-    delete owner_; 
-    owner_=(*rh.owner_).clone(); 
-    (*owner_).open(true); 
-    begin_=rh.begin(); size_=rh.size(); 
+    delete owner_;
+    owner_=(*rh.owner_).clone();
+    (*owner_).open(true);
+    begin_=rh.begin(); size_=rh.size();
     return *this;
   }
-  
-  inline void clear() { 
-    begin_=0; size_=0; 
+
+  inline void clear() {
+    begin_=0; size_=0;
     (*owner_).close();
-    delete owner_; 
-    owner_=new ZeroHandleAny(); 
+    delete owner_;
+    owner_=new ZeroHandleAny();
   }
 
-  inline void setOwner( const IHandleAny & io) { 
+  inline void setOwner( const IHandleAny & io) {
     (*owner_).close();
-    delete owner_; 
-    owner_=io.clone(); 
+    delete owner_;
+    owner_=io.clone();
     (*owner_).open(true);
   }
 
@@ -21828,10 +21828,10 @@ public:
 
   /// return first element
   inline const_reference front() const { return *begin(); }
-  
-  /// return last element 
+
+  /// return last element
   inline const_reference back() const { return *(end() - 1); }
-  
+
   /// return element n
   inline const_reference operator[](size_type n) const { return *(begin() + n); }
 
@@ -21868,14 +21868,14 @@ public:
   typedef X element_type;
   typedef X *  pointer;
   typedef X & reference;
- 
+
 private:
 
   X* ptr;
   int * counts_;
 
 public:
- 
+
   ///
   explicit refc_ptr() : ptr(0), counts_(0) {}
   explicit refc_ptr(X* p) : ptr(p), counts_(new int(1)) {}
@@ -21885,7 +21885,7 @@ public:
 
 
   ///
-  template <class T, bool I> refc_ptr(const refc_ptr<T, I>& a) 
+  template <class T, bool I> refc_ptr(const refc_ptr<T, I>& a)
     : ptr(a.get()),counts_(a.counts()) {add();}
 
 
@@ -21934,26 +21934,26 @@ public:
   ///
   X* get() const  { return ptr; }
 
-  int* counts() const { 
+  int* counts() const {
     return const_cast<refc_ptr<X>*>(this)->counts_;
   }
- 
+
 
   void add(){if (counts_) (*counts_)++;}
 
-  void remove(){ 
-    if (ptr==0||counts_==0) return; 
+  void remove(){
+    if (ptr==0||counts_==0) return;
     (*counts_)--;
     if ((*counts_)==0) {
-      if (!intrusive()) { delete counts_;}  
-      delete ptr; 
+      if (!intrusive()) { delete counts_;}
+      delete ptr;
     }
     ptr=0;counts_=0;
   }
 
   bool intrusive() {
     return (!( int(counts_)<int(ptr) )) &&
-            (char*)(counts_)-(char*)(ptr) < int(sizeof(*ptr)); 
+            (char*)(counts_)-(char*)(ptr) < int(sizeof(*ptr));
   }
 
 };
@@ -21978,7 +21978,7 @@ public:
   explicit refc_ptr(pointer p) : ptr(p) { add();}
 
   ///
-  refc_ptr(const  self& a) : 
+  refc_ptr(const  self& a) :
     ptr(a.get())  { add();}
 
 
@@ -22039,12 +22039,12 @@ public:
     if(ptr==0) return 0;
     return &(const_cast<self*>(this)->ptr->counts_);
   }
- 
+
 
   void add(){ if (ptr) (*ptr).counts_++;}
 
-  void remove(){ 
-    if (ptr==0) return; 
+  void remove(){
+    if (ptr==0) return;
     (*ptr).counts_--;
     if ((*ptr).counts_==0) {delete ptr;}
     ptr=0;
@@ -22324,7 +22324,7 @@ typedef bool   HepBoolean;
 // performed by multiplying with an object of the HepRotation class.
 //
 // .SS See Also
-// LorentzVector.h, Rotation.h, LorentzRotation.h 
+// LorentzVector.h, Rotation.h, LorentzRotation.h
 //
 // .SS Authors
 // Leif Lonnblad and Anders Nilsson; ZOOM additions by Mark Fischler
@@ -22366,15 +22366,15 @@ namespace std {
 # 1 "/home/wmtan/root/cint/include/_iostream" 1
 // include/_iostream
 
-std::ostream& operator<<(std::ostream& ostr,std::G__CINT_ENDL& i) 
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_ENDL& i)
         {return(std::endl(ostr));}
-std::ostream& operator<<(std::ostream& ostr,std::G__CINT_ENDS& i) 
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_ENDS& i)
         {return(std::ends(ostr));}
-std::ostream& operator<<(std::ostream& ostr,std::G__CINT_FLUSH& i) 
+std::ostream& operator<<(std::ostream& ostr,std::G__CINT_FLUSH& i)
         {return(std::flush(ostr));}
-std::istream& operator>>(std::istream& istr,std::G__CINT_ws& i) 
+std::istream& operator>>(std::istream& istr,std::G__CINT_ws& i)
         {return(std::ws(istr));}
-std::istream& operator>>(std::istream& istr,std::G__CINT_WS& i) 
+std::istream& operator>>(std::istream& istr,std::G__CINT_WS& i)
         {return(std::WS(istr));}
 
 
@@ -22505,14 +22505,14 @@ class Hep3Vector {
 
 public:
 
-// Basic properties and operations on 3-vectors:  
+// Basic properties and operations on 3-vectors:
 
   enum { X=0, Y=1, Z=2, NUM_COORDINATES=3, SIZE=NUM_COORDINATES };
   // Safe indexing of the coordinates when using with matrices, arrays, etc.
   // (BaBar)
 
   inline Hep3Vector(double x = 0.0, double y = 0.0, double z = 0.0);
-  // The constructor.  
+  // The constructor.
 
   inline Hep3Vector(const Hep3Vector &);
   // The copy constructor.
@@ -22521,10 +22521,10 @@ public:
   // The destructor.  Not virtual - inheritance from this class is dangerous.
 
   double operator () (int) const;
-  // Get components by index -- 0-based (Geant4) 
+  // Get components by index -- 0-based (Geant4)
 
   inline double operator [] (int) const;
-  // Get components by index -- 0-based (Geant4) 
+  // Get components by index -- 0-based (Geant4)
 
   double & operator () (int);
   // Set components by index.  0-based.
@@ -22542,7 +22542,7 @@ public:
   inline void setZ(double);
   // Set the components in cartesian coordinate system.
 
-  inline void set( double x, double y, double z); 
+  inline void set( double x, double y, double z);
   // Set all three components in cartesian coordinate system.
 
   inline double phi() const;
@@ -22582,7 +22582,7 @@ public:
   // Set the transverse component keeping phi and z constant.
 
   void setCylTheta(double);
-  // Set theta while keeping transvers component and phi fixed 
+  // Set theta while keeping transvers component and phi fixed
 
   inline double perp2(const Hep3Vector &) const;
   // The transverse component w.r.t. given axis squared.
@@ -22595,11 +22595,11 @@ public:
 
   inline bool operator == (const Hep3Vector &) const;
   inline bool operator != (const Hep3Vector &) const;
-  // Comparisons (Geant4). 
+  // Comparisons (Geant4).
 
   bool isNear (const Hep3Vector &, double epsilon=tolerance) const;
   // Check for equality within RELATIVE tolerance (default 2.2E-14). (ZOOM)
-  // |v1 - v2|**2 <= epsilon**2 * |v1.dot(v2)| 
+  // |v1 - v2|**2 <= epsilon**2 * |v1.dot(v2)|
 
   double howNear(const Hep3Vector & v ) const;
   // sqrt ( |v1-v2|**2 / v1.dot(v2) ) with a maximum of 1.
@@ -22670,15 +22670,15 @@ public:
 
 // = = = = = = = = = = = = = = = = = = = = = = = =
 //
-// Esoteric properties and operations on 3-vectors:  
+// Esoteric properties and operations on 3-vectors:
 //
 // 1 - Set vectors in various coordinate systems
 // 2 - Synonyms for accessing coordinates and properties
 // 3 - Comparisions (dictionary, near-ness, and geometric)
-// 4 - Intrinsic properties 
+// 4 - Intrinsic properties
 // 5 - Properties releative to z axis and arbitrary directions
 // 6 - Polar and azimuthal angle decomposition and deltaPhi
-// 7 - Rotations 
+// 7 - Rotations
 //
 // = = = = = = = = = = = = = = = = = = = = = = = =
 
@@ -22701,9 +22701,9 @@ public:
 
 // 2 - Synonyms for accessing coordinates and properties
 
-  inline double getX() const; 
+  inline double getX() const;
   inline double getY() const;
-  inline double getZ() const; 
+  inline double getZ() const;
   // x(), y(), and z()
 
   inline double getR    () const;
@@ -22720,7 +22720,7 @@ public:
 
   double eta     () const;
   double getEta  () const;
-  // pseudoRapidity() 
+  // pseudoRapidity()
 
   inline void setR ( double s );
   // setMag()
@@ -22742,7 +22742,7 @@ public:
 
   static double setTolerance (double tol);
   static inline double getTolerance ();
-  // Set the tolerance used in isNear() for Hep3Vectors 
+  // Set the tolerance used in isNear() for Hep3Vectors
 
   bool isParallel (const Hep3Vector & v, double epsilon=tolerance) const;
   // Are the vectors parallel, within the given tolerance?
@@ -22758,7 +22758,7 @@ public:
 
   enum { ToleranceTicks = 100 };
 
-// 4 - Intrinsic properties 
+// 4 - Intrinsic properties
 
   double beta    () const;
   // relativistic beta (considering v as a velocity vector with c=1)
@@ -22772,13 +22772,13 @@ public:
 
 // 5 - Properties relative to Z axis and to an arbitrary direction
 
-          // Note that the non-esoteric CLHEP provides 
+          // Note that the non-esoteric CLHEP provides
           // theta(), cosTheta(), cos2Theta, and angle(const Hep3Vector&)
 
   inline double angle() const;
   // angle against the Z axis -- synonym for theta()
 
-  inline double theta(const Hep3Vector & v2) const;  
+  inline double theta(const Hep3Vector & v2) const;
   // synonym for angle(v2)
 
   double cosTheta (const Hep3Vector & v2) const;
@@ -22787,7 +22787,7 @@ public:
 
   inline Hep3Vector project () const;
          Hep3Vector project (const Hep3Vector & v2) const;
-  // projection of a vector along a direction.  
+  // projection of a vector along a direction.
 
   inline Hep3Vector perpPart() const;
   inline Hep3Vector perpPart (const Hep3Vector & v2) const;
@@ -22797,7 +22797,7 @@ public:
   // inverse tanh(v.z())
 
   double rapidity (const Hep3Vector & v2) const;
-  // rapidity with respect to specified direction:  
+  // rapidity with respect to specified direction:
   // inverse tanh (v.dot(u)) where u is a unit in the direction of v2
 
   double eta(const Hep3Vector & v2) const;
@@ -22816,18 +22816,18 @@ public:
   double azimAngle  (const Hep3Vector & v2) const;
   // The reference direction is Z: the azimAngle is the same as deltaPhi
 
-  double polarAngle (const Hep3Vector & v2, 
+  double polarAngle (const Hep3Vector & v2,
                                         const Hep3Vector & ref) const;
-  // For arbitrary reference direction, 
+  // For arbitrary reference direction,
   //    polarAngle is abs(v.angle(ref) - v2.angle(ref)).
 
-  double azimAngle  (const Hep3Vector & v2, 
+  double azimAngle  (const Hep3Vector & v2,
                                         const Hep3Vector & ref) const;
   // To compute azimangle, project v and v2 into the plane normal to
   // the reference direction.  Then in that plane take the angle going
   // clockwise around the direction from projection of v to that of v2.
 
-// 7 - Rotations 
+// 7 - Rotations
 
 // These mehtods **DO NOT** use anything in the HepRotation class.
 // Thus, use of v.rotate(axis,delta) does not force linking in Rotation.cc.
@@ -22842,7 +22842,7 @@ public:
   Hep3Vector & rotate (double phi,
                         double theta,
                         double psi);
-  // Rotate via Euler Angles. Our Euler Angles conventions are 
+  // Rotate via Euler Angles. Our Euler Angles conventions are
   // those of Goldstein Classical Mechanics page 107.
 
 protected:
@@ -22867,11 +22867,11 @@ Hep3Vector rotationXOf (const Hep3Vector & vec, double delta);
 Hep3Vector rotationYOf (const Hep3Vector & vec, double delta);
 Hep3Vector rotationZOf (const Hep3Vector & vec, double delta);
 
-Hep3Vector rotationOf (const Hep3Vector & vec, 
+Hep3Vector rotationOf (const Hep3Vector & vec,
                                 const Hep3Vector & axis, double delta);
 Hep3Vector rotationOf (const Hep3Vector & vec, const HepAxisAngle & ax);
 
-Hep3Vector rotationOf (const Hep3Vector & vec, 
+Hep3Vector rotationOf (const Hep3Vector & vec,
                                 double phi, double theta, double psi);
 Hep3Vector rotationOf (const Hep3Vector & vec, const HepEulerAngles & e);
 // Return a new vector based on a rotation of the supplied vector
@@ -22910,7 +22910,7 @@ Hep3Vector operator / (const Hep3Vector &, double a);
 // ---------------------------------------------------------------------------
 //
 // This file is a part of the CLHEP - a Class Library for High Energy Physics.
-// 
+//
 // This is the definitions of the inline member functions of the
 // Hep3Vector class.
 //
@@ -22940,10 +22940,10 @@ inline void Hep3Vector::setX(double x) { dx = x; }
 inline void Hep3Vector::setY(double y) { dy = y; }
 inline void Hep3Vector::setZ(double z) { dz = z; }
 
-inline void Hep3Vector::set(double x, double y, double z) { 
-  dx = x; 
-  dy = y; 
-  dz = z; 
+inline void Hep3Vector::set(double x, double y, double z) {
+  dx = x;
+  dy = y;
+  dz = z;
 }
 
 // --------------
@@ -22976,17 +22976,17 @@ inline double operator * (const Hep3Vector & a, const Hep3Vector & b) {
 
 inline void Hep3Vector::setRThetaPhi
                   ( double r, double theta, double phi ) {
-  setSpherical (r, theta, phi); 
+  setSpherical (r, theta, phi);
 }
 
 inline void Hep3Vector::setREtaPhi
                   ( double r, double eta,  double phi ) {
-  setSpherical (r, 2*atan(exp(-eta)), phi); 
+  setSpherical (r, 2*atan(exp(-eta)), phi);
 }
 
 inline void Hep3Vector::setRhoPhiZ
                   ( double rho, double phi, double z) {
-  setCylindrical (rho, phi, z); 
+  setCylindrical (rho, phi, z);
 }
 
 // ------------
@@ -23056,7 +23056,7 @@ inline void Hep3Vector::setPhi(double ph) {
   setY(xy*sin(ph));
 }
 
-// perp, eta, 
+// perp, eta,
 
 inline double Hep3Vector::perp2()  const { return dx*dx + dy*dy; }
 inline double Hep3Vector::perp()   const { return sqrt(perp2()); }
@@ -23161,12 +23161,12 @@ inline double Hep3Vector::angle(const Hep3Vector & q) const {
   return acos(cosTheta(q));
 }
 
-inline double Hep3Vector::theta(const Hep3Vector & q) const { 
-  return angle(q); 
+inline double Hep3Vector::theta(const Hep3Vector & q) const {
+  return angle(q);
 }
 
-inline double Hep3Vector::azimAngle(const Hep3Vector & v2) const { 
-  return deltaPhi(v2); 
+inline double Hep3Vector::azimAngle(const Hep3Vector & v2) const {
+  return deltaPhi(v2);
 }
 
 // ----------
@@ -23227,11 +23227,11 @@ HepLorentzVector rotationOf
     ( const HepLorentzVector & vec, double phi,
                                     double theta,
                                     double psi );
-inline 
+inline
 HepLorentzVector  boostXOf( const HepLorentzVector & vec, double beta );
-inline 
+inline
 HepLorentzVector  boostYOf( const HepLorentzVector & vec, double beta );
-inline 
+inline
 HepLorentzVector  boostZOf( const HepLorentzVector & vec, double beta );
 inline HepLorentzVector  boostOf
     ( const HepLorentzVector & vec, const Hep3Vector & betaVector );
@@ -23301,10 +23301,10 @@ public:
   // Set momentum and energy.
 
   inline Hep3Vector vect() const;
-  // Get spatial component. 
+  // Get spatial component.
 
   inline void setVect(const Hep3Vector &);
-  // Set spatial component. 
+  // Set spatial component.
 
   inline double theta() const;
   inline double cosTheta() const;
@@ -23326,7 +23326,7 @@ public:
   // Set components by index.
 
   inline HepLorentzVector & operator = (const HepLorentzVector &);
-  // Assignment. 
+  // Assignment.
 
   inline HepLorentzVector   operator +  (const HepLorentzVector &) const;
   inline HepLorentzVector & operator += (const HepLorentzVector &);
@@ -23366,7 +23366,7 @@ public:
   // Angle wrt. another vector.
 
   inline double mag2() const;
-  // Dot product of 4-vector with itself. 
+  // Dot product of 4-vector with itself.
   // By default the metric is TimePositive, and mag2() is the same as m2().
 
   inline double m2() const;
@@ -23393,10 +23393,10 @@ public:
   // Scalar product.
 
   inline double invariantMass2( const HepLorentzVector & w ) const;
-  // Invariant mass squared of pair of 4-vectors 
+  // Invariant mass squared of pair of 4-vectors
 
   double invariantMass ( const HepLorentzVector & w ) const;
-  // Invariant mass of pair of 4-vectors 
+  // Invariant mass of pair of 4-vectors
 
   inline void setVectMag(const Hep3Vector & spatial, double magnitude);
   inline void setVectM(const Hep3Vector & spatial, double mass);
@@ -23459,27 +23459,27 @@ public:
 
 // = = = = = = = = = = = = = = = = = = = = = = = =
 //
-// Esoteric properties and operations on 4-vectors:  
+// Esoteric properties and operations on 4-vectors:
 //
 // 0 - Flexible metric convention and axial unit 4-vectors
-// 1 - Construct and set 4-vectors in various ways 
+// 1 - Construct and set 4-vectors in various ways
 // 2 - Synonyms for accessing coordinates and properties
-// 2a - Setting space coordinates in different ways 
+// 2a - Setting space coordinates in different ways
 // 3 - Comparisions (dictionary, near-ness, and geometric)
-// 4 - Intrinsic properties 
-// 4a - Releativistic kinematic properties 
+// 4 - Intrinsic properties
+// 4a - Releativistic kinematic properties
 // 4b - Methods combining two 4-vectors
 // 5 - Properties releative to z axis and to arbitrary directions
 // 7 - Rotations and Boosts
 //
 // = = = = = = = = = = = = = = = = = = = = = = = =
 
-// 0 - Flexible metric convention 
+// 0 - Flexible metric convention
 
   static ZMpvMetric_t setMetric( ZMpvMetric_t m );
   static ZMpvMetric_t getMetric();
 
-// 1 - Construct and set 4-vectors in various ways 
+// 1 - Construct and set 4-vectors in various ways
 
   inline void set        (double x, double y, double z, double  t);
   inline void set        (double x, double y, double z, Tcomponent t);
@@ -23498,10 +23498,10 @@ public:
 
   inline void set                 ( const Hep3Vector & v );
   inline explicit HepLorentzVector( const Hep3Vector & v );
-  // Form 4-vector with zero time component, by supplying space 3-vector 
+  // Form 4-vector with zero time component, by supplying space 3-vector
 
   inline HepLorentzVector & operator=( const Hep3Vector & v );
-  // Form 4-vector with zero time component, equal to space 3-vector 
+  // Form 4-vector with zero time component, equal to space 3-vector
 
   inline void set ( const Hep3Vector & v, double t );
   inline void set ( double t, const Hep3Vector & v );
@@ -23522,7 +23522,7 @@ public:
   inline void setV(const Hep3Vector &);
   // Set spatial component.   Same as setVect.
 
-// 2a - Setting space coordinates in different ways 
+// 2a - Setting space coordinates in different ways
 
   inline void setV( double x, double y, double z );
 
@@ -23539,12 +23539,12 @@ public:
   bool operator>=( const HepLorentzVector & w ) const;
   bool operator<=( const HepLorentzVector & w ) const;
 
-  bool   isNear ( const HepLorentzVector & w, 
+  bool   isNear ( const HepLorentzVector & w,
                                         double epsilon=tolerance ) const;
   double howNear( const HepLorentzVector & w ) const;
   // Is near using Euclidean measure t**2 + v**2
 
-  bool   isNearCM ( const HepLorentzVector & w, 
+  bool   isNearCM ( const HepLorentzVector & w,
                                         double epsilon=tolerance ) const;
   double howNearCM( const HepLorentzVector & w ) const;
   // Is near in CM frame:  Applicable only for two timelike HepLorentzVectors
@@ -23552,9 +23552,9 @@ public:
         // If w1 and w2 are already in their CM frame, then w1.isNearCM(w2)
         // is exactly equivalent to w1.isNear(w2).
         // If w1 and w2 have T components of zero, w1.isNear(w2) is exactly
-        // equivalent to w1.getV().isNear(w2.v()).  
+        // equivalent to w1.getV().isNear(w2.v()).
 
-  bool isParallel( const HepLorentzVector & w, 
+  bool isParallel( const HepLorentzVector & w,
                                         double epsilon=tolerance ) const;
   // Test for isParallel is within tolerance epsilon
   double howParallel (const HepLorentzVector & w) const;
@@ -23567,35 +23567,35 @@ public:
   double deltaR(const HepLorentzVector & v) const;
   // sqrt ( (delta eta)^2 + (delta phi)^2 ) of space part
 
-// 4 - Intrinsic properties 
+// 4 - Intrinsic properties
 
          double howLightlike() const;
   // Close to zero for almost lightlike 4-vectors; up to 1.
 
   inline double euclideanNorm2()  const;
-  // Sum of the squares of time and space components; not Lorentz invariant. 
+  // Sum of the squares of time and space components; not Lorentz invariant.
 
-  inline double euclideanNorm()  const; 
+  inline double euclideanNorm()  const;
   // Length considering the metric as (+ + + +); not Lorentz invariant.
 
 
-// 4a - Relativistic kinematic properties 
+// 4a - Relativistic kinematic properties
 
 // All Relativistic kinematic properties are independent of the sense of metric
 
   inline double restMass2() const;
-  inline double invariantMass2() const; 
+  inline double invariantMass2() const;
   // Rest mass squared -- same as m2()
 
   inline double restMass() const;
-  inline double invariantMass() const; 
+  inline double invariantMass() const;
   // Same as m().  If m2() is negative then -sqrt(-m2()) is returned.
 
-// The following properties are rest-frame related, 
+// The following properties are rest-frame related,
 // and are applicable only to non-spacelike 4-vectors
 
   HepLorentzVector rest4Vector() const;
-  // This 4-vector, boosted into its own rest frame:  (0, 0, 0, m()) 
+  // This 4-vector, boosted into its own rest frame:  (0, 0, 0, m())
           // The following relation holds by definition:
           // w.rest4Vector().boost(w.boostVector()) == w
 
@@ -23693,7 +23693,7 @@ public:
     ( const HepLorentzVector & vec, const Hep3Vector & betaVector );
   inline friend HepLorentzVector  boostOf
     ( const HepLorentzVector & vec, const Hep3Vector & axis,  double beta );
- 
+
 private:
 
   Hep3Vector pp;
@@ -23760,7 +23760,7 @@ public:
 // ---------------------------------------------------------------------------
 //
 // This file is a part of the CLHEP - a Class Library for High Energy Physics.
-// 
+//
 // This is the definitions of the inline member functions of the
 // HepLorentzVector class.
 //
@@ -23776,7 +23776,7 @@ public:
 //
 //  THIS FILE CONTAINS TWO VERSIONS OF THE NECESSARY CODE:
 //
-//  With no special defines, this file will produce code for pure CLHEP 
+//  With no special defines, this file will produce code for pure CLHEP
 //  building -- no ZOOM Exceptions are involved.
 //
 //  To force a build using ZOOM Exceptions where the ZMthorw macros appear,
@@ -23784,7 +23784,7 @@ public:
 //
 // ----------------------------------------------------------------------
 
-//#undef  ENABLE_ZOOM_EXCEPTIONS        // For CLHEP builds 
+//#undef  ENABLE_ZOOM_EXCEPTIONS        // For CLHEP builds
 //#define ENABLE_ZOOM_EXCEPTIONS        // For ZOOM  builds
 
 
@@ -23874,11 +23874,11 @@ public:
 
 
 
-//  This is the CLHEP version.  When compiled for CLHEP, the basic CLHEP 
-//  Vector classes will not (at least for now) depend on ZOOM Exceptions.  
-//  Though this header lists the various sorts of Exceptions that could be 
-//  thrown, ZMthrow.h in the pure CLHEP context will make ZMthrowA and 
-//  ZMthrowC do what CLHEP has always done:  whine to cerr about the problem 
+//  This is the CLHEP version.  When compiled for CLHEP, the basic CLHEP
+//  Vector classes will not (at least for now) depend on ZOOM Exceptions.
+//  Though this header lists the various sorts of Exceptions that could be
+//  thrown, ZMthrow.h in the pure CLHEP context will make ZMthrowA and
+//  ZMthrowC do what CLHEP has always done:  whine to cerr about the problem
 //  and exit (or continue in the ZMthrowC case).
 //
 //      If CLHEP ever embraces the ZOOM Exceptions mechanism, we will simply
@@ -23912,7 +23912,7 @@ public:
 
 
 
-// endif for ifndef ENABLE_ZOOM_EXCEPTIONS 
+// endif for ifndef ENABLE_ZOOM_EXCEPTIONS
 
 // =============================================================
 // =============================================================
@@ -23962,7 +23962,7 @@ inline HepLorentzVector::~HepLorentzVector() {}
 inline HepLorentzVector::operator const Hep3Vector & () const {return pp;}
 inline HepLorentzVector::operator Hep3Vector & () { return pp; }
 
-inline void HepLorentzVector::setX(double a) { pp.setX(a); } 
+inline void HepLorentzVector::setX(double a) { pp.setX(a); }
 inline void HepLorentzVector::setY(double a) { pp.setY(a); }
 inline void HepLorentzVector::setZ(double a) { pp.setZ(a); }
 inline void HepLorentzVector::setT(double a) { ee = a;}
@@ -23972,13 +23972,13 @@ inline double HepLorentzVector::py() const { return pp.y(); }
 inline double HepLorentzVector::pz() const { return pp.z(); }
 inline double HepLorentzVector::e()  const { return ee; }
 
-inline void HepLorentzVector::setPx(double a) { pp.setX(a); } 
+inline void HepLorentzVector::setPx(double a) { pp.setX(a); }
 inline void HepLorentzVector::setPy(double a) { pp.setY(a); }
 inline void HepLorentzVector::setPz(double a) { pp.setZ(a); }
 inline void HepLorentzVector::setE(double a)  { ee = a;}
 
-inline Hep3Vector HepLorentzVector::vect() const { return pp; } 
-inline void HepLorentzVector::setVect(const Hep3Vector &p) { pp = p; } 
+inline Hep3Vector HepLorentzVector::vect() const { return pp; }
+inline void HepLorentzVector::setVect(const Hep3Vector &p) { pp = p; }
 
 inline double HepLorentzVector::theta() const { return pp.theta(); }
 inline double HepLorentzVector::cosTheta() const { return pp.cosTheta(); }
@@ -24068,7 +24068,7 @@ inline double HepLorentzVector::mag() const {
   return mm < 0.0 ? -sqrt(-mm) : sqrt(mm);
 }
 
-inline double HepLorentzVector::m2() const { 
+inline double HepLorentzVector::m2() const {
   return t()*t() - pp.mag2();
 }
 
@@ -24104,13 +24104,13 @@ inline double HepLorentzVector::et(const Hep3Vector & v) const {
   return e() < 0.0 ? -sqrt(etet) : sqrt(etet);
 }
 
-inline void 
+inline void
 HepLorentzVector::setVectMag(const Hep3Vector & spatial, double magnitude) {
   setVect(spatial);
   setT(sqrt(magnitude * magnitude + spatial * spatial));
 }
 
-inline void 
+inline void
 HepLorentzVector::setVectM(const Hep3Vector & spatial, double mass) {
   setVectMag(spatial, mass);
 }
@@ -24170,7 +24170,7 @@ inline HepLorentzVector operator * (double a, const HepLorentzVector & p) {
 
 // The following were added when ZOOM PhysicsVectors was merged in:
 
-inline HepLorentzVector::HepLorentzVector( 
+inline HepLorentzVector::HepLorentzVector(
         double x, double y, double z, Tcomponent t ) :
         pp(x, y, z), ee(t) {}
 
@@ -24185,9 +24185,9 @@ inline void HepLorentzVector::set(
   set (x,y,z,Tcomponent(t));
 }
 
-inline HepLorentzVector::HepLorentzVector( 
+inline HepLorentzVector::HepLorentzVector(
         Tcomponent t, double x, double y, double z ) :
-        pp(x, y, z), ee(t) {}   
+        pp(x, y, z), ee(t) {}
 
 inline void HepLorentzVector::set(
         Tcomponent t, double x, double y, double z ) {
@@ -24205,7 +24205,7 @@ inline void HepLorentzVector::set( double t ) {
   ee = t;
 }
 
-inline HepLorentzVector::HepLorentzVector( Tcomponent t ) : 
+inline HepLorentzVector::HepLorentzVector( Tcomponent t ) :
         pp(0, 0, 0), ee(t) {}
 
 inline void HepLorentzVector::set( const Hep3Vector & v ) {
@@ -24213,7 +24213,7 @@ inline void HepLorentzVector::set( const Hep3Vector & v ) {
   ee = 0;
 }
 
-inline HepLorentzVector::HepLorentzVector( const Hep3Vector & v ) : 
+inline HepLorentzVector::HepLorentzVector( const Hep3Vector & v ) :
         pp(v), ee(0) {}
 
 inline void HepLorentzVector::setV(const Hep3Vector & v) {
@@ -24231,8 +24231,8 @@ inline double HepLorentzVector::getY() const { return pp.y(); }
 inline double HepLorentzVector::getZ() const { return pp.z(); }
 inline double HepLorentzVector::getT() const { return ee; }
 
-inline Hep3Vector HepLorentzVector::getV() const { return pp; } 
-inline Hep3Vector HepLorentzVector::v() const { return pp; } 
+inline Hep3Vector HepLorentzVector::getV() const { return pp; }
+inline Hep3Vector HepLorentzVector::v() const { return pp; }
 
 inline void HepLorentzVector::set(double t, const Hep3Vector & v) {
   pp = v;
@@ -24248,12 +24248,12 @@ inline void HepLorentzVector::setV( double x,
              double y,
              double z ) { pp.set(x, y, z); }
 
-inline void HepLorentzVector::setRThetaPhi 
-                ( double r, double theta, double phi ) 
+inline void HepLorentzVector::setRThetaPhi
+                ( double r, double theta, double phi )
                          { pp.setRThetaPhi( r, theta, phi ); }
 
-inline void HepLorentzVector::setREtaPhi 
-                ( double r, double eta, double phi ) 
+inline void HepLorentzVector::setREtaPhi
+                ( double r, double eta, double phi )
                          { pp.setREtaPhi( r, eta, phi ); }
 
 inline void HepLorentzVector::setRhoPhiZ
@@ -24262,7 +24262,7 @@ inline void HepLorentzVector::setRhoPhiZ
 
 inline bool HepLorentzVector::isTimelike() const {
   return restMass2() > 0;
-}  
+}
 
 inline bool  HepLorentzVector::isSpacelike() const {
   return restMass2() < 0;
@@ -24276,7 +24276,7 @@ inline double HepLorentzVector::diff2( const HepLorentzVector & w ) const {
     return metric*( (ee-w.ee)*(ee-w.ee) - (pp-w.pp).mag2() );
 }
 
-inline double HepLorentzVector::delta2Euclidean 
+inline double HepLorentzVector::delta2Euclidean
                                         ( const HepLorentzVector & w ) const {
     return (ee-w.ee)*(ee-w.ee) + (pp-w.pp).mag2();
 }
@@ -24293,13 +24293,13 @@ inline double HepLorentzVector::restMass2()      const { return m2(); }
 inline double HepLorentzVector::invariantMass2() const { return m2(); }
 
 inline double HepLorentzVector::restMass() const {
-    if( t() < 0.0 ) do { std ::cerr <<   
+    if( t() < 0.0 ) do { std ::cerr <<
               "E^2-p^2 < 0 for this particle. Magnitude returned."    << "\n" << "at line " << 381 << " in file " << "/afs/cern.ch/sw/lhcxx/specific/redhat61/gcc-2.95.2/4.0.4/include/CLHEP/Vector/LorentzVector.icc" << "\n"; } while (0) ;
     return t() < 0.0 ? -m() : m();
 }
 
 inline double HepLorentzVector::invariantMass() const {
-    if( t() < 0.0 ) do { std ::cerr <<   
+    if( t() < 0.0 ) do { std ::cerr <<
               "E^2-p^2 < 0 for this particle. Magnitude returned."    << "\n" << "at line " << 387 << " in file " << "/afs/cern.ch/sw/lhcxx/specific/redhat61/gcc-2.95.2/4.0.4/include/CLHEP/Vector/LorentzVector.icc" << "\n"; } while (0) ;
     return t() < 0.0 ? -m() : m();
 }
@@ -24369,14 +24369,14 @@ public:
   ///
   CoreSimVertex(float * g3vert, float tofg) {
     vert_[0] = g3vert[0];
-    vert_[1] = g3vert[1]; 
+    vert_[1] = g3vert[1];
     vert_[2] = g3vert[2];
-    vert_[3] = tofg; 
+    vert_[3] = tofg;
   }
 
 
   ///
-  inline HepLorentzVector position() const { 
+  inline HepLorentzVector position() const {
     return HepLorentzVector(vert_[0],vert_[1],vert_[2],vert_[3]);
   }
 
@@ -24392,7 +24392,7 @@ namespace std {
 }
 # 43 "CARF/BaseSimEvent/interface/CoreSimVertex.h" 2
 
-ostream& operator <<(ostream& o , const CoreSimVertex& v); 
+ostream& operator <<(ostream& o , const CoreSimVertex& v);
 
 
 // CoreSimVertex_H
@@ -24431,7 +24431,7 @@ public:
 
   /// index of the parent in the BaseSimEvent SimTrack container (-1 if no parent)
   int parentIndex() const { return  itrack_;}
-  /// 
+  ///
   bool noParent() const { return  itrack_==-1;}
 
 private:
@@ -24481,7 +24481,7 @@ ostream& operator <<(ostream& o , const EmbdSimVertex& v);
 //                    still abstract
 //  version     0.4   01/11/18
 //                    just core infos, not abstraction..
-//                      and use HepPDT...  
+//                      and use HepPDT...
 
 # 1 "/home/wmtan/root/cint/include/cmath" 1
 namespace std {
@@ -24519,14 +24519,14 @@ public:
     p_[1] = ip.y();
     p_[2] = ip.z();
     p_[3] = ie;
-   
+
   }
-  
+
   /// particle info...
   const HepParticleData * particleInfo() const;
 
   /// four momentum
-  inline HepLorentzVector momentum() const { 
+  inline HepLorentzVector momentum() const {
     return HepLorentzVector(p_[0],p_[1],p_[2],p_[3]);
   }
 
@@ -24551,7 +24551,7 @@ namespace std {
 }
 # 70 "CARF/BaseSimEvent/interface/CoreSimTrack.h" 2
 
-ostream& operator <<(ostream& o , const CoreSimTrack& t); 
+ostream& operator <<(ostream& o , const CoreSimTrack& t);
 
 
 // CoreSIMTrack_H
@@ -24603,9 +24603,9 @@ public:
 private:
 
   c_int16 ivert_;
-  
+
   c_int16 igenpart_;
-  
+
 };
 
 # 1 "/home/wmtan/root/cint/include/iosfwd" 1
@@ -24614,7 +24614,7 @@ namespace std {
 }
 # 69 "CARF/BaseSimEvent/interface/EmbdSimTrack.h" 2
 
-ostream& operator <<(ostream& o , const EmbdSimTrack& t); 
+ostream& operator <<(ostream& o , const EmbdSimTrack& t);
 
 
 // EmbdSIMTrack_H
@@ -24661,11 +24661,11 @@ public:
   ///
   EmbdGenParticle(){}
   ///
-  EmbdGenParticle(c_int32 pid, c_int16 istat, 
-                  c_int16 imo1, c_int16 imo2, 
-                 c_int16 ida1, c_int16 ida2, 
+  EmbdGenParticle(c_int32 pid, c_int16 istat,
+                  c_int16 imo1, c_int16 imo2,
+                 c_int16 ida1, c_int16 ida2,
                   float px, float py, float pz, float e) :
-    pid_(pid), status_(istat), 
+    pid_(pid), status_(istat),
     Mo1_(imo1), Mo2_(imo2),
     Da1_(ida1), Da2_(ida2)
   {
@@ -24675,11 +24675,11 @@ public:
     p_[3] = e;
   }
   ///
-  EmbdGenParticle(c_int32 pid, c_int16 istat, 
-                  c_int16 imo1, c_int16 imo2, 
+  EmbdGenParticle(c_int32 pid, c_int16 istat,
+                  c_int16 imo1, c_int16 imo2,
                   c_int16 ida1, c_int16 ida2,
                   const HepLorentzVector & ip) :
-    pid_(pid), status_(istat), 
+    pid_(pid), status_(istat),
     Mo1_(imo1), Mo2_(imo2) ,
     Da1_(ida1), Da2_(ida2)
   {
@@ -24688,10 +24688,10 @@ public:
     p_[2] = ip.z();
     p_[3] = ip.t();
   }
-  
-  
-  ///  
-  c_int32 pid() const { return pid_;} 
+
+
+  ///
+  c_int32 pid() const { return pid_;}
   ///
   c_int16 status() const { return status_;}
   ///
@@ -24706,23 +24706,23 @@ public:
   HepLorentzVector fourmomentum() const {
     return HepLorentzVector(p_[0],p_[1],p_[2],p_[3]);
   }
-  
+
   ///
   void print() const;
-  
+
 private:
-  
+
   ///
   c_int32 pid_;
-  
+
   ///
   c_int16 status_;
   ///
   c_int16 Mo1_, Mo2_;
-  
+
   ///
   c_int16 Da1_, Da2_;
-  
+
   ///
   float p_[4];
 
@@ -24735,7 +24735,7 @@ namespace std {
 # 101 "CARF/BaseSimEvent/interface/EmbdGenParticle.h" 2
 
 ///
-ostream& operator <<(ostream& o , const EmbdGenParticle& v); 
+ostream& operator <<(ostream& o , const EmbdGenParticle& v);
 
 
 // EmbdGENPARTICLE_H
@@ -24782,7 +24782,7 @@ public:
   static vertex_containerRef st_vertices_;
   static genpart_containerRef st_genparts_;
 
-  static void makeCaches(); 
+  static void makeCaches();
   static void clearCaches() { st_tracks_->clear(); st_vertices_->clear(); st_genparts_->clear();}
 
 public:
@@ -24792,9 +24792,9 @@ public:
   // constructor
   explicit BaseSimEvent(const CoreSimEvent::Id & iid, const TSimEvent& tev);
 
-  /// virtual destructor 
+  /// virtual destructor
   virtual ~BaseSimEvent();
- 
+
   virtual ProxyRef proxy() const =0;
 
   /// return track container
@@ -24858,7 +24858,7 @@ class SimEventBody;
 
 
 
-/**   a persistent Sim event 
+/**   a persistent Sim event
  */
 class SimEvent : public ooEvObj, public BaseSimEvent{
 
@@ -24873,7 +24873,7 @@ public:
   /// construct from transient
   SimEvent(const Id & iid, const TSimEvent& tev, opiRefBase genHint=opiRefBase(), opiRefBase bodyHint=opiRefBase());
 
-  /// virtual destructor 
+  /// virtual destructor
   virtual ~SimEvent();
 
   /// (deep) copy (if hint is valid, deep copy performed....
@@ -24893,16 +24893,16 @@ public:
   ///
   virtual const EmbdGenParticle & embdGenpart(int i) const;
 
- 
-  virtual BaseSimEvent::ProxyRef proxy() const; 
+
+  virtual BaseSimEvent::ProxyRef proxy() const;
    /// return track container
-  virtual BaseSimEvent::track_containerRef tracks() const; 
+  virtual BaseSimEvent::track_containerRef tracks() const;
   /// return vertex container
   /// return MC track container
-  virtual BaseSimEvent::vertex_containerRef vertices() const; 
+  virtual BaseSimEvent::vertex_containerRef vertices() const;
 
-  virtual BaseSimEvent::genpart_containerRef genparts() const; 
- 
+  virtual BaseSimEvent::genpart_containerRef genparts() const;
+
 
   virtual const opiRef< SmartRun > & run() const;
 
@@ -24927,7 +24927,7 @@ protected:
 
   opiRefBase  hits_;
 
-  private: static TClass *fgIsA; public: static TClass *Class(); static const char *Class_Name(); static Version_t Class_Version() { return   1  ; } static void Dictionary(); virtual TClass *IsA() const { return   SimEvent  ::Class(); } virtual void ShowMembers(TMemberInspector &insp, char *parent); virtual void Streamer(TBuffer &b); void StreamerNVirtual(TBuffer &b) {   SimEvent  ::Streamer(b); } static const char *DeclFileName() { return "CARF/SimEvent/interface/SimEvent.h"; } static int ImplFileLine(); static const char *ImplFileName();  static int DeclFileLine() { return 128; } 
+  private: static TClass *fgIsA; public: static TClass *Class(); static const char *Class_Name(); static Version_t Class_Version() { return   1  ; } static void Dictionary(); virtual TClass *IsA() const { return   SimEvent  ::Class(); } virtual void ShowMembers(TMemberInspector &insp, char *parent); virtual void Streamer(TBuffer &b); void StreamerNVirtual(TBuffer &b) {   SimEvent  ::Streamer(b); } static const char *DeclFileName() { return "CARF/SimEvent/interface/SimEvent.h"; } static int ImplFileLine(); static const char *ImplFileName();  static int DeclFileLine() { return 128; }
 };
 
 
@@ -24951,7 +24951,7 @@ public:
   /// construct from transient
   SimEventWithGen(const Id & iid, const TSimEvent& tev, opiRefBase genHint=opiRefBase(), opiRefBase bodyHint=opiRefBase());
 
-  /// virtual destructor 
+  /// virtual destructor
   virtual ~SimEventWithGen();
 
   /// (deep) copy (if hint is valid, deep copy performed....
@@ -24959,8 +24959,8 @@ public:
 
   /// clone
   virtual opiRef< SimEvent >  clone(opiRefBase hint, opiRefBase genHint=opiRefBase(), opiRefBase bodyHint=opiRefBase(), opiRefBase hitHint=opiRefBase());
-  
-  private: static TClass *fgIsA; public: static TClass *Class(); static const char *Class_Name(); static Version_t Class_Version() { return   1  ; } static void Dictionary(); virtual TClass *IsA() const { return   SimEventWithGen  ::Class(); } virtual void ShowMembers(TMemberInspector &insp, char *parent); virtual void Streamer(TBuffer &b); void StreamerNVirtual(TBuffer &b) {   SimEventWithGen  ::Streamer(b); } static const char *DeclFileName() { return "CARF/SimEvent/interface/SimEventWithGen.h"; } static int ImplFileLine(); static const char *ImplFileName();  static int DeclFileLine() { return 40; } 
+
+  private: static TClass *fgIsA; public: static TClass *Class(); static const char *Class_Name(); static Version_t Class_Version() { return   1  ; } static void Dictionary(); virtual TClass *IsA() const { return   SimEventWithGen  ::Class(); } virtual void ShowMembers(TMemberInspector &insp, char *parent); virtual void Streamer(TBuffer &b); void StreamerNVirtual(TBuffer &b) {   SimEventWithGen  ::Streamer(b); } static const char *DeclFileName() { return "CARF/SimEvent/interface/SimEventWithGen.h"; } static int ImplFileLine(); static const char *ImplFileName();  static int DeclFileLine() { return 40; }
 };
 /* !defined(_SIM_EVENT_WITH_GEN_H) */
 # 13 "CARF/PythiaSimEvent/interface/PythiaSimEvent.h" 2
@@ -24970,7 +24970,7 @@ public:
 
 //
 //
-//   V 0.0 
+//   V 0.0
 //
 
 # 1 "CARF/SimEvent/interface/TSimGenEvent.h" 1
@@ -24978,7 +24978,7 @@ public:
 
 //
 //
-//   V 0.1  VI 8/10/2000 
+//   V 0.1  VI 8/10/2000
 //          just an interface
 
 
@@ -25043,7 +25043,7 @@ public:
   /// construct from transient
   PythiaSimEvent(const TPythiaSimEvent & pse, const Id & iid, const TSimEvent& tev, opiRefBase genHint=opiRefBase(), opiRefBase bodyHint=opiRefBase());
 
-  /// virtual destructor 
+  /// virtual destructor
 virtual ~PythiaSimEvent();
 
   /// (deep) copy (if hint is valid, deep copy performed....
@@ -25052,7 +25052,7 @@ virtual ~PythiaSimEvent();
   /// clone
   virtual opiRef< SimEvent >  clone(opiRefBase hint, opiRefBase genHint=opiRefBase(), opiRefBase bodyHint=opiRefBase(), opiRefBase hitHint=opiRefBase());
 
-  private: static TClass *fgIsA; public: static TClass *Class(); static const char *Class_Name(); static Version_t Class_Version() { return   1  ; } static void Dictionary(); virtual TClass *IsA() const { return   PythiaSimEvent  ::Class(); } virtual void ShowMembers(TMemberInspector &insp, char *parent); virtual void Streamer(TBuffer &b); void StreamerNVirtual(TBuffer &b) {   PythiaSimEvent  ::Streamer(b); } static const char *DeclFileName() { return "CARF/PythiaSimEvent/interface/PythiaSimEvent.h"; } static int ImplFileLine(); static const char *ImplFileName();  static int DeclFileLine() { return 40; } 
+  private: static TClass *fgIsA; public: static TClass *Class(); static const char *Class_Name(); static Version_t Class_Version() { return   1  ; } static void Dictionary(); virtual TClass *IsA() const { return   PythiaSimEvent  ::Class(); } virtual void ShowMembers(TMemberInspector &insp, char *parent); virtual void Streamer(TBuffer &b); void StreamerNVirtual(TBuffer &b) {   PythiaSimEvent  ::Streamer(b); } static const char *DeclFileName() { return "CARF/PythiaSimEvent/interface/PythiaSimEvent.h"; } static int ImplFileLine(); static const char *ImplFileName();  static int DeclFileLine() { return 40; }
 };
 /* !defined(_PYTHIA_SIM_EVENT_H) */
 # 1 "CARF/PythiaSimEvent/src/PythiaSimEventLinkDef.h" 2
@@ -25064,8 +25064,8 @@ virtual ~PythiaSimEvent();
 
 
 //
-//   Based on 
-//   V 0.1  VI 8/10/2000 
+//   Based on
+//   V 0.1  VI 8/10/2000
 //          a SimEvent with Phytia generator infos
 //          MM 5/07/2001
 //          Extended parameters for B physics
@@ -25078,7 +25078,7 @@ virtual ~PythiaSimEvent();
 
 //
 //
-//   V 0.0 
+//   V 0.0
 //
 
 
@@ -25150,7 +25150,7 @@ public:
   /// construct from transient
   BBPyth01SimEvent(const TBBPyth01SimEvent & pse, const Id & iid, const TSimEvent& tev, opiRefBase genHint=opiRefBase(), opiRefBase bodyHint=opiRefBase());
 
-  /// virtual destructor 
+  /// virtual destructor
 virtual ~BBPyth01SimEvent();
 
   /// (deep) copy (if hint is valid, deep copy performed....
@@ -25159,7 +25159,7 @@ virtual ~BBPyth01SimEvent();
   /// clone
   virtual opiRef< SimEvent >  clone(opiRefBase hint, opiRefBase genHint=opiRefBase(), opiRefBase bodyHint=opiRefBase(), opiRefBase hitHint=opiRefBase());
 
-  private: static TClass *fgIsA; public: static TClass *Class(); static const char *Class_Name(); static Version_t Class_Version() { return   1  ; } static void Dictionary(); virtual TClass *IsA() const { return   BBPyth01SimEvent  ::Class(); } virtual void ShowMembers(TMemberInspector &insp, char *parent); virtual void Streamer(TBuffer &b); void StreamerNVirtual(TBuffer &b) {   BBPyth01SimEvent  ::Streamer(b); } static const char *DeclFileName() { return "CARF/PythiaSimEvent/interface/BBPyth01SimEvent.h"; } static int ImplFileLine(); static const char *ImplFileName();  static int DeclFileLine() { return 42; } 
+  private: static TClass *fgIsA; public: static TClass *Class(); static const char *Class_Name(); static Version_t Class_Version() { return   1  ; } static void Dictionary(); virtual TClass *IsA() const { return   BBPyth01SimEvent  ::Class(); } virtual void ShowMembers(TMemberInspector &insp, char *parent); virtual void Streamer(TBuffer &b); void StreamerNVirtual(TBuffer &b) {   BBPyth01SimEvent  ::Streamer(b); } static const char *DeclFileName() { return "CARF/PythiaSimEvent/interface/BBPyth01SimEvent.h"; } static int ImplFileLine(); static const char *ImplFileName();  static int DeclFileLine() { return 42; }
 };
 /* !defined(_BBPYTH01_SIM_EVENT_H) */
 # 2 "CARF/PythiaSimEvent/src/PythiaSimEventLinkDef.h" 2
@@ -25171,13 +25171,13 @@ virtual ~BBPyth01SimEvent();
 
 
 //
-//   Based on 
-//   V 0.1  VI 8/10/2000 
+//   Based on
+//   V 0.1  VI 8/10/2000
 //          a SimEvent with Phytia generator infos
 //          MM 5/07/2001
 //          Extended parameters for B physics
 // Modification for Miminum Bias Studies L.S. 14/02/02
-// 
+//
 
 
 # 1 "CARF/PythiaSimEvent/interface/TMBPythSimEvent.h" 1
@@ -25185,14 +25185,14 @@ virtual ~BBPyth01SimEvent();
 
 //
 //
-//   V 0.0 
+//   V 0.0
 //   L 0.1
 
 
 
 
 /** speciifc Minimum Bias Pythia stuff ...
-    Information stored are pthat and MSEL and ISUB (Sub Process) values 
+    Information stored are pthat and MSEL and ISUB (Sub Process) values
     used in the production
 */
 
@@ -25217,7 +25217,7 @@ public:
 
   float nparam() const { return npara_;}
   float pthat()  const { return pthat_;}
-  float msel()   const { return msel_;} 
+  float msel()   const { return msel_;}
   float subp()   const { return subp_;}
 
 private:
@@ -25248,7 +25248,7 @@ public:
   /// construct from transient
   MBPythSimEvent(const TMBPythSimEvent & pse, const Id & iid, const TSimEvent& tev, opiRefBase genHint=opiRefBase(), opiRefBase bodyHint=opiRefBase());
 
-  /// virtual destructor 
+  /// virtual destructor
 virtual ~MBPythSimEvent();
 
   /// (deep) copy (if hint is valid, deep copy performed....
@@ -25257,7 +25257,7 @@ virtual ~MBPythSimEvent();
   /// clone
   virtual opiRef< SimEvent >  clone(opiRefBase hint, opiRefBase genHint=opiRefBase(), opiRefBase bodyHint=opiRefBase(), opiRefBase hitHint=opiRefBase());
 
-  private: static TClass *fgIsA; public: static TClass *Class(); static const char *Class_Name(); static Version_t Class_Version() { return   1  ; } static void Dictionary(); virtual TClass *IsA() const { return   MBPythSimEvent  ::Class(); } virtual void ShowMembers(TMemberInspector &insp, char *parent); virtual void Streamer(TBuffer &b); void StreamerNVirtual(TBuffer &b) {   MBPythSimEvent  ::Streamer(b); } static const char *DeclFileName() { return "CARF/PythiaSimEvent/interface/MBPythSimEvent.h"; } static int ImplFileLine(); static const char *ImplFileName();  static int DeclFileLine() { return 42; } 
+  private: static TClass *fgIsA; public: static TClass *Class(); static const char *Class_Name(); static Version_t Class_Version() { return   1  ; } static void Dictionary(); virtual TClass *IsA() const { return   MBPythSimEvent  ::Class(); } virtual void ShowMembers(TMemberInspector &insp, char *parent); virtual void Streamer(TBuffer &b); void StreamerNVirtual(TBuffer &b) {   MBPythSimEvent  ::Streamer(b); } static const char *DeclFileName() { return "CARF/PythiaSimEvent/interface/MBPythSimEvent.h"; } static int ImplFileLine(); static const char *ImplFileName();  static int DeclFileLine() { return 42; }
 };
 /* !defined(_MBPYTH_SIM_EVENT_H) */
 # 3 "CARF/PythiaSimEvent/src/PythiaSimEventLinkDef.h" 2

@@ -135,9 +135,6 @@ TXMLFile::TXMLFile(const char *filename, Option_t *option, const char *title, In
    fUnits = 4;
    fOption = option;
    SetCompressionSettings(compression);
-   fWritten = 0;
-   fSumBuffer = 0;
-   fSum2Buffer = 0;
    fBytesRead = 0;
    fBytesWrite = 0;
    fClassIndex = nullptr;

@@ -149,8 +149,6 @@ public:
    enum ECacheAction { kDisconnect = 0, kDoNotDisconnect = 1 };
 
 protected:
-   Double_t         fSumBuffer{0};            ///<Sum of buffer sizes of objects written so far
-   Double_t         fSum2Buffer{0};           ///<Sum of squares of buffer sizes of objects written so far
    Long64_t         fBytesWrite{0};           ///<Number of bytes written to this file
    Long64_t         fBytesRead{0};            ///<Number of bytes read from this file
    Long64_t         fBytesReadExtra{0};       ///<Number of extra bytes (overhead) read by the readahead buffer
@@ -163,7 +161,6 @@ protected:
    Int_t            fCompress{0};             ///<Compression level and algorithm
    Int_t            fNbytesFree{0};           ///<Number of bytes for free segments structure
    Int_t            fNbytesInfo{0};           ///<Number of bytes for StreamerInfo record
-   Int_t            fWritten{0};              ///<Number of objects written so far
    Int_t            fNProcessIDs{0};          ///<Number of TProcessID written to this file
    Int_t            fReadCalls{0};            ///<Number of read calls ( not counting the cache calls )
    TString          fRealName;                ///<Effective real file name (not original url)
@@ -372,7 +369,6 @@ public:
    virtual void        SetReadCalls(Int_t readcalls = 0) { fReadCalls = readcalls; }
    virtual void        ShowStreamerInfo();
            Int_t       Sizeof() const override;
-           void        SumBuffer(Int_t bufsize);
    virtual Bool_t      WriteBuffer(const char *buf, Int_t len);
            Int_t       Write(const char *name=nullptr, Int_t opt=0, Int_t bufsiz=0) override;
            Int_t       Write(const char *name=nullptr, Int_t opt=0, Int_t bufsiz=0) const override;

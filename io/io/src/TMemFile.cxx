@@ -332,9 +332,6 @@ void TMemFile::ResetAfterMerge(TFileMergeInfo *info)
       delete fFree;
       fFree      = nullptr;
    }
-   fWritten      = 0;
-   fSumBuffer    = 0;
-   fSum2Buffer   = 0;
    fBytesRead    = 0;
    fBytesReadExtra = 0;
    fBytesWrite   = 0;

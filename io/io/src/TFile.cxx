@@ -2424,16 +2424,6 @@ void TFile::Streamer(TBuffer &b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Increment statistics for buffer sizes of objects in this file.
-
-void TFile::SumBuffer(Int_t bufsize)
-{
-   fWritten++;
-   fSumBuffer  += double(bufsize);
-   fSum2Buffer += double(bufsize) * double(bufsize); // avoid reaching MAXINT for temporary
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Write memory objects to this file.
 ///
 /// Loop on all objects in memory (including subdirectories).
@@ -3508,7 +3498,6 @@ void TFile::WriteStreamerInfo()
    fKeys->Remove(&key);
    fSeekInfo   = key.GetSeekKey();
    fNbytesInfo = key.GetNbytes();
-   SumBuffer(key.GetObjlen());
    key.WriteFile(0);
 
    fClassIndex->fArray[0] = 0;

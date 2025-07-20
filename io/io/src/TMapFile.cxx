@@ -227,9 +227,6 @@ TMapFile::TMapFile()
    fSemaphore   = -1;
    fhSemaphore  = 0;
    fGetting     = nullptr;
-   fWritten     = 0;
-   fSumBuffer   = 0;
-   fSum2Buffer  = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -263,9 +260,6 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
    fDirectory   = nullptr;
    fBrowseList  = nullptr;
    fGetting     = nullptr;
-   fWritten     = 0;
-   fSumBuffer   = 0;
-   fSum2Buffer  = 0;
 
    char  *cleanup = nullptr;
    Bool_t create  = kFALSE;
@@ -541,9 +535,6 @@ TMapFile::TMapFile(const TMapFile &f, Longptr_t offset) : TVirtualMapFile(f)
    fDirectory   = nullptr;
    fBrowseList  = nullptr;
    fGetting     = nullptr;
-   fWritten     = f.fWritten;
-   fSumBuffer   = f.fSumBuffer;
-   fSum2Buffer  = f.fSum2Buffer;
 #ifdef WIN32
    CreateSemaphore(fSemaphore);
 #else
@@ -681,7 +672,6 @@ void TMapFile::Update(TObject *obj)
          mr->fObject->Streamer(*b);
          mr->fBufSize = b->BufferSize() + 8; // extra space at end of buffer (used for free block count) there on
          mr->fBuffer  = b->Buffer();
-         SumBuffer(b->Length());
          b->DetachBuffer();
          delete b;
       }
@@ -1120,16 +1110,6 @@ void TMapFile::ls(Option_t *) const
       ((TMapFile*)this)->ReleaseSemaphore();
 
    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Increment statistics for buffer sizes of objects in this file.
-
-void TMapFile::SumBuffer(Int_t bufsize)
-{
-   fWritten++;
-   fSumBuffer  += bufsize;
-   fSum2Buffer += bufsize*bufsize;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

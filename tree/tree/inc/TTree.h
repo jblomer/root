@@ -733,8 +733,8 @@ public:
    virtual Int_t           StopCacheLearningPhase();
    virtual Int_t           UnbinnedFit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
            void            UseCurrentStyle() override;
-           Int_t           Write(const char *name=nullptr, Int_t option=0, Int_t bufsize=0) override;
-           Int_t           Write(const char *name=nullptr, Int_t option=0, Int_t bufsize=0) const override;
+           Int_t           Write(const char *name=nullptr, Int_t option=0) override;
+           Int_t           Write(const char *name=nullptr, Int_t option=0) const override;
 
    ClassDefOverride(TTree, 20) // Tree descriptor (the main ROOT I/O class)
 };

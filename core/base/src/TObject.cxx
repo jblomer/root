@@ -907,10 +907,6 @@ void TObject::UseCurrentStyle()
 ///
 ///  - The buffer is written to the file.
 ///
-///  Bufsize can be given to force a given buffer size to write this object.
-///  By default, the buffersize will be taken from the average buffer size
-///  of all objects written to the current file so far.
-///
 ///  If a name is specified, it will be the name of the key.
 ///  If name is not given, the name of the key will be the name as returned
 ///  by GetName().
@@ -939,7 +935,7 @@ void TObject::UseCurrentStyle()
 ///  The function returns the total number of bytes written to the file.
 ///  It returns 0 if the object cannot be written.
 
-Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize) const
+Int_t TObject::Write(const char *name, Int_t option) const
 {
    if (R__unlikely(option & kOnlyPrepStep))
       return 0;
@@ -950,7 +946,7 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize) const
    if (option & kWriteDelete) opt += "WriteDelete";
 
    if (gDirectory)
-      return gDirectory->WriteTObject(this,name,opt.Data(),bufsize);
+      return gDirectory->WriteTObject(this,name,opt.Data());
 
    const char *objname = name ? name : GetName();
    Error("Write","The current directory (gDirectory) is null. The object (%s) has not been written.",objname);
@@ -961,9 +957,9 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize) const
 /// Write this object to the current directory. For more see the
 /// const version of this method.
 
-Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
+Int_t TObject::Write(const char *name, Int_t option)
 {
-   return ((const TObject*)this)->Write(name, option, bufsize);
+   return ((const TObject*)this)->Write(name, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

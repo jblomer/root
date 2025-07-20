@@ -260,44 +260,42 @@ public:
    virtual void        SetSeekDir(Long64_t) {}
    virtual void        SetWritable(Bool_t) {}
            Int_t       Sizeof() const override {return 0;}
-   virtual Int_t       Write(const char * /*name*/=nullptr, Int_t /*opt*/=0, Int_t /*bufsize*/=0) override {return 0;}
-   virtual Int_t       Write(const char * /*name*/=nullptr, Int_t /*opt*/=0, Int_t /*bufsize*/=0) const override {return 0;}
-   virtual Int_t       WriteTObject(const TObject *obj, const char *name =nullptr, Option_t * /*option*/="", Int_t /*bufsize*/ =0);
+   virtual Int_t       Write(const char * /*name*/=nullptr, Int_t /*opt*/=0) override {return 0;}
+   virtual Int_t       Write(const char * /*name*/=nullptr, Int_t /*opt*/=0) const override {return 0;}
+   virtual Int_t       WriteTObject(const TObject *obj, const char *name =nullptr, Option_t * /*option*/="");
 private:
 /// \cond HIDDEN_SYMBOLS
-           Int_t       WriteObject(void *obj, const char* name, Option_t *option="", Int_t bufsize=0); // Intentionally not implemented.
+           Int_t       WriteObject(void *obj, const char* name, Option_t *option=""); // Intentionally not implemented.
 /// \endcond
 public:
    /// \brief Write an object with proper type checking.
    /// \param[in] obj Pointer to an object to be written.
    /// \param[in] name Name of the object in the file.
    /// \param[in] option Options. See TDirectoryFile::WriteTObject.
-   /// \param[in] bufsize Buffer size. See TDirectoryFile::WriteTObject.
    ///
    /// This overload takes care of instances of classes that are not derived
    /// from TObject. The method redirects to TDirectory::WriteObjectAny.
    template <typename T>
    inline std::enable_if_t<!std::is_base_of<TObject, T>::value, Int_t>
-   WriteObject(const T *obj, const char *name, Option_t *option = "", Int_t bufsize = 0)
+   WriteObject(const T *obj, const char *name, Option_t *option = "")
    {
-      return WriteObjectAny(obj, TClass::GetClass<T>(), name, option, bufsize);
+      return WriteObjectAny(obj, TClass::GetClass<T>(), name, option);
    }
    /// \brief Write an object with proper type checking.
    /// \param[in] obj Pointer to an object to be written.
    /// \param[in] name Name of the object in the file.
    /// \param[in] option Options. See TDirectoryFile::WriteTObject.
-   /// \param[in] bufsize Buffer size. See TDirectoryFile::WriteTObject.
    ///
    /// This overload takes care of instances of classes that are derived from
    /// TObject. The method redirects to TDirectory::WriteTObject.
    template <typename T>
    inline std::enable_if_t<std::is_base_of<TObject, T>::value, Int_t>
-   WriteObject(const T *obj, const char *name, Option_t *option = "", Int_t bufsize = 0)
+   WriteObject(const T *obj, const char *name, Option_t *option = "")
    {
-      return WriteTObject(obj, name, option, bufsize);
+      return WriteTObject(obj, name, option);
    }
-   virtual Int_t       WriteObjectAny(const void *, const char * /*classname*/, const char * /*name*/, Option_t * /*option*/="", Int_t /*bufsize*/ =0) {return 0;}
-   virtual Int_t       WriteObjectAny(const void *, const TClass * /*cl*/, const char * /*name*/, Option_t * /*option*/="", Int_t /*bufsize*/ =0) {return 0;}
+   virtual Int_t       WriteObjectAny(const void *, const char * /*classname*/, const char * /*name*/, Option_t * /*option*/="") {return 0;}
+   virtual Int_t       WriteObjectAny(const void *, const TClass * /*cl*/, const char * /*name*/, Option_t * /*option*/="") {return 0;}
    virtual void        WriteDirHeader() {}
    virtual void        WriteKeys() {}
 

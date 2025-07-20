@@ -1826,7 +1826,7 @@ void TDirectoryFile::Streamer(TBuffer &b)
 /// For allowed options see TObject::Write().
 /// The directory header info is rewritten on the directory header record.
 
-Int_t TDirectoryFile::Write(const char *, Int_t opt, Int_t bufsize)
+Int_t TDirectoryFile::Write(const char *, Int_t opt)
 {
    if (!IsWritable()) return 0;
    TDirectory::TContext ctxt(this);
@@ -1836,7 +1836,7 @@ Int_t TDirectoryFile::Write(const char *, Int_t opt, Int_t bufsize)
    TObject *obj;
    Int_t nbytes = 0;
    while ((obj=next())) {
-      nbytes += obj->Write(0,opt,bufsize);
+      nbytes += obj->Write(0,opt);
    }
    if (R__likely(!(opt & kOnlyPrepStep)))
       SaveSelf(kTRUE);   // force save itself
@@ -1847,10 +1847,10 @@ Int_t TDirectoryFile::Write(const char *, Int_t opt, Int_t bufsize)
 ////////////////////////////////////////////////////////////////////////////////
 /// One can not save a const TDirectory object.
 
-Int_t TDirectoryFile::Write(const char *n, Int_t opt, Int_t bufsize) const
+Int_t TDirectoryFile::Write(const char *n, Int_t opt) const
 {
    Error("Write const","A const TDirectory object should not be saved. We try to proceed anyway.");
-   return const_cast<TDirectoryFile*>(this)->Write(n, opt, bufsize);
+   return const_cast<TDirectoryFile*>(this)->Write(n, opt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1893,7 +1893,7 @@ Int_t TDirectoryFile::Write(const char *n, Int_t opt, Int_t bufsize) const
 /// WARNING: avoid special characters like '^','$','.' in the name as they
 /// are used by the regular expression parser (see TRegexp).
 
-Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_t *option, Int_t bufsize)
+Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_t *option)
 {
    TDirectory::TContext ctxt(this);
 
@@ -2002,7 +2002,7 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
 /// ~~~
 /// See also remarks in TDirectoryFile::WriteTObject
 
-Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option, Int_t bufsize)
+Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option)
 {
    TClass *cl = TClass::GetClass(classname);
    if (!cl) {
@@ -2015,7 +2015,7 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, con
          cl = info->GetClass();
       }
    }
-   return WriteObjectAny(obj,cl,name,option,bufsize);
+   return WriteObjectAny(obj,cl,name,option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2029,7 +2029,7 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, con
 /// An alternative is to call the function WriteObjectAny above.
 /// see TDirectoryFile::WriteTObject for comments
 
-Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option, Int_t bufsize)
+Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option)
 {
    TDirectory::TContext ctxt(this);
 

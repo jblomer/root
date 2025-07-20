@@ -26,12 +26,12 @@ TBufferMergerFile::~TBufferMergerFile()
 {
 }
 
-Int_t TBufferMergerFile::Write(const char *name, Int_t opt, Int_t bufsize)
+Int_t TBufferMergerFile::Write(const char *name, Int_t opt)
 {
    // Make sure the compression of the basket is done in the unlocked thread and
    // not in the locked section.
    if (!fMerger.GetNotrees())
-      TMemFile::Write(name, opt | TObject::kOnlyPrepStep, bufsize);
+      TMemFile::Write(name, opt | TObject::kOnlyPrepStep);
 
    // Merge using the live TTree.
    fMerger.Merge(this);

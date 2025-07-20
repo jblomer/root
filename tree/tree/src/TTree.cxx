@@ -9957,21 +9957,21 @@ void TTree::UseCurrentStyle()
 /// Write this object to the current directory. For more see TObject::Write
 /// If option & kFlushBasket, call FlushBasket before writing the tree.
 
-Int_t TTree::Write(const char *name, Int_t option, Int_t bufsize) const
+Int_t TTree::Write(const char *name, Int_t option) const
 {
    FlushBasketsImpl();
    if (R__unlikely(option & kOnlyPrepStep))
       return 0;
-   return TObject::Write(name, option, bufsize);
+   return TObject::Write(name, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write this object to the current directory. For more see TObject::Write
 /// If option & kFlushBasket, call FlushBasket before writing the tree.
 
-Int_t TTree::Write(const char *name, Int_t option, Int_t bufsize)
+Int_t TTree::Write(const char *name, Int_t option)
 {
-   return ((const TTree*)this)->Write(name, option, bufsize);
+   return ((const TTree*)this)->Write(name, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

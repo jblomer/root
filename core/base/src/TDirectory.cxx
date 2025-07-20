@@ -1423,7 +1423,7 @@ void TDirectory::RegisterGDirectory(TDirectory::SharedGDirectory_t &gdirectory_p
 ////////////////////////////////////////////////////////////////////////////////
 /// \copydoc TDirectoryFile::WriteObject(const T*,const char*,Option_t*,Int_t).
 
-Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t * /*option*/, Int_t /*bufsize*/)
+Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t * /*option*/)
 {
    const char *objname = "no name specified";
    if (name) objname = name;

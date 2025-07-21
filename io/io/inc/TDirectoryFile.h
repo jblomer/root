@@ -119,10 +119,10 @@ public:
            Int_t       Sizeof() const override;
            size_t      Write(const char *name=nullptr, Int_t opt=0) override;
            size_t      Write(const char *name=nullptr, Int_t opt=0) const override;
-           Int_t       WriteTObject(const TObject *obj, const char *name=nullptr, Option_t *option="") final;
-           Int_t       WriteObjectAny(const void *obj, const char *classname, const char *name,
+           size_t      WriteTObject(const TObject *obj, const char *name=nullptr, Option_t *option="") final;
+           size_t      WriteObjectAny(const void *obj, const char *classname, const char *name,
                                       Option_t *option="") final;
-           Int_t       WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option="") final;
+           size_t      WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option="") final;
            void        WriteDirHeader() override;
            void        WriteKeys() override;
 

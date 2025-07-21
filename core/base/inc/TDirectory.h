@@ -262,10 +262,10 @@ public:
            Int_t       Sizeof() const override {return 0;}
    virtual size_t      Write(const char * /*name*/=nullptr, Int_t /*opt*/=0) override {return 0;}
    virtual size_t      Write(const char * /*name*/=nullptr, Int_t /*opt*/=0) const override {return 0;}
-   virtual Int_t       WriteTObject(const TObject *obj, const char *name =nullptr, Option_t * /*option*/="");
+   virtual size_t      WriteTObject(const TObject *obj, const char *name =nullptr, Option_t * /*option*/="");
 private:
 /// \cond HIDDEN_SYMBOLS
-           Int_t       WriteObject(void *obj, const char* name, Option_t *option=""); // Intentionally not implemented.
+           size_t      WriteObject(void *obj, const char* name, Option_t *option=""); // Intentionally not implemented.
 /// \endcond
 public:
    /// \brief Write an object with proper type checking.
@@ -276,7 +276,7 @@ public:
    /// This overload takes care of instances of classes that are not derived
    /// from TObject. The method redirects to TDirectory::WriteObjectAny.
    template <typename T>
-   inline std::enable_if_t<!std::is_base_of<TObject, T>::value, Int_t>
+   inline std::enable_if_t<!std::is_base_of<TObject, T>::value, size_t>
    WriteObject(const T *obj, const char *name, Option_t *option = "")
    {
       return WriteObjectAny(obj, TClass::GetClass<T>(), name, option);
@@ -289,13 +289,15 @@ public:
    /// This overload takes care of instances of classes that are derived from
    /// TObject. The method redirects to TDirectory::WriteTObject.
    template <typename T>
-   inline std::enable_if_t<std::is_base_of<TObject, T>::value, Int_t>
+   inline std::enable_if_t<std::is_base_of<TObject, T>::value, size_t>
    WriteObject(const T *obj, const char *name, Option_t *option = "")
    {
       return WriteTObject(obj, name, option);
    }
-   virtual Int_t       WriteObjectAny(const void *, const char * /*classname*/, const char * /*name*/, Option_t * /*option*/="") {return 0;}
-   virtual Int_t       WriteObjectAny(const void *, const TClass * /*cl*/, const char * /*name*/, Option_t * /*option*/="") {return 0;}
+   virtual size_t      WriteObjectAny(const void *, const char * /*classname*/, const char * /*name*/,
+                                      Option_t * /*option*/="") { return 0; }
+   virtual size_t      WriteObjectAny(const void *, const TClass * /*cl*/, const char * /*name*/,
+                                      Option_t * /*option*/="") { return 0; }
    virtual void        WriteDirHeader() {}
    virtual void        WriteKeys() {}
 

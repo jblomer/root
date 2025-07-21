@@ -1893,15 +1893,19 @@ size_t TDirectoryFile::Write(const char *n, Int_t opt) const
 /// WARNING: avoid special characters like '^','$','.' in the name as they
 /// are used by the regular expression parser (see TRegexp).
 
-Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_t *option)
+size_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_t *option)
 {
    TDirectory::TContext ctxt(this);
 
    if (fFile==0) {
       const char *objname = "no name specified";
-      if (name) objname = name;
-      else if (obj) objname = obj->GetName();
-      Error("WriteTObject","The current directory (%s) is not associated with a file. The object (%s) has not been written.",GetName(),objname);
+      if (name) {
+         objname = name;
+      } else if (obj) {
+         objname = obj->GetName();
+      }
+      Error("WriteTObject","The current directory (%s) is not associated with a file. "
+            "The object (%s) has not been written.", GetName(), objname);
       return 0;
    }
 
@@ -1961,7 +1965,7 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
       delete key;
       return 0;
    }
-   Int_t nbytes = key->WriteFile(0);
+   size_t nbytes = key->WriteFile(0);
    if (fFile->TestBit(TFile::kWriteError)) {
       return 0;
    }
@@ -2002,11 +2006,11 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
 /// ~~~
 /// See also remarks in TDirectoryFile::WriteTObject
 
-Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option)
+size_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option)
 {
    TClass *cl = TClass::GetClass(classname);
    if (!cl) {
-      TObject *info_obj = *(TObject**)obj;
+      TObject *info_obj = *(TObject**)obj; // TODO: is this safe?
       TVirtualStreamerInfo *info = dynamic_cast<TVirtualStreamerInfo*>(info_obj);
       if (!info) {
          Error("WriteObjectAny","Unknown class: %s",classname);
@@ -2029,14 +2033,14 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, con
 /// An alternative is to call the function WriteObjectAny above.
 /// see TDirectoryFile::WriteTObject for comments
 
-Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option)
+size_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option)
 {
    TDirectory::TContext ctxt(this);
 
    if (!fFile) return 0;
 
    if (!cl) {
-      Error("WriteObject","Unknown type for %s, it can not be written.",name);
+      Error("WriteObject","Unknown type for %s, it can not be written.", name);
       return 0;
    }
 
@@ -2097,14 +2101,15 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
       oldkey = GetKey(oname);
    }
    key = fFile->CreateKey(this, obj, cl, oname, TBuffer::kInitialSize);
-   if (newName) delete [] newName;
+   if (newName)
+      delete[] newName;
 
    if (!key->GetSeekKey()) {
       fKeys->Remove(key);
       delete key;
       return 0;
    }
-   Int_t nbytes = key->WriteFile(0);
+   size_t nbytes = key->WriteFile(0);
    if (fFile->TestBit(TFile::kWriteError)) return 0;
 
    if (oldkey) {

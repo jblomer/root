@@ -1423,12 +1423,16 @@ void TDirectory::RegisterGDirectory(TDirectory::SharedGDirectory_t &gdirectory_p
 ////////////////////////////////////////////////////////////////////////////////
 /// \copydoc TDirectoryFile::WriteObject(const T*,const char*,Option_t*,Int_t).
 
-Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t * /*option*/)
+size_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t * /*option*/)
 {
    const char *objname = "no name specified";
-   if (name) objname = name;
-   else if (obj) objname = obj->GetName();
-   Error("WriteTObject","The current directory (%s) is not associated with a file. The object (%s) has not been written.",GetName(),objname);
+   if (name) {
+      objname = name;
+   } else if (obj) {
+      objname = obj->GetName();
+   }
+   Error("WriteTObject","The current directory (%s) is not associated with a file. "
+         "The object (%s) has not been written.", GetName(), objname);
    return 0;
 }
 

@@ -676,13 +676,13 @@ void TCollection::Streamer(TBuffer &b)
 /// objects using a single key specify a name and set option to
 /// TObject::kSingleKey (i.e. 1).
 
-Int_t TCollection::Write(const char *name, Int_t option) const
+size_t TCollection::Write(const char *name, Int_t option) const
 {
    if ((option & kSingleKey)) {
       return TObject::Write(name, option);
    } else {
       option &= ~kSingleKey;
-      Int_t nbytes = 0;
+      size_t nbytes = 0;
       TIter next(this);
       TObject *obj;
       while ((obj = next())) {
@@ -700,9 +700,9 @@ Int_t TCollection::Write(const char *name, Int_t option) const
 /// objects using a single key specify a name and set option to
 /// TObject::kSingleKey (i.e. 1).
 
-Int_t TCollection::Write(const char *name, Int_t option)
+size_t TCollection::Write(const char *name, Int_t option)
 {
-   return ((const TCollection*)this)->Write(name,option);
+   return ((const TCollection*)this)->Write(name, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

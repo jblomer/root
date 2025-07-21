@@ -402,13 +402,13 @@ void TMap::Streamer(TBuffer &b)
 /// objects using a single key specify a name and set option to
 /// TObject::kSingleKey (i.e. 1).
 
-Int_t TMap::Write(const char *name, Int_t option) const
+size_t TMap::Write(const char *name, Int_t option) const
 {
    if ((option & kSingleKey)) {
       return TObject::Write(name, option);
    } else {
       option &= ~kSingleKey;
-      Int_t nbytes = 0;
+      size_t nbytes = 0;
       TIter next(fTable);
       TPair *a;
       while ((a = (TPair*) next())) {
@@ -429,7 +429,7 @@ Int_t TMap::Write(const char *name, Int_t option) const
 /// objects using a single key specify a name and set option to
 /// TObject::kSingleKey (i.e. 1).
 
-Int_t TMap::Write(const char *name, Int_t option)
+size_t TMap::Write(const char *name, Int_t option)
 {
    return ((const TMap*)this)->Write(name, option);
 }

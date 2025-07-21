@@ -91,8 +91,8 @@ public:
    Int_t Sizeof() const final { return 0; }
 
    Bool_t WriteBuffer(const char *, Int_t) final { return kFALSE; }
-   Int_t Write(const char * = nullptr, Int_t = 0) final { return 0; }
-   Int_t Write(const char * = nullptr, Int_t = 0) const final { return 0; }
+   size_t Write(const char * = nullptr, Int_t = 0) final { return 0; }
+   size_t Write(const char * = nullptr, Int_t = 0) const final { return 0; }
    void WriteFree() final {}
    void WriteHeader() final {}
    void WriteStreamerInfo() final;

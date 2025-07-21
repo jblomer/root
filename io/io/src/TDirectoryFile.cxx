@@ -1826,7 +1826,7 @@ void TDirectoryFile::Streamer(TBuffer &b)
 /// For allowed options see TObject::Write().
 /// The directory header info is rewritten on the directory header record.
 
-Int_t TDirectoryFile::Write(const char *, Int_t opt)
+size_t TDirectoryFile::Write(const char *, Int_t opt)
 {
    if (!IsWritable()) return 0;
    TDirectory::TContext ctxt(this);
@@ -1834,9 +1834,9 @@ Int_t TDirectoryFile::Write(const char *, Int_t opt)
    // Loop on all objects (including subdirs)
    TIter next(fList);
    TObject *obj;
-   Int_t nbytes = 0;
-   while ((obj=next())) {
-      nbytes += obj->Write(0,opt);
+   size_t nbytes = 0;
+   while ((obj = next())) {
+      nbytes += obj->Write(0, opt);
    }
    if (R__likely(!(opt & kOnlyPrepStep)))
       SaveSelf(kTRUE);   // force save itself
@@ -1847,7 +1847,7 @@ Int_t TDirectoryFile::Write(const char *, Int_t opt)
 ////////////////////////////////////////////////////////////////////////////////
 /// One can not save a const TDirectory object.
 
-Int_t TDirectoryFile::Write(const char *n, Int_t opt) const
+size_t TDirectoryFile::Write(const char *n, Int_t opt) const
 {
    Error("Write const","A const TDirectory object should not be saved. We try to proceed anyway.");
    return const_cast<TDirectoryFile*>(this)->Write(n, opt);

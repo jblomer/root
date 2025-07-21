@@ -2435,7 +2435,7 @@ void TFile::Streamer(TBuffer &b)
 /// The linked list of FREE segments is written.
 /// The file header is written (bytes 1->fBEGIN).
 
-Int_t TFile::Write(const char *, Int_t opt)
+size_t TFile::Write(const char *, Int_t opt)
 {
    if (!IsWritable()) {
       if (!TestBit(kWriteError)) {
@@ -2453,7 +2453,7 @@ Int_t TFile::Write(const char *, Int_t opt)
    }
 
    fMustFlush = kFALSE;
-   Int_t nbytes = TDirectoryFile::Write(0, opt); // Write directory tree
+   size_t nbytes = TDirectoryFile::Write(0, opt); // Write directory tree
    WriteStreamerInfo();
    WriteFree();                       // Write free segments linked list
    WriteHeader();                     // Now write file header
@@ -2465,7 +2465,7 @@ Int_t TFile::Write(const char *, Int_t opt)
 ////////////////////////////////////////////////////////////////////////////////
 /// One can not save a const TDirectory object.
 
-Int_t TFile::Write(const char *n, Int_t opt) const
+size_t TFile::Write(const char *n, Int_t opt) const
 {
    Error("Write const","A const TFile object should not be saved. We try to proceed anyway.");
    return const_cast<TFile*>(this)->Write(n, opt);

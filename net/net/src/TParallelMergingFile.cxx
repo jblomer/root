@@ -175,9 +175,9 @@ Bool_t TParallelMergingFile::UploadAndReset()
 /// The linked list of FREE segments is written.
 /// The file header is written (bytes 1->fBEGIN).
 
-Int_t TParallelMergingFile::Write(const char *, Int_t opt)
+size_t TParallelMergingFile::Write(const char *, Int_t opt)
 {
-   Int_t nbytes = TMemFile::Write(0, opt);
+   size_t nbytes = TMemFile::Write(0, opt);
    if (nbytes) {
       UploadAndReset();
    }
@@ -187,7 +187,7 @@ Int_t TParallelMergingFile::Write(const char *, Int_t opt)
 ////////////////////////////////////////////////////////////////////////////////
 /// One can not save a const TDirectory object.
 
-Int_t TParallelMergingFile::Write(const char *n, Int_t opt) const
+size_t TParallelMergingFile::Write(const char *n, Int_t opt) const
 {
    Error("Write const","A const TFile object should not be saved. We try to proceed anyway.");
    return const_cast<TParallelMergingFile*>(this)->Write(n, opt);

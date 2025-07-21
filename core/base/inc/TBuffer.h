@@ -63,9 +63,9 @@ protected:
    TBuffer(const TBuffer &) = delete;
    void operator=(const TBuffer &) = delete;
 
-   Int_t Read(const char *name) override { return TObject::Read(name); }
-   Int_t Write(const char *name, Int_t opt) override { return TObject::Write(name, opt); }
-   Int_t Write(const char *name, Int_t opt) const override { return TObject::Write(name, opt); }
+   Int_t  Read(const char *name) override { return TObject::Read(name); }
+   size_t Write(const char *name, Int_t opt) override { return TObject::Write(name, opt); }
+   size_t Write(const char *name, Int_t opt) const override { return TObject::Write(name, opt); }
 
 public:
    enum EMode { kRead = 0, kWrite = 1 };

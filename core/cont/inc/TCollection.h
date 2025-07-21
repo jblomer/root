@@ -206,8 +206,8 @@ public:
    void               SetName(const char *name) { fName = name; }
    virtual void       SetOwner(Bool_t enable = kTRUE);
    virtual bool       UseRWLock(Bool_t enable = true);
-   Int_t              Write(const char *name = nullptr, Int_t option = 0) override;
-   Int_t              Write(const char *name = nullptr, Int_t option = 0) const override;
+   size_t             Write(const char *name = nullptr, Int_t option = 0) override;
+   size_t             Write(const char *name = nullptr, Int_t option = 0) const override;
 
    R__ALWAYS_INLINE Bool_t IsUsingRWLock() const { return TestBit(TCollection::kUseRWLock); }
 

@@ -260,8 +260,8 @@ public:
    virtual void        SetSeekDir(Long64_t) {}
    virtual void        SetWritable(Bool_t) {}
            Int_t       Sizeof() const override {return 0;}
-   virtual Int_t       Write(const char * /*name*/=nullptr, Int_t /*opt*/=0) override {return 0;}
-   virtual Int_t       Write(const char * /*name*/=nullptr, Int_t /*opt*/=0) const override {return 0;}
+   virtual size_t      Write(const char * /*name*/=nullptr, Int_t /*opt*/=0) override {return 0;}
+   virtual size_t      Write(const char * /*name*/=nullptr, Int_t /*opt*/=0) const override {return 0;}
    virtual Int_t       WriteTObject(const TObject *obj, const char *name =nullptr, Option_t * /*option*/="");
 private:
 /// \cond HIDDEN_SYMBOLS

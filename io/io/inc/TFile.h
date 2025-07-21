@@ -370,8 +370,8 @@ public:
    virtual void        ShowStreamerInfo();
            Int_t       Sizeof() const override;
    virtual Bool_t      WriteBuffer(const char *buf, Int_t len);
-           Int_t       Write(const char *name=nullptr, Int_t opt=0) override;
-           Int_t       Write(const char *name=nullptr, Int_t opt=0) const override;
+           size_t      Write(const char *name=nullptr, Int_t opt=0) override;
+           size_t      Write(const char *name=nullptr, Int_t opt=0) const override;
    virtual void        WriteFree();
    virtual void        WriteHeader();
    virtual UShort_t    WriteProcessID(TProcessID *pid);

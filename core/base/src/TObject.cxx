@@ -935,7 +935,7 @@ void TObject::UseCurrentStyle()
 ///  The function returns the total number of bytes written to the file.
 ///  It returns 0 if the object cannot be written.
 
-Int_t TObject::Write(const char *name, Int_t option) const
+size_t TObject::Write(const char *name, Int_t option) const
 {
    if (R__unlikely(option & kOnlyPrepStep))
       return 0;
@@ -946,7 +946,7 @@ Int_t TObject::Write(const char *name, Int_t option) const
    if (option & kWriteDelete) opt += "WriteDelete";
 
    if (gDirectory)
-      return gDirectory->WriteTObject(this,name,opt.Data());
+      return gDirectory->WriteTObject(this, name, opt.Data());
 
    const char *objname = name ? name : GetName();
    Error("Write","The current directory (gDirectory) is null. The object (%s) has not been written.",objname);
@@ -957,7 +957,7 @@ Int_t TObject::Write(const char *name, Int_t option) const
 /// Write this object to the current directory. For more see the
 /// const version of this method.
 
-Int_t TObject::Write(const char *name, Int_t option)
+size_t TObject::Write(const char *name, Int_t option)
 {
    return ((const TObject*)this)->Write(name, option);
 }

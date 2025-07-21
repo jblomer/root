@@ -26,7 +26,7 @@ TBufferMergerFile::~TBufferMergerFile()
 {
 }
 
-Int_t TBufferMergerFile::Write(const char *name, Int_t opt)
+size_t TBufferMergerFile::Write(const char *name, Int_t opt)
 {
    // Make sure the compression of the basket is done in the unlocked thread and
    // not in the locked section.

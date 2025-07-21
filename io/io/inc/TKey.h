@@ -50,6 +50,8 @@ protected:
    TBuffer    *fBufferRef;   ///< Pointer to the TBuffer object
    UShort_t    fPidOffset;   ///<!Offset to be added to the pid index in this key/buffer.  This is actually saved in the high bits of fSeekPdir
    TDirectory *fMotherDir;   ///<!pointer to mother directory
+   size_t      fActualNBytes; ///<! = fNBytes for normal keys. For chunked keys, the sum of all fNBytes of all chunks.
+   size_t      fActualObjlen; ///<! = fObjlen for normal keys. For chunked keys, the total object length.
 
            Int_t    Read(const char *name) override { return TObject::Read(name); }
    virtual void     Create(Int_t nbytes, TFile* f = nullptr);

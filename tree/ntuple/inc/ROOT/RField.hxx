@@ -403,6 +403,7 @@ public:
 #include "RField/RFieldFundamental.hxx"
 #include "RField/RFieldProxiedCollection.hxx"
 #include "RField/RFieldRecord.hxx"
+#include "RField/RFieldSoA.hxx"
 #include "RField/RFieldSequenceContainer.hxx"
 #include "RField/RFieldSTLMisc.hxx"
 

@@ -389,6 +389,7 @@ void TBufferXML::SetCompressionSettings(Int_t settings)
 
 void TBufferXML::XmlWriteBlock(XMLNodePointer_t node)
 {
+   printf("OK, WE ARE HERE %d, %d %p\n", GetCompressionLevel(), Length(), node);
    if (!node || (Length() == 0))
       return;
 

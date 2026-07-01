@@ -236,7 +236,7 @@ private:
    daos_handle_t fContainerHandle{};
    uuid_t fContainerUuid{};
    std::string fContainerLabel{};
-   std::shared_ptr<RDaosPool> fPool;
+   std::unique_ptr<RDaosPool> fPool;
    ObjClassId_t fDefaultObjectClass{OC_SX};
 
    /**
@@ -250,7 +250,7 @@ private:
                        int (RDaosObject::*fn)(RDaosObject::FetchUpdateArgs &));
 
 public:
-   RDaosContainer(std::shared_ptr<RDaosPool> pool, std::string_view containerId, bool create = false);
+   RDaosContainer(std::unique_ptr<RDaosPool> pool, std::string_view containerId, bool create = false);
    ~RDaosContainer();
 
    ObjClassId_t GetDefaultObjectClass() const { return fDefaultObjectClass; }

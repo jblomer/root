@@ -34,7 +34,7 @@ namespace Experimental {
 */
 // clang-format on
 class RNTupleWriteOptionsDaos : public ROOT::RNTupleWriteOptions {
-   std::string fObjectClass{"SX"};
+   std::string fObjectClass{"UNKNOWN"};
 
 public:
    ~RNTupleWriteOptionsDaos() override = default;

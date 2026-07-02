@@ -274,15 +274,12 @@ void ROOT::Experimental::Internal::RPageSinkDaos::InitImpl(unsigned char *serial
 {
    auto opts = dynamic_cast<RNTupleWriteOptionsDaos *>(fOptions.get());
    fNTupleAnchor.fObjClass = opts ? opts->GetObjectClass() : RNTupleWriteOptionsDaos().GetObjectClass();
-   auto oclass = RDaosObject::ObjClassId(fNTupleAnchor.fObjClass);
-   if (oclass.IsUnknown())
-      throw ROOT::RException(R__FAIL("Unknown object class " + fNTupleAnchor.fObjClass));
 
    auto args = ParseDaosURI(fURI);
    auto pool = std::make_unique<RDaosPool>(args.fPoolLabel);
 
    fDaosContainer = std::make_unique<RDaosContainer>(std::move(pool), args.fContainerLabel, /*create =*/true);
-   fDaosContainer->SetDefaultObjectClass(oclass);
+   fDaosContainer->SetDefaultObjectClass(fNTupleAnchor.fObjClass);
 
    auto [locator, _] = RDaosContainerNTupleLocator::LocateNTuple(*fDaosContainer, fNTupleName);
    fNTupleIndex = locator.GetIndex();
@@ -485,11 +482,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::AttachImpl(RNTupleSerializer::EDe
       throw ROOT::RException(
          R__FAIL("Attach: requested ntuple '" + fNTupleName + "' is not present in DAOS container."));
 
-   auto oclass = RDaosObject::ObjClassId(locator.fAnchor->fObjClass);
-   if (oclass.IsUnknown())
-      throw ROOT::RException(R__FAIL("Attach: unknown object class " + locator.fAnchor->fObjClass));
-
-   fDaosContainer->SetDefaultObjectClass(oclass);
+   fDaosContainer->SetDefaultObjectClass(locator.fAnchor->fObjClass);
    fNTupleIndex = locator.GetIndex();
    daos_obj_id_t oidPageList{kOidLowPageList, static_cast<decltype(daos_obj_id_t::hi)>(fNTupleIndex)};
 

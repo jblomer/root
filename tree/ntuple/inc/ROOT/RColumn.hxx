@@ -36,6 +36,8 @@ namespace ROOT::Internal {
 // clang-format on
 class RColumn {
 private:
+   /// The column id in the column descriptor, once connected to a sink or source
+   ROOT::DescriptorId_t fOnDiskId = ROOT::kInvalidDescriptorId;
    ROOT::ENTupleColumnType fType;
    /// Columns belonging to the same field are distinguished by their order.  E.g. for an std::string field, there is
    /// the offset column with index 0 and the character value column with index 1.
@@ -44,8 +46,6 @@ private:
    std::uint16_t fRepresentationIndex;
    ROOT::Internal::RPageSink *fPageSink = nullptr;
    ROOT::Internal::RPageSource *fPageSource = nullptr;
-   ROOT::Internal::RPageStorage::ColumnHandle_t fHandleSink;
-   ROOT::Internal::RPageStorage::ColumnHandle_t fHandleSource;
    /// The page into which new elements are being written. The page will initially be small
    /// (RNTupleWriteOptions::fInitialUnzippedPageSize, which corresponds to fInitialElements) and expand as needed and
    /// as memory for page buffers is still available (RNTupleWriteOptions::fPageBufferBudget) or the maximum page
@@ -57,8 +57,6 @@ private:
    ROOT::NTupleSize_t fNElements = 0;
    /// The currently mapped page for reading
    ROOT::Internal::RPageRef fReadPageRef;
-   /// The column id in the column descriptor, once connected to a sink or source
-   ROOT::DescriptorId_t fOnDiskId = ROOT::kInvalidDescriptorId;
    /// Global index of the first element in this column; usually == 0, unless it is a deferred column
    ROOT::NTupleSize_t fFirstElementIndex = 0;
    /// Used to pack and unpack pages on writing/reading
@@ -73,6 +71,8 @@ private:
 
    RColumn(ROOT::ENTupleColumnType type, std::uint32_t columnIndex, std::uint16_t representationIndex);
 
+   ROOT::Internal::RPageStorage::ColumnHandle_t MakeHandle() { return {fOnDiskId, this}; }
+
    /// Used when trying to append to a full write page. If possible, expand the page. Otherwise, flush and reset
    /// to the minimal size.
    void HandleWritePageIfFull()
@@ -86,7 +86,7 @@ private:
          // Maximum page size reached, flush and reset
          Flush();
       } else {
-         auto expandedPage = fPageSink->ReservePage(fHandleSink, newMaxElements);
+         auto expandedPage = fPageSink->ReservePage(MakeHandle(), newMaxElements);
          if (expandedPage.IsNull()) {
             Flush();
          } else {
@@ -352,8 +352,6 @@ public:
    ROOT::NTupleSize_t GetFirstElementIndex() const { return fFirstElementIndex; }
    ROOT::Internal::RPageSource *GetPageSource() const { return fPageSource; }
    ROOT::Internal::RPageSink *GetPageSink() const { return fPageSink; }
-   ROOT::Internal::RPageStorage::ColumnHandle_t GetHandleSource() const { return fHandleSource; }
-   ROOT::Internal::RPageStorage::ColumnHandle_t GetHandleSink() const { return fHandleSink; }
 
    void SetBitsOnStorage(std::size_t bits) { fElement->SetBitsOnStorage(bits); }
    std::size_t GetWritePageCapacity() const { return fWritePage.GetCapacity(); }

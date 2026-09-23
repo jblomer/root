@@ -36,38 +36,51 @@ namespace ROOT::Internal {
 // clang-format on
 class RColumn {
 private:
+   /// Information needed when connected to a page sink
+   struct RWriteInfo {
+      ROOT::Internal::RPageSink *fPageSink = nullptr;
+      /// The initial number of elements in a page
+      ROOT::NTupleSize_t fInitialNElements = 1;
+      /// The number of elements written
+      ROOT::NTupleSize_t fNElements = 0;
+      /// Global index of the first element in this column; usually == 0, unless it is a deferred column
+      ROOT::NTupleSize_t fFirstElementIndex = 0;
+      /// The page into which new elements are being written. The page will initially be small
+      /// (RNTupleWriteOptions::fInitialUnzippedPageSize, which corresponds to fInitialElements) and expand as needed
+      /// and as memory for page buffers is still available (RNTupleWriteOptions::fPageBufferBudget) or the maximum page
+      /// size is reached (RNTupleWriteOptions::fMaxUnzippedPageSize).
+      ROOT::Internal::RPage fWritePage;
+   };
+
+   /// Information needed when connected to a page source
+   struct RReadInfo {
+      ROOT::Internal::RPageSource *fPageSource = nullptr;
+      /// The currently mapped page for reading
+      ROOT::Internal::RPageRef fReadPageRef;
+      /// The column team is a set of columns that serve the same column index for different representation IDs.
+      /// Initially, the team has only one member, the very column it belongs to. Through MergeTeams(), two columns
+      /// can join forces. The team is used to react on suppressed columns: if the current team member has a suppressed
+      /// column for a MapPage() call, it get the page from the active column in the corresponding cluster.
+      std::vector<RColumn *> fTeam;
+      /// Points into fTeam to the column that successfully returned the last page.
+      std::size_t fLastGoodTeamIdx = 0;
+   };
+
    /// The column id in the column descriptor, once connected to a sink or source
    ROOT::DescriptorId_t fOnDiskId = ROOT::kInvalidDescriptorId;
+
+   std::unique_ptr<RWriteInfo> fWriteInfo;
+   std::unique_ptr<RReadInfo> fReadInfo;
+
+   /// Used to pack and unpack pages on writing/reading
+   std::unique_ptr<ROOT::Internal::RColumnElementBase> fElement;
+   /// The type of fElement
    ROOT::ENTupleColumnType fType;
    /// Columns belonging to the same field are distinguished by their order.  E.g. for an std::string field, there is
    /// the offset column with index 0 and the character value column with index 1.
    std::uint32_t fIndex;
    /// Fields can have multiple column representations, distinguished by representation index
    std::uint16_t fRepresentationIndex;
-   ROOT::Internal::RPageSink *fPageSink = nullptr;
-   ROOT::Internal::RPageSource *fPageSource = nullptr;
-   /// The page into which new elements are being written. The page will initially be small
-   /// (RNTupleWriteOptions::fInitialUnzippedPageSize, which corresponds to fInitialElements) and expand as needed and
-   /// as memory for page buffers is still available (RNTupleWriteOptions::fPageBufferBudget) or the maximum page
-   /// size is reached (RNTupleWriteOptions::fMaxUnzippedPageSize).
-   ROOT::Internal::RPage fWritePage;
-   /// The initial number of elements in a page
-   ROOT::NTupleSize_t fInitialNElements = 1;
-   /// The number of elements written
-   ROOT::NTupleSize_t fNElements = 0;
-   /// The currently mapped page for reading
-   ROOT::Internal::RPageRef fReadPageRef;
-   /// Global index of the first element in this column; usually == 0, unless it is a deferred column
-   ROOT::NTupleSize_t fFirstElementIndex = 0;
-   /// Used to pack and unpack pages on writing/reading
-   std::unique_ptr<ROOT::Internal::RColumnElementBase> fElement;
-   /// The column team is a set of columns that serve the same column index for different representation IDs.
-   /// Initially, the team has only one member, the very column it belongs to. Through MergeTeams(), two columns
-   /// can join forces. The team is used to react on suppressed columns: if the current team member has a suppressed
-   /// column for a MapPage() call, it get the page from the active column in the corresponding cluster.
-   std::vector<RColumn *> fTeam;
-   /// Points into fTeam to the column that successfully returned the last page.
-   std::size_t fLastGoodTeamIdx = 0;
 
    RColumn(ROOT::ENTupleColumnType type, std::uint32_t columnIndex, std::uint16_t representationIndex);
 
@@ -77,27 +90,27 @@ private:
    /// to the minimal size.
    void HandleWritePageIfFull()
    {
-      auto newMaxElements = fWritePage.GetMaxElements() * 2;
-      if (newMaxElements * fElement->GetSize() > fPageSink->GetWriteOptions().GetMaxUnzippedPageSize()) {
-         newMaxElements = fPageSink->GetWriteOptions().GetMaxUnzippedPageSize() / fElement->GetSize();
+      auto newMaxElements = fWriteInfo->fWritePage.GetMaxElements() * 2;
+      if (newMaxElements * fElement->GetSize() > fWriteInfo->fPageSink->GetWriteOptions().GetMaxUnzippedPageSize()) {
+         newMaxElements = fWriteInfo->fPageSink->GetWriteOptions().GetMaxUnzippedPageSize() / fElement->GetSize();
       }
 
-      if (newMaxElements == fWritePage.GetMaxElements()) {
+      if (newMaxElements == fWriteInfo->fWritePage.GetMaxElements()) {
          // Maximum page size reached, flush and reset
          Flush();
       } else {
-         auto expandedPage = fPageSink->ReservePage(MakeHandle(), newMaxElements);
+         auto expandedPage = fWriteInfo->fPageSink->ReservePage(MakeHandle(), newMaxElements);
          if (expandedPage.IsNull()) {
             Flush();
          } else {
-            memcpy(expandedPage.GetBuffer(), fWritePage.GetBuffer(), fWritePage.GetNBytes());
-            expandedPage.Reset(fNElements);
-            expandedPage.GrowUnchecked(fWritePage.GetNElements());
-            fWritePage = std::move(expandedPage);
+            memcpy(expandedPage.GetBuffer(), fWriteInfo->fWritePage.GetBuffer(), fWriteInfo->fWritePage.GetNBytes());
+            expandedPage.Reset(fWriteInfo->fNElements);
+            expandedPage.GrowUnchecked(fWriteInfo->fWritePage.GetNElements());
+            fWriteInfo->fWritePage = std::move(expandedPage);
          }
       }
 
-      assert(fWritePage.GetNElements() < fWritePage.GetMaxElements());
+      assert(fWriteInfo->fWritePage.GetNElements() < fWriteInfo->fWritePage.GetMaxElements());
    }
 
 public:
@@ -124,14 +137,14 @@ public:
 
    void Append(const void *from)
    {
-      if (fWritePage.GetNElements() == fWritePage.GetMaxElements()) {
+      if (fWriteInfo->fWritePage.GetNElements() == fWriteInfo->fWritePage.GetMaxElements()) {
          HandleWritePageIfFull();
       }
 
-      void *dst = fWritePage.GrowUnchecked(1);
+      void *dst = fWriteInfo->fWritePage.GrowUnchecked(1);
 
       std::memcpy(dst, from, fElement->GetSize());
-      fNElements++;
+      fWriteInfo->fNElements++;
    }
 
    void AppendV(const void *from, std::size_t count)
@@ -139,42 +152,43 @@ public:
       auto src = reinterpret_cast<const unsigned char *>(from);
       // TODO(jblomer): A future optimization should grow the page in one go, up to the maximum unzipped page size
       while (count > 0) {
-         std::size_t nElementsRemaining = fWritePage.GetMaxElements() - fWritePage.GetNElements();
+         std::size_t nElementsRemaining =
+            fWriteInfo->fWritePage.GetMaxElements() - fWriteInfo->fWritePage.GetNElements();
          if (nElementsRemaining == 0) {
             HandleWritePageIfFull();
-            nElementsRemaining = fWritePage.GetMaxElements() - fWritePage.GetNElements();
+            nElementsRemaining = fWriteInfo->fWritePage.GetMaxElements() - fWriteInfo->fWritePage.GetNElements();
          }
 
          assert(nElementsRemaining > 0);
          auto nBatch = std::min(count, nElementsRemaining);
 
-         void *dst = fWritePage.GrowUnchecked(nBatch);
+         void *dst = fWriteInfo->fWritePage.GrowUnchecked(nBatch);
          std::memcpy(dst, src, nBatch * fElement->GetSize());
          src += nBatch * fElement->GetSize();
          count -= nBatch;
-         fNElements += nBatch;
+         fWriteInfo->fNElements += nBatch;
       }
    }
 
    void Read(const ROOT::NTupleSize_t globalIndex, void *to)
    {
-      if (!fReadPageRef.Get().Contains(globalIndex)) {
+      if (!fReadInfo->fReadPageRef.Get().Contains(globalIndex)) {
          MapPage(globalIndex);
       }
       const auto elemSize = fElement->GetSize();
-      void *from = static_cast<unsigned char *>(fReadPageRef.Get().GetBuffer()) +
-                   (globalIndex - fReadPageRef.Get().GetGlobalRangeFirst()) * elemSize;
+      void *from = static_cast<unsigned char *>(fReadInfo->fReadPageRef.Get().GetBuffer()) +
+                   (globalIndex - fReadInfo->fReadPageRef.Get().GetGlobalRangeFirst()) * elemSize;
       std::memcpy(to, from, elemSize);
    }
 
    void Read(RNTupleLocalIndex localIndex, void *to)
    {
-      if (!fReadPageRef.Get().Contains(localIndex)) {
+      if (!fReadInfo->fReadPageRef.Get().Contains(localIndex)) {
          MapPage(localIndex);
       }
       const auto elemSize = fElement->GetSize();
-      void *from = static_cast<unsigned char *>(fReadPageRef.Get().GetBuffer()) +
-                   (localIndex.GetIndexInCluster() - fReadPageRef.Get().GetLocalRangeFirst()) * elemSize;
+      void *from = static_cast<unsigned char *>(fReadInfo->fReadPageRef.Get().GetBuffer()) +
+                   (localIndex.GetIndexInCluster() - fReadInfo->fReadPageRef.Get().GetLocalRangeFirst()) * elemSize;
       std::memcpy(to, from, elemSize);
    }
 
@@ -184,13 +198,14 @@ public:
       auto tail = static_cast<unsigned char *>(to);
 
       while (count > 0) {
-         if (!fReadPageRef.Get().Contains(globalIndex)) {
+         if (!fReadInfo->fReadPageRef.Get().Contains(globalIndex)) {
             MapPage(globalIndex);
          }
-         const ROOT::NTupleSize_t idxInPage = globalIndex - fReadPageRef.Get().GetGlobalRangeFirst();
+         const ROOT::NTupleSize_t idxInPage = globalIndex - fReadInfo->fReadPageRef.Get().GetGlobalRangeFirst();
 
-         const void *from = static_cast<unsigned char *>(fReadPageRef.Get().GetBuffer()) + idxInPage * elemSize;
-         const ROOT::NTupleSize_t nBatch = std::min(fReadPageRef.Get().GetNElements() - idxInPage, count);
+         const void *from =
+            static_cast<unsigned char *>(fReadInfo->fReadPageRef.Get().GetBuffer()) + idxInPage * elemSize;
+         const ROOT::NTupleSize_t nBatch = std::min(fReadInfo->fReadPageRef.Get().GetNElements() - idxInPage, count);
 
          std::memcpy(tail, from, elemSize * nBatch);
 
@@ -206,13 +221,15 @@ public:
       auto tail = static_cast<unsigned char *>(to);
 
       while (count > 0) {
-         if (!fReadPageRef.Get().Contains(localIndex)) {
+         if (!fReadInfo->fReadPageRef.Get().Contains(localIndex)) {
             MapPage(localIndex);
          }
-         ROOT::NTupleSize_t idxInPage = localIndex.GetIndexInCluster() - fReadPageRef.Get().GetLocalRangeFirst();
+         ROOT::NTupleSize_t idxInPage =
+            localIndex.GetIndexInCluster() - fReadInfo->fReadPageRef.Get().GetLocalRangeFirst();
 
-         const void *from = static_cast<unsigned char *>(fReadPageRef.Get().GetBuffer()) + idxInPage * elemSize;
-         const ROOT::NTupleSize_t nBatch = std::min(count, fReadPageRef.Get().GetNElements() - idxInPage);
+         const void *from =
+            static_cast<unsigned char *>(fReadInfo->fReadPageRef.Get().GetBuffer()) + idxInPage * elemSize;
+         const ROOT::NTupleSize_t nBatch = std::min(count, fReadInfo->fReadPageRef.Get().GetNElements() - idxInPage);
 
          std::memcpy(tail, from, elemSize * nBatch);
 
@@ -239,43 +256,44 @@ public:
    template <typename CppT>
    CppT *MapV(const ROOT::NTupleSize_t globalIndex, ROOT::NTupleSize_t &nItems)
    {
-      if (R__unlikely(!fReadPageRef.Get().Contains(globalIndex))) {
+      if (R__unlikely(!fReadInfo->fReadPageRef.Get().Contains(globalIndex))) {
          MapPage(globalIndex);
       }
       // +1 to go from 0-based indexing to 1-based number of items
-      nItems = fReadPageRef.Get().GetGlobalRangeLast() - globalIndex + 1;
-      return reinterpret_cast<CppT *>(static_cast<unsigned char *>(fReadPageRef.Get().GetBuffer()) +
-                                      (globalIndex - fReadPageRef.Get().GetGlobalRangeFirst()) * sizeof(CppT));
+      nItems = fReadInfo->fReadPageRef.Get().GetGlobalRangeLast() - globalIndex + 1;
+      return reinterpret_cast<CppT *>(
+         static_cast<unsigned char *>(fReadInfo->fReadPageRef.Get().GetBuffer()) +
+         (globalIndex - fReadInfo->fReadPageRef.Get().GetGlobalRangeFirst()) * sizeof(CppT));
    }
 
    template <typename CppT>
    CppT *MapV(RNTupleLocalIndex localIndex, ROOT::NTupleSize_t &nItems)
    {
-      if (!fReadPageRef.Get().Contains(localIndex)) {
+      if (!fReadInfo->fReadPageRef.Get().Contains(localIndex)) {
          MapPage(localIndex);
       }
       // +1 to go from 0-based indexing to 1-based number of items
-      nItems = fReadPageRef.Get().GetLocalRangeLast() - localIndex.GetIndexInCluster() + 1;
-      return reinterpret_cast<CppT *>(static_cast<unsigned char *>(fReadPageRef.Get().GetBuffer()) +
-                                      (localIndex.GetIndexInCluster() - fReadPageRef.Get().GetLocalRangeFirst()) *
-                                         sizeof(CppT));
+      nItems = fReadInfo->fReadPageRef.Get().GetLocalRangeLast() - localIndex.GetIndexInCluster() + 1;
+      return reinterpret_cast<CppT *>(static_cast<unsigned char *>(
+         fReadInfo->fReadPageRef.Get().GetBuffer()) +
+         (localIndex.GetIndexInCluster() - fReadInfo->fReadPageRef.Get().GetLocalRangeFirst()) * sizeof(CppT));
    }
 
    ROOT::NTupleSize_t GetGlobalIndex(RNTupleLocalIndex clusterIndex)
    {
-      if (!fReadPageRef.Get().Contains(clusterIndex)) {
+      if (!fReadInfo->fReadPageRef.Get().Contains(clusterIndex)) {
          MapPage(clusterIndex);
       }
-      return fReadPageRef.Get().GetClusterInfo().GetIndexOffset() + clusterIndex.GetIndexInCluster();
+      return fReadInfo->fReadPageRef.Get().GetClusterInfo().GetIndexOffset() + clusterIndex.GetIndexInCluster();
    }
 
    RNTupleLocalIndex GetClusterIndex(ROOT::NTupleSize_t globalIndex)
    {
-      if (!fReadPageRef.Get().Contains(globalIndex)) {
+      if (!fReadInfo->fReadPageRef.Get().Contains(globalIndex)) {
          MapPage(globalIndex);
       }
-      return RNTupleLocalIndex(fReadPageRef.Get().GetClusterInfo().GetId(),
-                               globalIndex - fReadPageRef.Get().GetClusterInfo().GetIndexOffset());
+      return RNTupleLocalIndex(fReadInfo->fReadPageRef.Get().GetClusterInfo().GetId(),
+                               globalIndex - fReadInfo->fReadPageRef.Get().GetClusterInfo().GetIndexOffset());
    }
 
    /// For offset columns only, look at the two adjacent values that define a collection's coordinates
@@ -286,21 +304,21 @@ public:
       ROOT::NTupleSize_t idxEnd;
       // Try to avoid jumping back to the previous page and jumping back to the previous cluster
       if (R__likely(globalIndex > 0)) {
-         if (R__likely(fReadPageRef.Get().Contains(globalIndex - 1))) {
+         if (R__likely(fReadInfo->fReadPageRef.Get().Contains(globalIndex - 1))) {
             idxStart = *Map<ROOT::Internal::RColumnIndex>(globalIndex - 1);
             idxEnd = *Map<ROOT::Internal::RColumnIndex>(globalIndex);
-            if (R__unlikely(fReadPageRef.Get().GetClusterInfo().GetIndexOffset() == globalIndex))
+            if (R__unlikely(fReadInfo->fReadPageRef.Get().GetClusterInfo().GetIndexOffset() == globalIndex))
                idxStart = 0;
          } else {
             idxEnd = *Map<ROOT::Internal::RColumnIndex>(globalIndex);
-            auto selfOffset = fReadPageRef.Get().GetClusterInfo().GetIndexOffset();
+            auto selfOffset = fReadInfo->fReadPageRef.Get().GetClusterInfo().GetIndexOffset();
             idxStart = (globalIndex == selfOffset) ? 0 : *Map<ROOT::Internal::RColumnIndex>(globalIndex - 1);
          }
       } else {
          idxEnd = *Map<ROOT::Internal::RColumnIndex>(globalIndex);
       }
       *collectionSize = idxEnd - idxStart;
-      *collectionStart = RNTupleLocalIndex(fReadPageRef.Get().GetClusterInfo().GetId(), idxStart);
+      *collectionStart = RNTupleLocalIndex(fReadInfo->fReadPageRef.Get().GetClusterInfo().GetId(), idxStart);
    }
 
    void GetCollectionInfo(RNTupleLocalIndex localIndex, RNTupleLocalIndex *collectionStart,
@@ -317,7 +335,7 @@ public:
    void GetSwitchInfo(ROOT::NTupleSize_t globalIndex, RNTupleLocalIndex *varIndex, std::uint32_t *tag)
    {
       auto varSwitch = Map<ROOT::Internal::RColumnSwitch>(globalIndex);
-      *varIndex = RNTupleLocalIndex(fReadPageRef.Get().GetClusterInfo().GetId(), varSwitch->GetIndex());
+      *varIndex = RNTupleLocalIndex(fReadInfo->fReadPageRef.Get().GetClusterInfo().GetId(), varSwitch->GetIndex());
       *tag = varSwitch->GetTag();
    }
 
@@ -333,24 +351,17 @@ public:
 
    ROOT::Internal::RColumnElementBase *GetElement() const { return fElement.get(); }
    ROOT::ENTupleColumnType GetType() const { return fType; }
-   std::uint16_t GetBitsOnStorage() const
-   {
-      assert(fElement);
-      return static_cast<std::uint16_t>(fElement->GetBitsOnStorage());
-   }
-   std::optional<std::pair<double, double>> GetValueRange() const
-   {
-      assert(fElement);
-      return fElement->GetValueRange();
-   }
+   std::uint16_t GetBitsOnStorage() const { return static_cast<std::uint16_t>(fElement->GetBitsOnStorage()); }
+   std::optional<std::pair<double, double>> GetValueRange() const { return fElement->GetValueRange(); }
    std::uint32_t GetIndex() const { return fIndex; }
    std::uint16_t GetRepresentationIndex() const { return fRepresentationIndex; }
    ROOT::DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
-   ROOT::NTupleSize_t GetFirstElementIndex() const { return fFirstElementIndex; }
 
    void SetBitsOnStorage(std::size_t bits) { fElement->SetBitsOnStorage(bits); }
-   std::size_t GetWritePageCapacity() const { return fWritePage.GetCapacity(); }
    void SetValueRange(double min, double max) { fElement->SetValueRange(min, max); }
+
+   std::size_t GetWritePageCapacity() const { return fWriteInfo->fWritePage.GetCapacity(); }
+   ROOT::NTupleSize_t GetFirstElementIndex() const { return fWriteInfo->fFirstElementIndex; }
 }; // class RColumn
 
 } // namespace ROOT::Internal

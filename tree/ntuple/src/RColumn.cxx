@@ -24,101 +24,103 @@ using ROOT::Internal::RPageSink;
 using ROOT::Internal::RPageSource;
 
 ROOT::Internal::RColumn::RColumn(ENTupleColumnType type, std::uint32_t columnIndex, std::uint16_t representationIndex)
-   : fType(type), fIndex(columnIndex), fRepresentationIndex(representationIndex), fTeam({this})
+   : fType(type), fIndex(columnIndex), fRepresentationIndex(representationIndex)
 {
 }
 
 ROOT::Internal::RColumn::~RColumn()
 {
-   if (fPageSink)
-      fPageSink->DropColumn(MakeHandle());
-   if (fPageSource)
-      fPageSource->DropColumn(MakeHandle());
+   if (fWriteInfo)
+      fWriteInfo->fPageSink->DropColumn(MakeHandle());
+   if (fReadInfo)
+      fReadInfo->fPageSource->DropColumn(MakeHandle());
 }
 
 void ROOT::Internal::RColumn::ConnectPageSink(ROOT::DescriptorId_t fieldId, RPageSink &pageSink,
                                               ROOT::NTupleSize_t firstElementIndex)
 {
-   fInitialNElements = pageSink.GetWriteOptions().GetInitialUnzippedPageSize() / fElement->GetSize();
-   if (fInitialNElements < 1) {
+   fWriteInfo = std::make_unique<RWriteInfo>();
+
+   fWriteInfo->fInitialNElements = pageSink.GetWriteOptions().GetInitialUnzippedPageSize() / fElement->GetSize();
+   if (fWriteInfo->fInitialNElements < 1) {
       throw RException(R__FAIL("initial page size is too small for at least one element"));
    }
 
-   fPageSink = &pageSink;
-   fFirstElementIndex = firstElementIndex;
-   fOnDiskId = fPageSink->AddColumn(fieldId, *this).fPhysicalId;
-   fWritePage = fPageSink->ReservePage(MakeHandle(), fInitialNElements);
-   if (fWritePage.IsNull())
+   fWriteInfo->fPageSink = &pageSink;
+   fWriteInfo->fFirstElementIndex = firstElementIndex;
+   fOnDiskId = fWriteInfo->fPageSink->AddColumn(fieldId, *this).fPhysicalId;
+   fWriteInfo->fWritePage = fWriteInfo->fPageSink->ReservePage(MakeHandle(), fWriteInfo->fInitialNElements);
+   if (fWriteInfo->fWritePage.IsNull())
       throw RException(R__FAIL("page buffer memory budget too small"));
 }
 
 void ROOT::Internal::RColumn::ConnectPageSource(ROOT::DescriptorId_t fieldId, RPageSource &pageSource)
 {
-   fPageSource = &pageSource;
-   fOnDiskId = fPageSource->AddColumn(fieldId, *this).fPhysicalId;
-   {
-      auto descriptorGuard = fPageSource->GetSharedDescriptorGuard();
-      fFirstElementIndex = descriptorGuard->GetColumnDescriptor(fOnDiskId).GetFirstElementIndex();
-   }
+   fReadInfo = std::make_unique<RReadInfo>();
+   fReadInfo->fTeam.emplace_back(this);
+   fReadInfo->fPageSource = &pageSource;
+   fOnDiskId = fReadInfo->fPageSource->AddColumn(fieldId, *this).fPhysicalId;
 }
 
 void ROOT::Internal::RColumn::Flush()
 {
-   if (fWritePage.GetNElements() == 0)
+   if (fWriteInfo->fWritePage.GetNElements() == 0)
       return;
 
-   fPageSink->CommitPage(MakeHandle(), fWritePage);
-   fWritePage = fPageSink->ReservePage(MakeHandle(), fInitialNElements);
-   R__ASSERT(!fWritePage.IsNull());
-   fWritePage.Reset(fNElements);
+   fWriteInfo->fPageSink->CommitPage(MakeHandle(), fWriteInfo->fWritePage);
+   fWriteInfo->fWritePage = fWriteInfo->fPageSink->ReservePage(MakeHandle(), fWriteInfo->fInitialNElements);
+   R__ASSERT(!fWriteInfo->fWritePage.IsNull());
+   fWriteInfo->fWritePage.Reset(fWriteInfo->fNElements);
 }
 
 void ROOT::Internal::RColumn::CommitSuppressed()
 {
-   fPageSink->CommitSuppressedColumn(MakeHandle());
+   fWriteInfo->fPageSink->CommitSuppressedColumn(MakeHandle());
 }
 
 bool ROOT::Internal::RColumn::TryMapPage(ROOT::NTupleSize_t globalIndex)
 {
-   const auto nTeam = fTeam.size();
+   const auto nTeam = fReadInfo->fTeam.size();
    std::size_t iTeam = 1;
    do {
-      fReadPageRef = fPageSource->LoadPage(fTeam.at(fLastGoodTeamIdx)->MakeHandle(), globalIndex);
-      if (!fReadPageRef.Get().IsNull())
+      fReadInfo->fReadPageRef = fReadInfo->fPageSource->LoadPage(
+         fReadInfo->fTeam.at(fReadInfo->fLastGoodTeamIdx)->MakeHandle(), globalIndex);
+      if (!fReadInfo->fReadPageRef.Get().IsNull())
          break;
-      fLastGoodTeamIdx = (fLastGoodTeamIdx + 1) % nTeam;
+      fReadInfo->fLastGoodTeamIdx = (fReadInfo->fLastGoodTeamIdx + 1) % nTeam;
       iTeam++;
    } while (iTeam <= nTeam);
 
-   return fReadPageRef.Get().Contains(globalIndex);
+   return fReadInfo->fReadPageRef.Get().Contains(globalIndex);
 }
 
 bool ROOT::Internal::RColumn::TryMapPage(RNTupleLocalIndex localIndex)
 {
-   const auto nTeam = fTeam.size();
+   const auto nTeam = fReadInfo->fTeam.size();
    std::size_t iTeam = 1;
    do {
-      fReadPageRef = fPageSource->LoadPage(fTeam.at(fLastGoodTeamIdx)->MakeHandle(), localIndex);
-      if (!fReadPageRef.Get().IsNull())
+      fReadInfo->fReadPageRef = fReadInfo->fPageSource->LoadPage(
+         fReadInfo->fTeam.at(fReadInfo->fLastGoodTeamIdx)->MakeHandle(), localIndex);
+      if (!fReadInfo->fReadPageRef.Get().IsNull())
          break;
-      fLastGoodTeamIdx = (fLastGoodTeamIdx + 1) % nTeam;
+      fReadInfo->fLastGoodTeamIdx = (fReadInfo->fLastGoodTeamIdx + 1) % nTeam;
       iTeam++;
    } while (iTeam <= nTeam);
 
-   return fReadPageRef.Get().Contains(localIndex);
+   return fReadInfo->fReadPageRef.Get().Contains(localIndex);
 }
 
 void ROOT::Internal::RColumn::MergeTeams(RColumn &other)
 {
    // We are working on very small vectors here, so quadratic complexity works
-   for (auto *c : other.fTeam) {
-      if (std::find(fTeam.begin(), fTeam.end(), c) == fTeam.end())
-         fTeam.emplace_back(c);
+   for (auto *c : other.fReadInfo->fTeam) {
+      if (std::find(fReadInfo->fTeam.begin(), fReadInfo->fTeam.end(), c) == fReadInfo->fTeam.end())
+         fReadInfo->fTeam.emplace_back(c);
    }
 
-   for (auto c : fTeam) {
+   for (auto c : fReadInfo->fTeam) {
       if (c == this)
          continue;
-      c->fTeam = fTeam;
+      c->fReadInfo->fTeam = fReadInfo->fTeam;
    }
 }

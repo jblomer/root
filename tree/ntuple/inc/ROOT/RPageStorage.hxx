@@ -689,6 +689,13 @@ private:
    bool fIsAttached = false;                 ///< Set to true once `Attach()` is called
    bool fHasStreamerInfosRegistered = false; ///< Set to true when RegisterStreamerInfos() is called.
 
+   /// This vector is aligned with the cluster groups in the descriptor. It stores the cumulative number of clusters
+   /// in the cluster groups. Given a cluster ID, we can thus quickly determine the cluster group that the cluster
+   /// comes from. While descriptor IDs in a descriptor in general are arbitrary, for the descriptor in the page source,
+   /// that was created from a serialized on-disk representation, we know that cluster and cluster group IDs are
+   /// issued consecutively.
+   std::vector<NTupleSize_t> fCumulativeClusterCounts;
+
    /// The active columns are implicitly defined by the model fields or views
    RActivePhysicalColumns fActivePhysicalColumns;
 
@@ -711,6 +718,9 @@ private:
    /// Pinned clusters and their $2 * (cluster bunch size) - 1$ successors will not be evicted from the cluster pool.
    /// Pages of pinned clusters won't be evicted from the page pool.
    std::unordered_set<ROOT::DescriptorId_t> fPinnedClusters;
+
+   /// Uses binary search in fCumulativeClusterCounts to determine the cluster group that the cluster ID belongs in.
+   DescriptorId_t FindClusterGroupId(DescriptorId_t clusterId) const;
 
    /// Does nothing if fLastUsedCluster == clusterId. Otherwise, updated fLastUsedCluster
    /// and evict unused paged from the page pool of all previous clusters.

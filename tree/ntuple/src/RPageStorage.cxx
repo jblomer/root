@@ -238,6 +238,9 @@ void ROOT::Internal::RPageSource::Attach(RNTupleSerializer::EDescriptorDeseriali
    descGuard.MoveIn(AttachImpl());
    fStructureBuffer.Reset();
 
+   NTupleSize_t sumClusterCount = 0;
+   fCumulativeClusterCounts.reserve(descGuard->GetNClusterGroups());
+
    std::vector<unsigned char> buffer;
    for (const auto &cgDesc : descGuard->GetClusterGroupIterable()) {
       buffer.resize(cgDesc.GetPageListLength() + cgDesc.GetPageListLocator().GetNBytesOnStorage());
@@ -248,6 +251,9 @@ void ROOT::Internal::RPageSource::Attach(RNTupleSerializer::EDescriptorDeseriali
                                  cgDesc.GetPageListLength(), buffer.data());
       RNTupleSerializer::DeserializePageList(buffer.data(), cgDesc.GetPageListLength(), cgDesc.GetId(), *descGuard,
                                              mode);
+
+      sumClusterCount += cgDesc.GetNClusters();
+      fCumulativeClusterCounts.emplace_back(sumClusterCount);
    }
 
    fIsAttached = true;
@@ -260,8 +266,16 @@ std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Internal::RPageSource::Clone(
       clone->GetExclDescriptorGuard().MoveIn(GetSharedDescriptorGuard()->Clone());
       clone->fHasStructure = true;
       clone->fIsAttached = true;
+      clone->fCumulativeClusterCounts = fCumulativeClusterCounts;
    }
    return clone;
+}
+
+ROOT::DescriptorId_t ROOT::Internal::RPageSource::FindClusterGroupId(DescriptorId_t clusterId) const
+{
+   auto iter = std::lower_bound(fCumulativeClusterCounts.begin(), fCumulativeClusterCounts.end(), clusterId);
+   R__ASSERT(iter != fCumulativeClusterCounts.end());
+   return std::distance(fCumulativeClusterCounts.begin(), iter);
 }
 
 ROOT::NTupleSize_t ROOT::Internal::RPageSource::GetNEntries()

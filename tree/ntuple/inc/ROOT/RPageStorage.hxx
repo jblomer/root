@@ -788,6 +788,10 @@ private:
 
    /// Uses binary search in fCumulativeClusterCounts to determine the cluster group that the cluster ID belongs in.
    DescriptorId_t FindClusterGroupId(DescriptorId_t clusterId) const;
+   /// Ensures that fDescriptor has cluster details loaded for the given cluster group ID. This method is expected
+   /// to be called while holding the shared lock passed by descGuard. The returned descriptor guard is either the
+   /// passed one or a new, exclusive guard if cluster details needed to be loaded.
+   RAnyDescriptorGuard EnsureClusterDetails(DescriptorId_t cgId, RSharedDescriptorGuard descGuard);
 
    /// Does nothing if fLastUsedCluster == clusterId. Otherwise, updated fLastUsedCluster
    /// and evict unused paged from the page pool of all previous clusters.

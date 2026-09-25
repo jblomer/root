@@ -271,6 +271,36 @@ std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Internal::RPageSource::Clone(
    return clone;
 }
 
+ROOT::Internal::RPageSource::RAnyDescriptorGuard
+ROOT::Internal::RPageSource::EnsureClusterDetails(DescriptorId_t cgId, RSharedDescriptorGuard descGuard)
+{
+   assert(descGuard.IsValid());
+   if (descGuard->GetClusterGroupDescriptor(cgId).HasClusterDetails())
+      return descGuard;
+
+   descGuard.Release();
+
+   auto exclGuard = GetExclDescriptorGuard();
+
+   const auto &cgDesc = exclGuard->GetClusterGroupDescriptor(cgId);
+   if (exclGuard->GetClusterGroupDescriptor(cgId).HasClusterDetails()) {
+      // unlikely, but between releasing the shared guard and acquiring the exclusive guard, the cluster details
+      // may have appeared
+      return exclGuard;
+   }
+
+   std::vector<unsigned char> buffer;
+   buffer.resize(cgDesc.GetPageListLength() + cgDesc.GetPageListLocator().GetNBytesOnStorage());
+   auto zipBuffer = buffer.data() + cgDesc.GetPageListLength();
+   LoadPageListImpl(cgDesc.GetPageListLocator(), zipBuffer);
+   RNTupleDecompressor::Unzip(zipBuffer, cgDesc.GetPageListLocator().GetNBytesOnStorage(),
+                              cgDesc.GetPageListLength(), buffer.data());
+   RNTupleSerializer::DeserializePageList(buffer.data(), cgDesc.GetPageListLength(), cgDesc.GetId(), *exclGuard,
+                                          RNTupleSerializer::EDescriptorDeserializeMode::kForReading);
+
+   return exclGuard;
+}
+
 ROOT::DescriptorId_t ROOT::Internal::RPageSource::FindClusterGroupId(DescriptorId_t clusterId) const
 {
    auto iter = std::lower_bound(fCumulativeClusterCounts.begin(), fCumulativeClusterCounts.end(), clusterId);

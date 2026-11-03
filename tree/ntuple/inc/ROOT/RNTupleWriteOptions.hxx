@@ -58,6 +58,16 @@ The compression settings for this RNTuple
 </tr>
 
 <tr>
+<td>`fClusterGroupPageThreshold`</td>
+<td>`std::size_t`</td>
+<td>500'000</td>
+<td>
+Commit a new cluster group when the number of pages in the current cluster group surpass the given limit.
+Set to zero to disable automatic cluster group creation.
+</td>
+</tr>
+
+<tr>
 <td>`ApproxZippedClusterSize`</td>
 <td>`std::size_t`</td>
 <td>128 MiB</td>
@@ -194,6 +204,7 @@ public:
 
 protected:
    std::uint32_t fCompression{RCompressionSetting::EDefaults::kUseGeneralPurpose};
+   std::size_t fClusterGroupPageThreshold = 500'000;
    std::size_t fApproxZippedClusterSize = 128 * 1024 * 1024;
    std::size_t fMaxUnzippedClusterSize = 10 * fApproxZippedClusterSize;
    std::size_t fInitialUnzippedPageSize = 16;
@@ -220,6 +231,9 @@ public:
    {
       fCompression = CompressionSettings(algorithm, compressionLevel);
    }
+
+   std::size_t GetClusterGroupPageThreshold() const { return fClusterGroupPageThreshold; }
+   void SetClusterGroupPageThreshold(std::size_t val) { fClusterGroupPageThreshold = val; }
 
    std::size_t GetApproxZippedClusterSize() const { return fApproxZippedClusterSize; }
    void SetApproxZippedClusterSize(std::size_t val);

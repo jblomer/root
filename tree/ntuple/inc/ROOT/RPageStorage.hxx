@@ -469,8 +469,6 @@ protected:
    };
    std::unique_ptr<RCounters> fCounters;
 
-   virtual void InitImpl(unsigned char *serializedHeader, std::uint32_t length) = 0;
-
    /// Updates the descriptor and calls InitImpl() that handles the backend-specific details (file, DAOS, etc.)
    void InitImpl(RNTupleModel &model) final;
 
@@ -488,6 +486,8 @@ protected:
    CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges, const std::vector<bool> &mask);
    /// Returns the number of bytes written to storage (excluding metadata)
    virtual std::uint64_t StageClusterImpl() = 0;
+
+   virtual void CommitHeaderImpl(unsigned char *serializedHeader, std::uint32_t length) = 0;
    /// Returns the locator of the page list envelope of the given buffer that contains the serialized page list.
    /// Typically, the implementation takes care of compressing and writing the provided buffer.
    virtual RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) = 0;

@@ -79,7 +79,7 @@ public:
    void UpdateExtraTypeInfo(const ROOT::RExtraTypeInfoDescriptor &) final {}
 
    void CommitSuppressedColumn(DescriptorId_t) final {}
-   void CommitPage(ColumnHandle_t, const ROOT::Internal::RPage &page) final
+   void CommitPage(DescriptorId_t, const ROOT::Internal::RColumnElementBase &, const ROOT::Internal::RPage &page) final
    {
       fNBytesCurrentCluster += page.GetNBytes();
    }
